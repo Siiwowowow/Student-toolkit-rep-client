@@ -1,0 +1,386 @@
+.budget-container {
+          padding: 20px;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        
+        h2 {
+          color: #333;
+          margin-bottom: 20px;
+        }
+        
+        .loading, .error-message {
+          padding: 20px;
+          text-align: center;
+          font-size: 18px;
+        }
+        
+        .error-message {
+          color: #dc3545;
+          background-color: #f8d7da;
+          border: 1px solid #f5c6cb;
+          border-radius: 5px;
+          margin-bottom: 20px;
+        }
+        
+        /* Financial Overview Cards */
+        .financial-overview {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 20px;
+          margin-bottom: 30px;
+        }
+        
+        .metric-card {
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+          text-align: center;
+        }
+        
+        .metric-card.income {
+          background: linear-gradient(135deg, #e6f7ee, #c8eedb);
+          border-left: 4px solid #28a745;
+        }
+        
+        .metric-card.expense {
+          background: linear-gradient(135deg, #ffe6e6, #ffcece);
+          border-left: 4px solid #dc3545;
+        }
+        
+        .metric-card.balance {
+          background: linear-gradient(135deg, #e6f0ff, #cce0ff);
+          border-left: 4px solid #007bff;
+        }
+        
+        .metric-card.savings {
+          background: linear-gradient(135deg, #fff9e6, #fff2cc);
+          border-left: 4px solid #ffc107;
+        }
+        
+        .metric-card h3 {
+          margin: 0 0 10px 0;
+          font-size: 16px;
+          color: #555;
+        }
+        
+        .metric-card .amount {
+          font-size: 24px;
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+        
+        .metric-card .amount.negative {
+          color: #dc3545;
+        }
+        
+        .metric-card .amount.excellent {
+          color: #28a745;
+        }
+        
+        .metric-card .amount.good {
+          color: #ffc107;
+        }
+        
+        .metric-card .amount.poor {
+          color: #dc3545;
+        }
+        
+        .metric-card .trend {
+          font-size: 12px;
+          color: #777;
+        }
+        
+        /* Charts Section */
+        .charts-section {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          margin-bottom: 30px;
+        }
+        
+        .chart-container {
+          background: white;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .chart-container.full-width {
+          grid-column: 1 / -1;
+        }
+        
+        .chart-container h3 {
+          margin-top: 0;
+          color: #333;
+        }
+        
+        .empty-state {
+          padding: 40px 20px;
+          text-align: center;
+          color: #777;
+          font-style: italic;
+        }
+        
+        /* Transaction Section */
+        .transaction-section {
+          background: white;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+        
+        .section-header h3 {
+          margin: 0;
+        }
+        
+        .controls {
+          display: flex;
+          gap: 15px;
+          align-items: center;
+        }
+        
+        .filter-buttons {
+          display: flex;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          overflow: hidden;
+        }
+        
+        .filter-buttons button {
+          padding: 8px 16px;
+          border: none;
+          background: #f8f9fa;
+          cursor: pointer;
+        }
+        
+        .filter-buttons button.active {
+          background: #007bff;
+          color: white;
+        }
+        
+        .btn-primary {
+          background: #007bff;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 5px;
+          cursor: pointer;
+        }
+        
+        .btn-secondary {
+          background: #6c757d;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 5px;
+          cursor: pointer;
+        }
+        
+        .btn-danger {
+          background: #dc3545;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 5px;
+          cursor: pointer;
+        }
+        
+        .transaction-counter {
+          margin-bottom: 15px;
+          color: #777;
+          font-size: 14px;
+        }
+        
+        /* Transaction Form */
+        .transaction-form-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        
+        .transaction-form {
+          background: white;
+          padding: 25px;
+          border-radius: 10px;
+          width: 90%;
+          max-width: 500px;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+        
+        .transaction-form h3 {
+          margin-top: 0;
+        }
+        
+        .form-row {
+          display: flex;
+          gap: 15px;
+          margin-bottom: 15px;
+        }
+        
+        .form-group {
+          flex: 1;
+          margin-bottom: 15px;
+        }
+        
+        .form-group label {
+          display: block;
+          margin-bottom: 5px;
+          font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+          width: 100%;
+          padding: 8px 12px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          box-sizing: border-box;
+        }
+        
+        .form-group textarea {
+          min-height: 80px;
+          resize: vertical;
+        }
+        
+        .form-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          margin-top: 20px;
+        }
+        
+        /* Transactions List */
+        .transactions-list {
+          max-height: 500px;
+          overflow-y: auto;
+        }
+        
+        .transaction-item {
+          display: flex;
+          align-items: center;
+          padding: 15px;
+          border-bottom: 1px solid #eee;
+          position: relative;
+        }
+        
+        .transaction-item.income {
+          background-color: rgba(40, 167, 69, 0.05);
+        }
+        
+        .transaction-item.expense {
+          background-color: rgba(220, 53, 69, 0.05);
+        }
+        
+        .transaction-icon {
+          font-size: 24px;
+          margin-right: 15px;
+        }
+        
+        .transaction-details {
+          flex: 1;
+        }
+        
+        .transaction-category {
+          font-weight: 500;
+          margin-bottom: 5px;
+        }
+        
+        .transaction-description {
+          color: #666;
+          font-size: 14px;
+          margin-bottom: 5px;
+        }
+        
+        .transaction-date {
+          color: #888;
+          font-size: 12px;
+        }
+        
+        .transaction-amount {
+          font-weight: bold;
+          margin: 0 15px;
+        }
+        
+        .transaction-item.income .transaction-amount {
+          color: #28a745;
+        }
+        
+        .transaction-item.expense .transaction-amount {
+          color: #dc3545;
+        }
+        
+        .transaction-actions {
+          display: flex;
+          gap: 10px;
+        }
+        
+        .icon-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 16px;
+          padding: 5px;
+        }
+        
+        .delete-confirm {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(255, 255, 255, 0.95);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          padding: 20px;
+          text-align: center;
+          z-index: 10;
+        }
+        
+        .delete-confirm p {
+          margin: 0 0 15px 0;
+        }
+        
+        .delete-confirm div {
+          display: flex;
+          gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+          .financial-overview {
+            grid-template-columns: 1fr 1fr;
+          }
+          
+          .charts-section {
+            grid-template-columns: 1fr;
+          }
+          
+          .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+          }
+          
+          .form-row {
+            flex-direction: column;
+            gap: 0;
+          }
+        }

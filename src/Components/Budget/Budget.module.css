@@ -1,0 +1,523 @@
+/* --- General Styles and Layout --- */
+.budgetContainer {
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: #333;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 15px;
+}
+
+.title {
+  color: #1D74F4;
+  font-size: 2.5em;
+  margin: 0;
+  font-weight: 600;
+}
+
+.loading, .errorMessage, .emptyState {
+  padding: 20px;
+  text-align: center;
+  font-size: 1.2em;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.loading {
+  background-color: #f0f4ff;
+  color: #1D74F4;
+}
+
+.errorMessage {
+  background-color: #ffe8e8;
+  color: #E04F2F;
+  border: 1px solid #ffcccc;
+}
+
+.emptyState {
+  padding: 40px 20px;
+  text-align: center;
+  color: #777;
+  font-style: italic;
+  background-color: #f9f9f9;
+}
+
+/* --- Buttons --- */
+.btnPrimary, .btnSecondary, .btnDanger, .addTransactionBtn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1em;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.addTransactionBtn {
+  background-color: #1D74F4;
+  color: white;
+}
+
+.addTransactionBtn:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.btnPrimary {
+  background-color: #55B869;
+  color: white;
+}
+
+.btnPrimary:hover {
+  background-color: #449154;
+}
+
+.btnSecondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btnSecondary:hover {
+  background-color: #5a6268;
+}
+
+.btnDanger {
+  background-color: #E04F2F;
+  color: white;
+}
+
+.btnDanger:hover {
+  background-color: #c9302c;
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 8px;
+  transition: transform 0.2s ease;
+}
+
+.iconBtn:hover {
+  transform: scale(1.1);
+}
+
+/* --- Main Content Layout --- */
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* --- Financial Overview Cards --- */
+.financialOverview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.metricCard {
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.metricCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.metricCard h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.2em;
+  color: #555;
+  font-weight: 500;
+}
+
+.metricCard .amount {
+  font-size: 2.2em;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.metricCard .amount.negative {
+  color: #E04F2F;
+}
+
+.metricCard.income {
+  background: linear-gradient(135deg, #e6f7ee, #c8eedb);
+  border-left: 5px solid #55B869;
+}
+
+.metricCard.expense {
+  background: linear-gradient(135deg, #ffe6e6, #ffcece);
+  border-left: 5px solid #E04F2F;
+}
+
+.metricCard.balance {
+  background: linear-gradient(135deg, #e6f0ff, #cce0ff);
+  border-left: 5px solid #1D74F4;
+}
+
+.metricCard.savings {
+  background: linear-gradient(135deg, #fff9e6, #fff2cc);
+  border-left: 5px solid #E6A50E;
+}
+
+.metricCard .amount.excellent {
+  color: #55B869;
+}
+
+.metricCard .amount.good {
+  color: #E6A50E;
+}
+
+.metricCard .amount.poor {
+  color: #E04F2F;
+}
+
+.metricCard .trend {
+  font-size: 0.9em;
+  color: #777;
+}
+
+/* --- Charts Section --- */
+.chartsSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.chartContainer {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.chartContainer.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.chartContainer h3 {
+  margin-top: 0;
+  color: #444;
+}
+
+/* --- Transaction Section --- */
+.transactionSection {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.transactionsTitle {
+  margin: 0;
+  color: #1D74F4;
+  font-size: 1.8em;
+}
+
+.controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.filterButtons {
+  display: flex;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.filterButtons button {
+  padding: 10px 20px;
+  border: none;
+  background: #f8f9fa;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.filterButtons button.active {
+  background: #1D74F4;
+  color: white;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filterButtons button:not(.active):hover {
+  background-color: #e9ecef;
+}
+
+.transactionCounter {
+  margin-bottom: 20px;
+  color: #777;
+  font-size: 1em;
+}
+
+/* --- Transaction Form --- */
+.formOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.transactionForm {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 550px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.transactionForm h3 {
+  margin-top: 0;
+  color: #444;
+  font-size: 1.5em;
+  margin-bottom: 25px;
+}
+
+.formRow {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.formGroup {
+  flex: 1;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 1em;
+  transition: border-color 0.2s;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: #1D74F4;
+  box-shadow: 0 0 0 3px rgba(29, 116, 244, 0.1);
+}
+
+.formGroup textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+/* --- Transactions List --- */
+.transactionsList {
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 10px; /* For scrollbar spacing */
+}
+
+.transactionItem {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  position: relative;
+  transition: background-color 0.2s ease;
+  border-radius: 8px;
+}
+
+.transactionItem:hover {
+  background-color: #f8f9fa;
+}
+
+.transactionItem.income {
+  background-color: #f4fff7;
+}
+
+.transactionItem.expense {
+  background-color: #fff4f4;
+}
+
+.transactionIcon {
+  font-size: 1.8em;
+  margin-right: 20px;
+}
+
+.transactionDetails {
+  flex: 1;
+}
+
+.transactionCategory {
+  font-weight: 600;
+  font-size: 1.1em;
+  margin-bottom: 4px;
+}
+
+.transactionDescription {
+  color: #666;
+  font-size: 0.9em;
+  margin-bottom: 4px;
+}
+
+.transactionDate {
+  color: #888;
+  font-size: 0.8em;
+}
+
+.transactionAmount {
+  font-weight: bold;
+  font-size: 1.2em;
+  margin: 0 20px;
+}
+
+.transactionItem.income .transactionAmount {
+  color: #55B869;
+}
+
+.transactionItem.expense .transactionAmount {
+  color: #E04F2F;
+}
+
+.transactionActions {
+  display: flex;
+  gap: 10px;
+}
+
+/* --- Delete Confirmation --- */
+.deleteConfirm {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+  z-index: 10;
+  border-radius: 8px;
+}
+
+.deleteConfirm p {
+  margin: 0 0 15px 0;
+  font-size: 1.1em;
+  font-weight: 500;
+}
+
+.deleteConfirm div {
+  display: flex;
+  gap: 10px;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 992px) {
+  .chartsSection {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .budgetContainer {
+    padding: 15px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .title {
+    font-size: 2em;
+  }
+  
+  .financialOverview {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .transactionsTitle {
+    font-size: 1.5em;
+  }
+
+  .formRow {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .financialOverview {
+    grid-template-columns: 1fr;
+  }
+  
+  .transactionItem {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .transactionActions {
+    margin-left: auto;
+  }
+  
+  .transactionAmount {
+    width: 100%;
+    text-align: right;
+  }
+}
