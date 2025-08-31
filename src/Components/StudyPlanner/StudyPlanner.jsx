@@ -3,9 +3,14 @@ import axios from 'axios';
 import { 
   FaPlus, FaCheck, FaExclamationTriangle, FaCalendarAlt, 
   FaClock, FaBook, FaTrash, FaTasks, FaTimes, FaFilter,
-  FaListUl, FaRunning, FaCheckCircle, FaSync
+  FaListUl, FaRunning, FaCheckCircle, FaSync, FaChartBar,
+  FaUserGraduate, FaFire, FaTrophy, FaRegSmile, FaBars, FaHome
 } from 'react-icons/fa';
 import { MdSubject, MdNotes } from 'react-icons/md';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area
+} from 'recharts';
 import Confetti from 'react-confetti';
 
 // Sound effects
@@ -178,6 +183,587 @@ const Modal = ({ isOpen, onClose, children }) => {
   );
 };
 
+// Student Activity Chart Component
+const StudentActivityChart = ({ tasks }) => {
+  // Calculate activity data for charts
+  const calculateActivityData = () => {
+    // Group tasks by subject
+    const subjectData = tasks.reduce((acc, task) => {
+      if (!acc[task.subject]) {
+        acc[task.subject] = { completed: 0, pending: 0, total: 0 };
+      }
+      if (task.completed) {
+        acc[task.subject].completed++;
+      } else {
+        acc[task.subject].pending++;
+      }
+      acc[task.subject].total++;
+      return acc;
+    }, {});
+
+    // Convert to array for charts
+    const subjectChartData = Object.keys(subjectData).map(subject => ({
+      subject,
+      completed: subjectData[subject].completed,
+      pending: subjectData[subject].pending,
+      total: subjectData[subject].total
+    }));
+
+    // Weekly activity data (last 7 days)
+    const last7Days = [...Array(7)].map((_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    }).reverse();
+
+    const weeklyData = last7Days.map(day => ({
+      day,
+      tasks: Math.floor(Math.random() * 6) // Random data for demo
+    }));
+
+    // Priority distribution
+    const priorityData = [
+      { name: 'High', value: tasks.filter(t => t.priority === 'high').length },
+      { name: 'Medium', value: tasks.filter(t => t.priority === 'medium').length },
+      { name: 'Low', value: tasks.filter(t => t.priority === 'low').length }
+    ];
+
+    // Completion rate
+    const completedTasks = tasks.filter(t => t.completed).length;
+    const completionRate = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
+
+    return { subjectChartData, weeklyData, priorityData, completionRate };
+  };
+
+  const { subjectChartData, weeklyData, priorityData, completionRate } = calculateActivityData();
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+        <FaChartBar className="text-indigo-600" /> Student Activity Dashboard
+      </h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Completion Rate Card */}
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Completion Rate</h3>
+            <FaTrophy className="text-2xl" />
+          </div>
+          <div className="text-3xl font-bold mb-2">{completionRate}%</div>
+          <p className="text-indigo-100">
+            {completionRate >= 80 ? 'Excellent work! Keep it up!' :
+             completionRate >= 50 ? 'Good progress! Almost there!' :
+             'Keep going! You can do it!'}
+          </p>
+        </div>
+
+        {/* Stats Overview Card */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Study Stats</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-indigo-600">{tasks.length}</div>
+              <div className="text-sm text-gray-600">Total Tasks</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {tasks.filter(t => t.completed).length}
+              </div>
+              <div className="text-sm text-gray-600">Completed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">
+                {tasks.filter(t => !t.completed).length}
+              </div>
+              <div className="text-sm text-gray-600">Pending</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">
+                {tasks.filter(t => new Date(t.deadline) < new Date() && !t.completed).length}
+              </div>
+              <div className="text-sm text-gray-600">Overdue</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Subjects Bar Chart */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <FaBook className="text-indigo-500" /> Tasks by Subject
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={subjectChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="subject" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="completed" name="Completed" fill="#10B981" />
+                <Bar dataKey="pending" name="Pending" fill="#F59E0B" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Priority Pie Chart */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <FaExclamationTriangle className="text-indigo-500" /> Task Priority Distribution
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={priorityData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {priorityData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Weekly Activity Chart */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <FaFire className="text-indigo-500" /> Weekly Activity Trend
+        </h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={weeklyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="tasks" stroke="#6366F1" fill="#818CF8" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Navigation Component
+const Navigation = ({ activeSection, setActiveSection }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: <FaHome className="mr-2" /> },
+    { id: 'analytics', label: 'Analytics', icon: <FaChartBar className="mr-2" /> },
+    { id: 'tasks', label: 'All Tasks', icon: <FaListUl className="mr-2" /> }
+  ];
+
+  return (
+    <nav className="bg-white shadow-md mb-6 rounded-lg">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <span className="flex items-center text-xl font-semibold text-gray-800">
+              <FaBook className="text-indigo-600 mr-2" /> Study Planner
+            </span>
+          </div>
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-4">
+            {navItems.map(item => (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
+                  activeSection === item.id
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
+          </div>
+          
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none"
+            >
+              <FaBars className="block h-6 w-6" />
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            {navItems.map(item => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveSection(item.id);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2 rounded-md text-base font-medium flex items-center ${
+                  activeSection === item.id
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+};
+
+// Dashboard Section Component
+const DashboardSection = ({ 
+  tasks, loading, filter, setFilter, showModal, setShowModal, 
+  toggleCompletion,  getPriorityBadge, isOverdue, 
+  fetchTasks, completedTasksCount, totalTasksCount, progressPercentage,
+  formData, handleInputChange, addTask 
+}) => {
+  // Get tasks due this week (next 7 days)
+  const getThisWeekTasks = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+    nextWeek.setHours(23, 59, 59, 999);
+    
+    return tasks.filter(task => {
+      const taskDate = new Date(task.deadline);
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate >= today && taskDate <= nextWeek && !task.completed;
+    }).sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+  };
+
+  // Get pending tasks
+  const getPendingTasks = () => {
+    return tasks.filter(task => !task.completed)
+      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+  };
+
+  // Get completed tasks
+  const getCompletedTasks = () => {
+    return tasks.filter(task => task.completed)
+      .sort((a, b) => new Date(b.deadline) - new Date(a.deadline));
+  };
+
+  // Billboard data
+  const upcomingTasks = getThisWeekTasks();
+  const pendingTasks = getPendingTasks();
+  const completedTasksList = getCompletedTasks();
+
+  return (
+    <>
+      {/* Progress Overview Card */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+            <FaTasks className="text-indigo-600" /> Progress Overview
+          </h2>
+          <button
+            onClick={fetchTasks}
+            className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 transition-colors"
+            title="Refresh tasks"
+          >
+            <FaSync className={loading ? 'animate-spin' : ''} />
+            <span>Refresh</span>
+          </button>
+        </div>
+        
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-gray-600">Completed: <span className="font-semibold text-green-600">{completedTasksCount}/{totalTasksCount}</span></p>
+            <p className="text-gray-600">Pending: <span className="font-semibold text-orange-600">{totalTasksCount - completedTasksCount}</span></p>
+          </div>
+          <div className="text-2xl font-bold text-indigo-600">{progressPercentage}%</div>
+        </div>
+        
+        <div className="w-full bg-gray-200 rounded-full h-4">
+          <div 
+            className="bg-indigo-600 h-4 rounded-full transition-all duration-500" 
+            style={{ width: `${progressPercentage}%` }}
+          ></div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-between mb-6">
+        <button 
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+        >
+          <FaPlus /> Add Study Task
+        </button>
+        
+        <div className="flex items-center gap-2 bg-white rounded-lg shadow-md px-4">
+          <FaFilter className="text-indigo-600" />
+          <select 
+            value={filter} 
+            onChange={(e) => setFilter(e.target.value)}
+            className="py-2 pl-2 pr-8 border-0 focus:ring-0 focus:outline-none"
+          >
+            <option value="all">All Tasks</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Billboard Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <BillboardCard 
+          title="Upcoming Tasks" 
+          count={upcomingTasks.length}
+          icon={<FaCalendarAlt className="text-blue-500 text-xl" />}
+          color="text-blue-500"
+          tasks={upcomingTasks.slice(0, 5)}
+          toggleCompletion={toggleCompletion}
+          getPriorityBadge={getPriorityBadge}
+          isOverdue={isOverdue}
+        />
+        
+        <BillboardCard 
+          title="Pending Tasks" 
+          count={pendingTasks.length}
+          icon={<FaRunning className="text-orange-500 text-xl" />}
+          color="text-orange-500"
+          tasks={pendingTasks.slice(0, 5)}
+          toggleCompletion={toggleCompletion}
+          getPriorityBadge={getPriorityBadge}
+          isOverdue={isOverdue}
+        />
+        
+        <BillboardCard 
+          title="Completed Tasks" 
+          count={completedTasksList.length}
+          icon={<FaCheckCircle className="text-green-500 text-xl" />}
+          color="text-green-500"
+          tasks={completedTasksList.slice(0, 5)}
+          toggleCompletion={toggleCompletion}
+          getPriorityBadge={getPriorityBadge}
+          isOverdue={isOverdue}
+        />
+      </div>
+
+      {/* Modal for Add Task Form */}
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+        <form onSubmit={addTask} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                <MdSubject className="text-indigo-600" /> Subject *
+              </label>
+              <input
+                type="text"
+                name="subject"
+                value={formData.subject}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="e.g., Mathematics"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Topic *
+              </label>
+              <input
+                type="text"
+                name="topic"
+                value={formData.topic}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="e.g., Calculus"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Priority Level
+              </label>
+              <select
+                name="priority"
+                value={formData.priority}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                <FaCalendarAlt className="text-indigo-600" /> Deadline *
+              </label>
+              <input
+                type="date"
+                name="deadline"
+                value={formData.deadline}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Time Slot *
+              </label>
+              <input
+                type="time"
+                name="timeSlot"
+                value={formData.timeSlot}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                <FaClock className="text-indigo-600" /> Duration (minutes) *
+              </label>
+              <input
+                type="number"
+                name="duration"
+                value={formData.duration}
+                onChange={handleInputChange}
+                min="1"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="e.g., 60"
+                required
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+              <MdNotes className="text-indigo-600" /> Notes
+            </label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleInputChange}
+              rows="3"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Additional details about this task..."
+            ></textarea>
+          </div>
+          
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowModal(false)}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-md transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-md transition-colors"
+              disabled={loading}
+            >
+              {loading ? 'Adding...' : 'Add Task'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </>
+  );
+};
+
+// Analytics Section Component
+const AnalyticsSection = ({ tasks }) => (
+  <StudentActivityChart tasks={tasks} />
+);
+
+// Tasks Section Component
+const TasksSection = ({ 
+  tasks, loading, filter, toggleCompletion, deleteTask, 
+  getPriorityBadge, isOverdue 
+}) => {
+  // Filter tasks based on selected filter
+  const filteredTasks = tasks.filter(task => {
+    if (filter === 'completed') return task.completed;
+    if (filter === 'pending') return !task.completed;
+    return true; // 'all'
+  });
+
+  // Sort all tasks by deadline
+  const sortedTasks = [...filteredTasks].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <FaListUl className="text-indigo-600" />
+          {filter === 'all' ? 'All Study Tasks' : 
+            filter === 'pending' ? 'Pending Tasks' : 'Completed Tasks'}
+        </h2>
+        <span className="text-sm text-gray-500">
+          {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
+        </span>
+      </div>
+      
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <FaSync className="animate-spin text-indigo-600 text-2xl" />
+        </div>
+      ) : sortedTasks.length === 0 ? (
+        <p className="text-gray-500 text-center py-4">
+          {filter === 'all' ? 'No tasks added yet. Start by adding a study task!' :
+            filter === 'pending' ? 'No pending tasks. Great job!' :
+            'No completed tasks yet. Keep going!'}
+        </p>
+      ) : (
+        <div className="space-y-4">
+          {sortedTasks.map(task => (
+            <TaskCard 
+              key={task._id} 
+              task={task} 
+              toggleCompletion={toggleCompletion} 
+              deleteTask={deleteTask} 
+              getPriorityBadge={getPriorityBadge} 
+              isOverdue={isOverdue} 
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Main Component
 const StudyPlanner = () => {
   // State for tasks and form data
@@ -187,6 +773,7 @@ const StudyPlanner = () => {
   const [filter, setFilter] = useState('all'); // 'all', 'pending', 'completed'
   const [showConfetti, setShowConfetti] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [activeSection, setActiveSection] = useState('dashboard'); // 'dashboard', 'analytics', 'tasks'
   const [formData, setFormData] = useState({
     subject: '',
     topic: '',
@@ -336,47 +923,10 @@ const StudyPlanner = () => {
     }
   };
 
-  // Filter tasks based on selected filter
-  const filteredTasks = tasks.filter(task => {
-    if (filter === 'completed') return task.completed;
-    if (filter === 'pending') return !task.completed;
-    return true; // 'all'
-  });
-
   // Calculate progress statistics
   const completedTasksCount = tasks.filter(task => task.completed).length;
   const totalTasksCount = tasks.length;
   const progressPercentage = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
-
-  // Get tasks due this week (next 7 days)
-  const getThisWeekTasks = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const nextWeek = new Date();
-    nextWeek.setDate(today.getDate() + 7);
-    nextWeek.setHours(23, 59, 59, 999);
-    
-    return tasks.filter(task => {
-      const taskDate = new Date(task.deadline);
-      taskDate.setHours(0, 0, 0, 0);
-      return taskDate >= today && taskDate <= nextWeek && !task.completed;
-    }).sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-  };
-
-  // Get pending tasks
-  const getPendingTasks = () => {
-    return tasks.filter(task => !task.completed)
-      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-  };
-
-  // Get completed tasks
-  const getCompletedTasks = () => {
-    return tasks.filter(task => task.completed)
-      .sort((a, b) => new Date(b.deadline) - new Date(a.deadline));
-  };
-
-  // Sort all tasks by deadline
-  const sortedTasks = [...filteredTasks].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 
   // Priority badge styling
   const getPriorityBadge = (priority) => {
@@ -402,11 +952,6 @@ const StudyPlanner = () => {
     return taskDate < today;
   };
 
-  // Billboard data
-  const upcomingTasks = getThisWeekTasks();
-  const pendingTasks = getPendingTasks();
-  const completedTasksList = getCompletedTasks();
-
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -414,6 +959,50 @@ const StudyPlanner = () => {
       ...formData,
       [name]: value
     });
+  };
+
+  // Render active section
+  const renderActiveSection = () => {
+    switch (activeSection) {
+      case 'dashboard':
+        return (
+          <DashboardSection 
+            tasks={tasks}
+            loading={loading}
+            filter={filter}
+            setFilter={setFilter}
+            showModal={showModal}
+            setShowModal={setShowModal}
+            toggleCompletion={toggleCompletion}
+            deleteTask={deleteTask}
+            getPriorityBadge={getPriorityBadge}
+            isOverdue={isOverdue}
+            fetchTasks={fetchTasks}
+            completedTasksCount={completedTasksCount}
+            totalTasksCount={totalTasksCount}
+            progressPercentage={progressPercentage}
+            formData={formData}
+            handleInputChange={handleInputChange}
+            addTask={addTask}
+          />
+        );
+      case 'analytics':
+        return <AnalyticsSection tasks={tasks} />;
+      case 'tasks':
+        return (
+          <TasksSection 
+            tasks={tasks}
+            loading={loading}
+            filter={filter}
+            toggleCompletion={toggleCompletion}
+            deleteTask={deleteTask}
+            getPriorityBadge={getPriorityBadge}
+            isOverdue={isOverdue}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -429,271 +1018,11 @@ const StudyPlanner = () => {
       )}
       
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-2">
-            <FaBook className="text-indigo-600" /> Study Planner
-          </h1>
-          <p className="text-gray-600 mt-2">Organize your study tasks efficiently</p>
-        </div>
-
-        {/* Progress Overview Card */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-              <FaTasks className="text-indigo-600" /> Progress Overview
-            </h2>
-            <button
-              onClick={fetchTasks}
-              className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 transition-colors"
-              title="Refresh tasks"
-            >
-              <FaSync className={loading ? 'animate-spin' : ''} />
-              <span>Refresh</span>
-            </button>
-          </div>
-          
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-gray-600">Completed: <span className="font-semibold text-green-600">{completedTasksCount}/{totalTasksCount}</span></p>
-              <p className="text-gray-600">Pending: <span className="font-semibold text-orange-600">{totalTasksCount - completedTasksCount}</span></p>
-            </div>
-            <div className="text-2xl font-bold text-indigo-600">{progressPercentage}%</div>
-          </div>
-          
-          <div className="w-full bg-gray-200 rounded-full h-4">
-            <div 
-              className="bg-indigo-600 h-4 rounded-full transition-all duration-500" 
-              style={{ width: `${progressPercentage}%` }}
-            ></div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex justify-between mb-6">
-          <button 
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-          >
-            <FaPlus /> Add Study Task
-          </button>
-          
-          <div className="flex items-center gap-2 bg-white rounded-lg shadow-md px-4">
-            <FaFilter className="text-indigo-600" />
-            <select 
-              value={filter} 
-              onChange={(e) => setFilter(e.target.value)}
-              className="py-2 pl-2 pr-8 border-0 focus:ring-0 focus:outline-none"
-            >
-              <option value="all">All Tasks</option>
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Billboard Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <BillboardCard 
-            title="Upcoming Tasks" 
-            count={upcomingTasks.length}
-            icon={<FaCalendarAlt className="text-blue-500 text-xl" />}
-            color="text-blue-500"
-            tasks={upcomingTasks.slice(0, 5)}
-            toggleCompletion={toggleCompletion}
-            getPriorityBadge={getPriorityBadge}
-            isOverdue={isOverdue}
-          />
-          
-          <BillboardCard 
-            title="Pending Tasks" 
-            count={pendingTasks.length}
-            icon={<FaRunning className="text-orange-500 text-xl" />}
-            color="text-orange-500"
-            tasks={pendingTasks.slice(0, 5)}
-            toggleCompletion={toggleCompletion}
-            getPriorityBadge={getPriorityBadge}
-            isOverdue={isOverdue}
-          />
-          
-          <BillboardCard 
-            title="Completed Tasks" 
-            count={completedTasksList.length}
-            icon={<FaCheckCircle className="text-green-500 text-xl" />}
-            color="text-green-500"
-            tasks={completedTasksList.slice(0, 5)}
-            toggleCompletion={toggleCompletion}
-            getPriorityBadge={getPriorityBadge}
-            isOverdue={isOverdue}
-          />
-        </div>
-
-        {/* Modal for Add Task Form */}
-        <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-          <form onSubmit={addTask} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <MdSubject className="text-indigo-600" /> Subject *
-                </label>
-                <input
-                  type="text"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="e.g., Mathematics"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Topic *
-                </label>
-                <input
-                  type="text"
-                  name="topic"
-                  value={formData.topic}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="e.g., Calculus"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Priority Level
-                </label>
-                <select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <FaCalendarAlt className="text-indigo-600" /> Deadline *
-                </label>
-                <input
-                  type="date"
-                  name="deadline"
-                  value={formData.deadline}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Time Slot *
-                </label>
-                <input
-                  type="time"
-                  name="timeSlot"
-                  value={formData.timeSlot}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <FaClock className="text-indigo-600" /> Duration (minutes) *
-                </label>
-                <input
-                  type="number"
-                  name="duration"
-                  value={formData.duration}
-                  onChange={handleInputChange}
-                  min="1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="e.g., 60"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                <MdNotes className="text-indigo-600" /> Notes
-              </label>
-              <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleInputChange}
-                rows="3"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Additional details about this task..."
-              ></textarea>
-            </div>
-            
-            <div className="flex justify-end gap-3 pt-4">
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-md transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-md transition-colors"
-                disabled={loading}
-              >
-                {loading ? 'Adding...' : 'Add Task'}
-              </button>
-            </div>
-          </form>
-        </Modal>
-
-        {/* All Study Tasks Section */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-              <FaListUl className="text-indigo-600" />
-              {filter === 'all' ? 'All Study Tasks' : 
-               filter === 'pending' ? 'Pending Tasks' : 'Completed Tasks'}
-            </h2>
-            <span className="text-sm text-gray-500">
-              {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
-            </span>
-          </div>
-          
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <FaSync className="animate-spin text-indigo-600 text-2xl" />
-            </div>
-          ) : sortedTasks.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">
-              {filter === 'all' ? 'No tasks added yet. Start by adding a study task!' :
-               filter === 'pending' ? 'No pending tasks. Great job!' :
-               'No completed tasks yet. Keep going!'}
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {sortedTasks.map(task => (
-                <TaskCard 
-                  key={task._id} 
-                  task={task} 
-                  toggleCompletion={toggleCompletion} 
-                  deleteTask={deleteTask} 
-                  getPriorityBadge={getPriorityBadge} 
-                  isOverdue={isOverdue} 
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Navigation */}
+        <Navigation activeSection={activeSection} setActiveSection={setActiveSection} />
+        
+        {/* Main Content */}
+        {renderActiveSection()}
       </div>
     </div>
   );
