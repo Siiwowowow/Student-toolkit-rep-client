@@ -1,17 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import './Budget.css';
+import React, { useState, useEffect, useContext } from "react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
+import { AuthContext } from "../../Context/AuthContext"; // ✅ make sure path is correct
+import "./Budget.css";
+
+const API_BASE = "http://localhost:3000"; // change for production
+
 const Budget = () => {
-  // State for transactions, form data, filters, etc.
+  const { user } = useContext(AuthContext); // ✅ get logged-in user
+  const userEmail = user?.email;
+
   const [transactions, setTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState("all");
   const [formData, setFormData] = useState({
-    type: 'expense',
-    category: '',
-    amount: '',
-    description: '',
-    date: new Date().toISOString().split('T')[0]
+    type: "expense",
+    category: "",
+    amount: "",
+    description: "",
+    date: new Date().toISOString().split("T")[0],
   });
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -19,291 +39,250 @@ const Budget = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // API base URL
-  const API_BASE = 'http://localhost:3000';
-
-  // Income and expense categories with icons
+  // ✅ Categories
   const incomeCategories = [
-    { value: 'salary', label: 'Salary', icon: '💼' },
-    { value: 'scholarship', label: 'Scholarship', icon: '🎓' },
-    { value: 'part-time', label: 'Part-time Job', icon: '⏱️' },
-    { value: 'allowance', label: 'Allowance', icon: '👨‍👩‍👧‍👦' },
-    { value: 'freelancing', label: 'Freelancing', icon: '💻' },
-    { value: 'investment', label: 'Investment', icon: '📈' },
-    { value: 'gift', label: 'Gift', icon: '🎁' },
-    { value: 'other-income', label: 'Other Income', icon: '💰' }
+    { value: "salary", label: "Salary", icon: "💼" },
+    { value: "scholarship", label: "Scholarship", icon: "🎓" },
+    { value: "part-time", label: "Part-time Job", icon: "⏱️" },
+    { value: "allowance", label: "Allowance", icon: "👨‍👩‍👧‍👦" },
+    { value: "freelancing", label: "Freelancing", icon: "💻" },
+    { value: "investment", label: "Investment", icon: "📈" },
+    { value: "gift", label: "Gift", icon: "🎁" },
+    { value: "other-income", label: "Other Income", icon: "💰" },
   ];
 
   const expenseCategories = [
-    { value: 'food', label: 'Food', icon: '🍔' },
-    { value: 'transport', label: 'Transport', icon: '🚌' },
-    { value: 'books', label: 'Books', icon: '📚' },
-    { value: 'entertainment', label: 'Entertainment', icon: '🎬' },
-    { value: 'clothes', label: 'Clothes', icon: '👕' },
-    { value: 'health', label: 'Health', icon: '🏥' },
-    { value: 'utilities', label: 'Utilities', icon: '💡' },
-    { value: 'rent', label: 'Rent', icon: '🏠' },
-    { value: 'supplies', label: 'Supplies', icon: '🛒' },
-    { value: 'other-expense', label: 'Other Expense', icon: '💸' }
+    { value: "food", label: "Food", icon: "🍔" },
+    { value: "transport", label: "Transport", icon: "🚌" },
+    { value: "books", label: "Books", icon: "📚" },
+    { value: "entertainment", label: "Entertainment", icon: "🎬" },
+    { value: "clothes", label: "Clothes", icon: "👕" },
+    { value: "health", label: "Health", icon: "🏥" },
+    { value: "utilities", label: "Utilities", icon: "💡" },
+    { value: "rent", label: "Rent", icon: "🏠" },
+    { value: "supplies", label: "Supplies", icon: "🛒" },
+    { value: "other-expense", label: "Other Expense", icon: "💸" },
   ];
 
-  // Fetch transactions from backend
+  // ✅ Fetch transactions (email based)
   const fetchTransactions = async () => {
+    if (!userEmail) return;
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/budget`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
-      }
+      const response = await fetch(`${API_BASE}/budget?email=${userEmail}`);
+      if (!response.ok) throw new Error("Failed to fetch transactions");
       const data = await response.json();
       setTransactions(data);
       setError(null);
     } catch (err) {
       setError(err.message);
-      console.error('Error fetching transactions:', err);
+      console.error("Error fetching transactions:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Add new transaction to backend
+  // ✅ Add
   const addTransaction = async (transaction) => {
     try {
       const response = await fetch(`${API_BASE}/budget`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(transaction),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...transaction, email: userEmail }),
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to add transaction');
-      }
-      
-      await fetchTransactions(); // Refresh the list
+      if (!response.ok) throw new Error("Failed to add transaction");
+      await fetchTransactions();
       return true;
     } catch (err) {
       setError(err.message);
-      console.error('Error adding transaction:', err);
       return false;
     }
   };
 
-  // Update transaction in backend
+  // ✅ Update
   const updateTransaction = async (id, transaction) => {
     try {
       const response = await fetch(`${API_BASE}/budget/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(transaction),
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...transaction, email: userEmail }),
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update transaction');
-      }
-      
-      await fetchTransactions(); // Refresh the list
+      if (!response.ok) throw new Error("Failed to update transaction");
+      await fetchTransactions();
       return true;
     } catch (err) {
       setError(err.message);
-      console.error('Error updating transaction:', err);
       return false;
     }
   };
 
-  // Delete transaction from backend
+  // ✅ Delete
   const deleteTransaction = async (id) => {
     try {
-      const response = await fetch(`${API_BASE}/budget/${id}`, {
-        method: 'DELETE',
+      const response = await fetch(`${API_BASE}/budget/${id}?email=${userEmail}`, {
+        method: "DELETE",
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete transaction');
-      }
-      
-      await fetchTransactions(); // Refresh the list
+      if (!response.ok) throw new Error("Failed to delete transaction");
+      await fetchTransactions();
       return true;
     } catch (err) {
       setError(err.message);
-      console.error('Error deleting transaction:', err);
       return false;
     }
   };
 
-  // Load data from backend on component mount
+  // ✅ Effects
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [userEmail]);
 
-  // Filter transactions based on current filter
   useEffect(() => {
-    filterTransactions();
-  }, [transactions, filter]);
-
-  const filterTransactions = () => {
-    if (filter === 'all') {
+    if (filter === "all") {
       setFilteredTransactions([...transactions].reverse());
     } else {
-      setFilteredTransactions(transactions.filter(t => t.type === filter).reverse());
+      setFilteredTransactions(
+        transactions.filter((t) => t.type === filter).reverse()
+      );
     }
-  };
+  }, [transactions, filter]);
 
-  // Calculate financial metrics
+  // ✅ Metrics
   const totalIncome = transactions
-    .filter(t => t.type === 'income')
+    .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + parseFloat(t.amount), 0);
 
   const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
+    .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + parseFloat(t.amount), 0);
 
   const netBalance = totalIncome - totalExpenses;
-  const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
+  const savingsRate =
+    totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
 
-  // Prepare data for charts
-  const expenseData = expenseCategories.map(category => {
-    const total = transactions
-      .filter(t => t.type === 'expense' && t.category === category.value)
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-    return { name: category.label, value: total, icon: category.icon };
-  }).filter(item => item.value > 0);
+  // ✅ Charts
+  const expenseData = expenseCategories
+    .map((category) => {
+      const total = transactions
+        .filter((t) => t.type === "expense" && t.category === category.value)
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      return { name: category.label, value: total, icon: category.icon };
+    })
+    .filter((item) => item.value > 0);
 
-  const incomeData = incomeCategories.map(category => {
-    const total = transactions
-      .filter(t => t.type === 'income' && t.category === category.value)
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-    return { name: category.label, value: total, icon: category.icon };
-  }).filter(item => item.value > 0);
+  const incomeData = incomeCategories
+    .map((category) => {
+      const total = transactions
+        .filter((t) => t.type === "income" && t.category === category.value)
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      return { name: category.label, value: total, icon: category.icon };
+    })
+    .filter((item) => item.value > 0);
 
-  // Generate monthly trend data (last 6 months)
   const monthlyData = [];
   const now = new Date();
   for (let i = 5; i >= 0; i--) {
     const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthName = month.toLocaleString('default', { month: 'short' });
+    const monthName = month.toLocaleString("default", { month: "short" });
     const year = month.getFullYear();
-    
+
     const monthIncome = transactions
-      .filter(t => t.type === 'income' && 
-        new Date(t.date).getMonth() === month.getMonth() &&
-        new Date(t.date).getFullYear() === year)
+      .filter(
+        (t) =>
+          t.type === "income" &&
+          new Date(t.date).getMonth() === month.getMonth() &&
+          new Date(t.date).getFullYear() === year
+      )
       .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-      
+
     const monthExpenses = transactions
-      .filter(t => t.type === 'expense' && 
-        new Date(t.date).getMonth() === month.getMonth() &&
-        new Date(t.date).getFullYear() === year)
+      .filter(
+        (t) =>
+          t.type === "expense" &&
+          new Date(t.date).getMonth() === month.getMonth() &&
+          new Date(t.date).getFullYear() === year
+      )
       .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-      
+
     monthlyData.push({
       name: `${monthName} ${year}`,
       income: monthIncome,
-      expenses: monthExpenses
+      expenses: monthExpenses,
     });
   }
 
-  // Handle form input changes
+  // ✅ Handlers
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation
     if (!formData.category || !formData.amount || parseFloat(formData.amount) <= 0) {
-      alert('Please fill all fields with valid values');
+      alert("Please fill all fields with valid values");
       return;
     }
-    
     if (formData.description.length > 100) {
-      alert('Description must be 100 characters or less');
+      alert("Description must be 100 characters or less");
       return;
     }
-    
+
     const transactionData = {
       ...formData,
-      amount: parseFloat(formData.amount).toFixed(2)
+      amount: parseFloat(formData.amount).toFixed(2),
     };
-    
+
     let success = false;
-    
     if (editingId) {
-      // Update existing transaction
       success = await updateTransaction(editingId, transactionData);
     } else {
-      // Add new transaction
       success = await addTransaction(transactionData);
     }
-    
+
     if (success) {
-      // Reset form
       setFormData({
-        type: 'expense',
-        category: '',
-        amount: '',
-        description: '',
-        date: new Date().toISOString().split('T')[0]
+        type: "expense",
+        category: "",
+        amount: "",
+        description: "",
+        date: new Date().toISOString().split("T")[0],
       });
       setEditingId(null);
       setShowForm(false);
     }
   };
 
-  // Edit a transaction
   const handleEdit = (transaction) => {
     setFormData({
       type: transaction.type,
       category: transaction.category,
       amount: transaction.amount,
       description: transaction.description,
-      date: transaction.date
+      date: transaction.date,
     });
     setEditingId(transaction._id);
     setShowForm(true);
   };
 
-  // Delete a transaction
   const handleDelete = async (id) => {
     const success = await deleteTransaction(id);
-    if (success) {
-      setDeleteConfirm(null);
-    }
+    if (success) setDeleteConfirm(null);
   };
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
+  const formatCurrency = (amount) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
+      amount
+    );
 
-  // Get category details
-  const getCategoryDetails = (type, value) => {
-    if (type === 'income') {
-      return incomeCategories.find(c => c.value === value) || { label: value, icon: '💰' };
-    } else {
-      return expenseCategories.find(c => c.value === value) || { label: value, icon: '💸' };
-    }
-  };
+  const getCategoryDetails = (type, value) =>
+    type === "income"
+      ? incomeCategories.find((c) => c.value === value) || { label: value, icon: "💰" }
+      : expenseCategories.find((c) => c.value === value) || { label: value, icon: "💸" };
 
-  // Colors for charts
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A4DE6C', '#D0ED57', '#8884D8', '#82CA9D'];
-  
-  if (loading) {
-    return <div className="loading">Loading budget data...</div>;
-  }
-  
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A4DE6C", "#D0ED57", "#8884D8", "#82CA9D"];
+
+  if (loading) return <div className="loading">Loading budget data...</div>;
+
   return (
     <div className="budget-container">
       <h2>Budget Management</h2>

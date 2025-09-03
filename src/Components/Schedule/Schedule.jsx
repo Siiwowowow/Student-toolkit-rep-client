@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
-
+import { AuthContext } from "../../Context/AuthContext"; // Your auth context
 const subjectColors = {
   Mathematics: { bg: "bg-blue-100", border: "border-blue-300", text: "text-blue-800", icon: "🧮" },
   Physics: { bg: "bg-red-100", border: "border-red-300", text: "text-red-800", icon: "⚛️" },
@@ -16,6 +16,7 @@ const subjectColors = {
 };
 
 const Schedule = () => {
+  const { user } = useContext(AuthContext); // Assuming user.email exists
   const [classes, setClasses] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [activeDay, setActiveDay] = useState("All");
@@ -35,11 +36,12 @@ const Schedule = () => {
   // Load from backend
   useEffect(() => {
     const fetchData = async () => {
+      if (!user?.email) return;
       try {
         setLoading(true);
-        const res = await axios.get(API_URL);
-        setClasses(res.data);
-        toast.success("Schedule loaded successfully!");
+        const res = await axios.get(`${API_URL}?email=${user.email}`);
+        if (res.data.success) setClasses(res.data.data);
+        
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load schedule. Please try again.");
@@ -48,7 +50,7 @@ const Schedule = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [user?.email]);
 
   // Add class
   const handleAddClass = async () => {
@@ -63,41 +65,37 @@ const Schedule = () => {
 
     const newClass = {
       ...formData,
+      email: user.email, // Attach email
       color: subjectColors[formData.subject] || { bg: "bg-gray-100", border: "border-gray-300", text: "text-gray-800", icon: "📝" },
     };
 
     try {
       const res = await axios.post(API_URL, newClass);
-      setClasses([...classes, { ...newClass, _id: res.data.insertedId }]);
-      setShowModal(false);
-      setFormData({ subject: "", instructor: "", day: "Monday", startTime: "", endTime: "", location: "" });
-      toast.success("Class added successfully!");
+      if (res.data.success) {
+        setClasses([...classes, { ...newClass, _id: res.data.data._id }]);
+        setShowModal(false);
+        setFormData({ subject: "", instructor: "", day: "Monday", startTime: "", endTime: "", location: "" });
+        toast.success("Class added successfully!");
+      }
     } catch (error) {
       console.error("Error adding class:", error);
       toast.error("Failed to add class. Please try again.");
     }
   };
 
+
   // Delete class
   const handleDelete = async (id) => {
-    const classToDelete = classes.find(c => c._id === id);
-    
     toast((t) => (
       <div className="flex flex-col">
         <p className="font-medium">Are you sure you want to delete this class?</p>
-        <p className="text-sm text-gray-600 mt-1">{classToDelete.subject} with {classToDelete.instructor}</p>
         <div className="flex justify-end space-x-2 mt-3">
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
-          >
-            Cancel
-          </button>
+          <button onClick={() => toast.dismiss(t.id)} className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
           <button
             onClick={async () => {
               toast.dismiss(t.id);
               try {
-                await axios.delete(`${API_URL}/${id}`);
+                await axios.delete(`${API_URL}/${id}?email=${user.email}`);
                 setClasses(classes.filter((c) => c._id !== id));
                 toast.success("Class deleted successfully!");
               } catch (error) {
@@ -111,10 +109,9 @@ const Schedule = () => {
           </button>
         </div>
       </div>
-    ), {
-      duration: 10000, // Longer duration for confirmation
-    });
+    ), { duration: 10000 });
   };
+
 
   // Filter classes based on active day and search term
   const filteredClasses = classes.filter((c) => {
@@ -423,31 +420,155 @@ const Schedule = () => {
       )}
 
       {/* Weekly Overview */}
-      <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
-        <h2 className="text-xl font-bold mb-6 text-gray-800">Weekly Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-          {classesByDay.map(({ day, classes }) => (
-            <div key={day} className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <h3 className="font-semibold text-center mb-3 p-2 bg-white rounded-lg text-indigo-700">{day}</h3>
-              <div className="space-y-2">
-                {classes.length > 0 ? (
-                  classes.map((c) => {
-                    const color = subjectColors[c.subject] || { bg: "bg-gray-100", text: "text-gray-800" };
-                    return (
-                      <div key={c._id} className={`p-2 rounded-lg ${color.bg} ${color.text} text-xs transition-colors hover:bg-opacity-80`}>
-                        <p className="font-semibold truncate">{c.subject}</p>
-                        <p>{c.startTime} - {c.endTime}</p>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-gray-400 text-center text-xs py-2">No classes</p>
-                )}
-              </div>
+      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+    <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+      <svg className="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      Weekly Overview
+    </h2>
+    <div className="flex items-center mt-2 md:mt-0">
+      <span className="text-sm text-gray-500 mr-2">Total hours:</span>
+      <span className="font-semibold text-indigo-600">{totalHours.toFixed(1)}h</span>
+    </div>
+  </div>
+  
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+    {classesByDay.map(({ day, classes }) => {
+      const dayHours = classes.reduce((acc, c) => {
+        const start = new Date(`1970-01-01T${c.startTime}`);
+        const end = new Date(`1970-01-01T${c.endTime}`);
+        return acc + (end - start) / (1000 * 60 * 60);
+      }, 0);
+      
+      const isToday = new Date().toLocaleString('en-us', { weekday: 'long' }) === day;
+      const [isExpanded, setIsExpanded] = useState(false);
+      
+      // Determine how many classes to show in collapsed view
+      const maxVisibleClasses = 2;
+      const visibleClasses = isExpanded ? classes : classes.slice(0, maxVisibleClasses);
+      const hasMoreClasses = classes.length > maxVisibleClasses;
+      
+      return (
+        <div 
+          key={day} 
+          className={`p-3 rounded-xl border transition-all ${isToday ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200 bg-gray-50'} ${
+            isExpanded ? 'row-span-2' : ''
+          }`}
+          style={{ 
+            gridRow: isExpanded ? 'span 2' : 'auto',
+            minHeight: isExpanded ? 'auto' : '200px' 
+          }}
+        >
+          <div className="flex justify-between items-center mb-3">
+            <h3 className={`font-semibold ${isToday ? 'text-indigo-700' : 'text-gray-700'}`}>
+              {day.substring(0, 3)}
+            </h3>
+            <div className="flex items-center">
+              <span className={`text-xs px-2 py-1 rounded-full ${isToday ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-200 text-gray-600'}`}>
+                {classes.length} class{classes.length !== 1 ? 'es' : ''}
+              </span>
+              {hasMoreClasses && (
+                <button 
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="ml-1 text-gray-500 hover:text-indigo-600 transition-colors"
+                  title={isExpanded ? "Show less" : "Show more"}
+                >
+                  <svg 
+                    className={`w-4 h-4 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              )}
             </div>
-          ))}
+          </div>
+          
+          <div className="mb-2">
+            <div className="flex justify-between items-center text-xs text-gray-500">
+              <span>Hours:</span>
+              <span className="font-medium">{dayHours.toFixed(1)}h</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+              <div 
+                className="bg-indigo-500 h-1.5 rounded-full" 
+                style={{ width: `${Math.min(dayHours / 8 * 100, 100)}%` }}
+              ></div>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            {visibleClasses.length > 0 ? (
+              visibleClasses
+                .sort((a, b) => new Date(`1970-01-01T${a.startTime}`) - new Date(`1970-01-01T${b.startTime}`))
+                .map((c) => {
+                  const color = subjectColors[c.subject] || { bg: "bg-gray-100", text: "text-gray-800", accent: "bg-gray-500" };
+                  const startTime = new Date(`1970-01-01T${c.startTime}`);
+                  const endTime = new Date(`1970-01-01T${c.endTime}`);
+                  const duration = (endTime - startTime) / (1000 * 60 * 60);
+                  
+                  return (
+                    <div 
+                      key={c._id} 
+                      className={`p-2 rounded-lg ${color.bg} ${color.text} text-xs transition-all hover:scale-[1.02] cursor-pointer`}
+                      onClick={() => {
+                        setActiveDay(day);
+                        setSearchTerm(c.subject.split(' ')[0]);
+                        document.getElementById('class-list-section')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center mb-1">
+                            <span className="mr-1">{subjectColors[c.subject]?.icon || '📝'}</span>
+                            <p className="font-semibold truncate">{c.subject}</p>
+                          </div>
+                          <p className="text-xs opacity-80 truncate">{c.instructor}</p>
+                        </div>
+                        {c.location && (
+                          <span className="text-xs ml-1 opacity-70" title={c.location}>📍</span>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center mt-1">
+                        <p className="font-medium">
+                          {c.startTime} - {c.endTime}
+                        </p>
+                        <span className="text-xs bg-white bg-opacity-50 px-1 rounded">
+                          {duration.toFixed(1)}h
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+            ) : (
+              <div className="text-center py-3 text-gray-400">
+                <svg className="w-8 h-8 mx-auto mb-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-xs">No classes</p>
+              </div>
+            )}
+            
+            {hasMoreClasses && !isExpanded && (
+              <div className="text-center pt-1">
+                <span className="text-xs text-gray-500">
+                  +{classes.length - maxVisibleClasses} more
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      );
+    })}
+  </div>
+  
+  
+</div>
 
       {/* Add Button */}
       <div className="fixed bottom-6 right-6">

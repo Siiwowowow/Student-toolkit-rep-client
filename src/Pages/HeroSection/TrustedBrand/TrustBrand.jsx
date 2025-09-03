@@ -1,7 +1,6 @@
 import React from "react";
 
 const TrustBrand = () => {
-  // Replace logos with advantage/convenience text
   const advantages = [
     "Easy Class Scheduling",
     "Budget Management",
@@ -13,7 +12,7 @@ const TrustBrand = () => {
   ];
 
   return (
-    <div className="py-4 border border-gray-100">
+    <div className="py-2 border bg-base-200 border-gray-100">
       {/* Custom styles for marquee animation */}
       <style>{`
         .marquee-inner {
@@ -27,16 +26,16 @@ const TrustBrand = () => {
         }
       `}</style>
 
-      <div className="overflow-hidden w-full relative max-w-7xl mx-auto select-none h-12">
+      <div className="overflow-hidden bg-base-200 w-full relative max-w-7xl mx-auto select-none h-10 sm:h-12 lg:h-16">
         {/* Left Gradient */}
-        <div className="absolute left-0 top-0 h-full w-32 z-10 pointer-events-none bg-gradient-to-r from-white to-transparent" />
+        <div className="absolute left-0 top-0 h-full w-16 sm:w-24 lg:w-32 z-10 pointer-events-none bg-gradient-to-r from-white to-transparent" />
 
         {/* Marquee Inner */}
-        <div className="marquee-inner min-w-[200%] flex items-center">
+        <div className="marquee-inner min-w-[200%] flex  items-center text-center">
           {[...advantages, ...advantages].map((text, index) => (
             <div
               key={index}
-              className="mx-12 text-xl font-semibold text-gray-700 whitespace-nowrap"
+              className="mx-4 sm:mx-8 lg:mx-12 text-sm sm:text-base md:text-lg lg:text-xl font-semibold mt-4 text-gray-700 whitespace-nowrap "
             >
               {text}
             </div>
@@ -44,7 +43,7 @@ const TrustBrand = () => {
         </div>
 
         {/* Right Gradient */}
-        <div className="absolute right-0 top-0 h-full w-32 z-10 pointer-events-none bg-gradient-to-l from-white to-transparent" />
+        <div className="absolute right-0 top-0 h-full w-16 sm:w-24 lg:w-32 z-10 pointer-events-none bg-gradient-to-l from-white to-transparent" />
       </div>
     </div>
   );

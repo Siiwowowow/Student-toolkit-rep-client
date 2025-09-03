@@ -26,10 +26,9 @@ const Signup = () => {
   const [uploading, setUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const from = location.state?.from?.pathname || '/';
-
   // Image upload to imgbb
   const handleImageUpload = async (e) => {
     const image = e.target.files[0];
@@ -94,9 +93,10 @@ const Signup = () => {
       const response = await axios.post("http://localhost:3000/users", userToSave);
       if (response.data.success) {
         toast.success("Account created successfully! Welcome! 🎉");
+        navigate(from, { replace: true });
         reset();
         setProfile(null);
-        navigate(from, { replace: true });
+        
       } else {
         toast.error("Failed to save user in database. Please try again. 😢");
       }

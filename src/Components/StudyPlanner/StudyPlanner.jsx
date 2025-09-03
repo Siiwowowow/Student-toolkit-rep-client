@@ -1,38 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
+import { AuthContext } from "../../Context/AuthContext";
 import { 
-  FaPlus, FaCheck, FaExclamationTriangle, FaCalendarAlt, 
-  FaClock, FaBook, FaTrash, FaTasks, FaTimes, FaFilter,
-  FaListUl, FaRunning, FaCheckCircle, FaSync, FaChartBar,
-  FaUserGraduate, FaFire, FaTrophy, FaRegSmile, FaBars, FaHome
+  FaPlus, FaCheck, FaExclamationTriangle, FaCalendarAlt, FaClock, FaBook, 
+  FaTrash, FaTasks, FaTimes, FaFilter, FaListUl, FaRunning, FaCheckCircle, 
+  FaSync, FaChartBar, FaTrophy, FaFire, FaHome, FaBars 
 } from 'react-icons/fa';
 import { MdSubject, MdNotes } from 'react-icons/md';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area
-} from 'recharts';
 import Confetti from 'react-confetti';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area } from 'recharts';
 
-// Sound effects
-const useSound = (src, volume = 0.5) => {
-  const soundRef = useRef(null);
-  
-  useEffect(() => {
-    soundRef.current = new Audio(src);
-    soundRef.current.volume = volume;
-  }, [src, volume]);
-  
-  const play = () => {
-    if (soundRef.current) {
-      soundRef.current.currentTime = 0;
-      soundRef.current.play();
-    }
-  };
-  
-  return play;
-};
-
-// Toast Notification Component
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -764,16 +741,17 @@ const TasksSection = ({
   );
 };
 
-// Main Component
 const StudyPlanner = () => {
-  // State for tasks and form data
+  const { user } = useContext(AuthContext); // user.email should be available
+  const userEmail = user?.email; 
+
   const [tasks, setTasks] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
-  const [filter, setFilter] = useState('all'); // 'all', 'pending', 'completed'
+  const [filter, setFilter] = useState('all');
   const [showConfetti, setShowConfetti] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [activeSection, setActiveSection] = useState('dashboard'); // 'dashboard', 'analytics', 'tasks'
+  const [activeSection, setActiveSection] = useState('dashboard');
   const [formData, setFormData] = useState({
     subject: '',
     topic: '',
@@ -784,244 +762,124 @@ const StudyPlanner = () => {
     notes: ''
   });
 
-  // API base URL
   const API_BASE_URL = 'http://localhost:3000';
 
-  // Sound effects
+  // Sound hooks (unchanged)
+  const useSound = (src, volume = 0.5) => {
+    const soundRef = useRef(null);
+    useEffect(() => { soundRef.current = new Audio(src); soundRef.current.volume = volume; }, [src, volume]);
+    return () => { if(soundRef.current){soundRef.current.currentTime=0; soundRef.current.play();} };
+  };
   const playAddSound = useSound('https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3');
   const playDeleteSound = useSound('https://assets.mixkit.co/sfx/preview/mixkit-click-error-1110.mp3');
   const playCompleteSound = useSound('https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3');
   const playCongratsSound = useSound('https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3');
   const playNotifySound = useSound('https://assets.mixkit.co/sfx/preview/mixkit-game-ball-tap-2073.mp3');
 
-  // Load tasks from backend on component mount
-  useEffect(() => {
-    fetchTasks();
-  }, []);
+  // Fetch tasks on mount
+  useEffect(() => { if(userEmail) fetchTasks(); }, [userEmail]);
 
-  // Fetch tasks from backend
   const fetchTasks = async () => {
+    if(!userEmail) return;
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/study-tasks`);
-      if (response.data.success) {
-        setTasks(response.data.data);
-      } else {
-        showToast('Failed to fetch tasks', 'error');
-      }
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-      showToast('Error connecting to server', 'error');
-    } finally {
-      setLoading(false);
-    }
+      const response = await axios.get(`${API_BASE_URL}/study-tasks`, { params: { email: userEmail } });
+      if(response.data.success) setTasks(response.data.data);
+      else showToast('Failed to fetch tasks', 'error');
+    } catch(err) {
+      console.error(err);
+      showToast('Server error', 'error');
+    } finally { setLoading(false); }
   };
 
-  // Show toast notification
-  const showToast = (message, type = 'info') => {
-    setToast({ show: true, message, type });
-    playNotifySound();
-  };
+  const showToast = (message, type='info') => { setToast({ show:true, message, type }); playNotifySound(); };
 
-  // Add a new task
   const addTask = async (e) => {
     e.preventDefault();
-    
-    // Form validation
-    if (!formData.subject || !formData.topic || !formData.deadline || !formData.timeSlot || !formData.duration) {
-      showToast('Please fill in all required fields', 'error');
-      return;
-    }
-    
-    if (parseInt(formData.duration) <= 0) {
-      showToast('Duration must be a positive number', 'error');
-      return;
-    }
-    
+    if(!userEmail) return showToast('User not logged in', 'error');
+
+    // validation
+    if(!formData.subject || !formData.topic || !formData.deadline || !formData.timeSlot || !formData.duration) return showToast('Fill required fields', 'error');
+    if(parseInt(formData.duration)<=0) return showToast('Duration must be positive', 'error');
+
     try {
       setLoading(true);
-      const response = await axios.post(`${API_BASE_URL}/study-tasks`, formData);
-      
-      if (response.data.success) {
+      const response = await axios.post(`${API_BASE_URL}/study-tasks`, { ...formData, email: userEmail });
+      if(response.data.success){
         setTasks([...tasks, response.data.data]);
-        setFormData({
-          subject: '',
-          topic: '',
-          priority: 'medium',
-          deadline: '',
-          timeSlot: '',
-          duration: '',
-          notes: ''
-        });
+        setFormData({ subject:'', topic:'', priority:'medium', deadline:'', timeSlot:'', duration:'', notes:'' });
         setShowModal(false);
         playAddSound();
-        showToast('Task added successfully!', 'success');
-      } else {
-        showToast('Failed to add task', 'error');
-      }
-    } catch (error) {
-      console.error('Error adding task:', error);
-      showToast('Error adding task', 'error');
-    } finally {
-      setLoading(false);
-    }
+        showToast('Task added!', 'success');
+      } else showToast('Failed to add task', 'error');
+    } catch(err){ console.error(err); showToast('Error adding task', 'error'); } finally { setLoading(false); }
   };
 
-  // Toggle task completion status
   const toggleCompletion = async (id) => {
-    try {
-      const taskToUpdate = tasks.find(task => task._id === id);
-      if (!taskToUpdate) return;
-      
+    if(!userEmail) return;
+    try{
+      const taskToUpdate = tasks.find(t=>t._id===id);
+      if(!taskToUpdate) return;
       const updatedTask = { ...taskToUpdate, completed: !taskToUpdate.completed };
-      
-      const response = await axios.put(`${API_BASE_URL}/study-tasks/${id}`, {
-        completed: updatedTask.completed
-      });
-      
-      if (response.data.success) {
-        const updatedTasks = tasks.map(task => 
-          task._id === id ? updatedTask : task
-        );
-        
-        setTasks(updatedTasks);
-        
-        // Check if this was a completion (not un-completion)
-        if (!taskToUpdate.completed) {
-          // Show confetti and play congrats sound for 5 seconds
-          setShowConfetti(true);
-          playCongratsSound();
-          setTimeout(() => setShowConfetti(false), 5000);
-        }
-        
+      const response = await axios.put(`${API_BASE_URL}/study-tasks/${id}`, { completed: updatedTask.completed, email: userEmail });
+      if(response.data.success){
+        setTasks(tasks.map(t=>t._id===id ? updatedTask : t));
+        if(!taskToUpdate.completed){ setShowConfetti(true); playCongratsSound(); setTimeout(()=>setShowConfetti(false),5000);}
         playCompleteSound();
         showToast('Task status updated!', 'info');
-      } else {
-        showToast('Failed to update task', 'error');
-      }
-    } catch (error) {
-      console.error('Error updating task:', error);
-      showToast('Error updating task', 'error');
-    }
+      } else showToast('Failed to update task', 'error');
+    } catch(err){ console.error(err); showToast('Error updating task', 'error'); }
   };
 
-  // Delete a task
   const deleteTask = async (id) => {
-    try {
-      const response = await axios.delete(`${API_BASE_URL}/study-tasks/${id}`);
-      
-      if (response.data.success) {
-        setTasks(tasks.filter(task => task._id !== id));
+    if(!userEmail) return;
+    try{
+      const response = await axios.delete(`${API_BASE_URL}/study-tasks/${id}`, { params:{ email: userEmail } });
+      if(response.data.success){
+        setTasks(tasks.filter(t=>t._id!==id));
         playDeleteSound();
         showToast('Task deleted!', 'warning');
-      } else {
-        showToast('Failed to delete task', 'error');
-      }
-    } catch (error) {
-      console.error('Error deleting task:', error);
-      showToast('Error deleting task', 'error');
-    }
+      } else showToast('Failed to delete task', 'error');
+    } catch(err){ console.error(err); showToast('Error deleting task', 'error'); }
   };
 
-  // Calculate progress statistics
-  const completedTasksCount = tasks.filter(task => task.completed).length;
+  // helpers
+  const completedTasksCount = tasks.filter(t=>t.completed).length;
   const totalTasksCount = tasks.length;
-  const progressPercentage = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
-
-  // Priority badge styling
-  const getPriorityBadge = (priority) => {
-    const priorityStyles = {
-      high: 'bg-red-100 text-red-800',
-      medium: 'bg-orange-100 text-orange-800',
-      low: 'bg-green-100 text-green-800'
-    };
-    
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${priorityStyles[priority]}`}>
-        {priority.charAt(0).toUpperCase() + priority.slice(1)}
-      </span>
-    );
+  const progressPercentage = totalTasksCount>0 ? Math.round((completedTasksCount/totalTasksCount)*100) : 0;
+  const getPriorityBadge = priority => {
+    const styles = { high:'bg-red-100 text-red-800', medium:'bg-orange-100 text-orange-800', low:'bg-green-100 text-green-800' };
+    return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[priority]}`}>{priority.charAt(0).toUpperCase()+priority.slice(1)}</span>;
   };
+  const isOverdue = deadline => { const today = new Date(); today.setHours(0,0,0,0); const d=new Date(deadline); d.setHours(0,0,0,0); return d<today; };
+  const handleInputChange = e => { const { name,value }=e.target; setFormData({...formData,[name]:value}); };
 
-  // Check if a task is overdue
-  const isOverdue = (deadline) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const taskDate = new Date(deadline);
-    taskDate.setHours(0, 0, 0, 0);
-    return taskDate < today;
-  };
-
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
-
-  // Render active section
+  // render active section
   const renderActiveSection = () => {
-    switch (activeSection) {
+    switch(activeSection){
       case 'dashboard':
         return (
           <DashboardSection 
-            tasks={tasks}
-            loading={loading}
-            filter={filter}
-            setFilter={setFilter}
-            showModal={showModal}
-            setShowModal={setShowModal}
-            toggleCompletion={toggleCompletion}
-            deleteTask={deleteTask}
-            getPriorityBadge={getPriorityBadge}
-            isOverdue={isOverdue}
-            fetchTasks={fetchTasks}
-            completedTasksCount={completedTasksCount}
-            totalTasksCount={totalTasksCount}
-            progressPercentage={progressPercentage}
-            formData={formData}
-            handleInputChange={handleInputChange}
-            addTask={addTask}
+            tasks={tasks} loading={loading} filter={filter} setFilter={setFilter}
+            showModal={showModal} setShowModal={setShowModal} toggleCompletion={toggleCompletion} deleteTask={deleteTask}
+            getPriorityBadge={getPriorityBadge} isOverdue={isOverdue} fetchTasks={fetchTasks}
+            completedTasksCount={completedTasksCount} totalTasksCount={totalTasksCount} progressPercentage={progressPercentage}
+            formData={formData} handleInputChange={handleInputChange} addTask={addTask}
           />
         );
-      case 'analytics':
-        return <AnalyticsSection tasks={tasks} />;
+      case 'analytics': return <AnalyticsSection tasks={tasks} />;
       case 'tasks':
-        return (
-          <TasksSection 
-            tasks={tasks}
-            loading={loading}
-            filter={filter}
-            toggleCompletion={toggleCompletion}
-            deleteTask={deleteTask}
-            getPriorityBadge={getPriorityBadge}
-            isOverdue={isOverdue}
-          />
-        );
-      default:
-        return null;
+        return <TasksSection tasks={tasks} loading={loading} filter={filter} toggleCompletion={toggleCompletion} deleteTask={deleteTask} getPriorityBadge={getPriorityBadge} isOverdue={isOverdue} />;
+      default: return null;
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       {showConfetti && <Confetti recycle={false} numberOfPieces={200} />}
-      
-      {toast.show && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={() => setToast({ ...toast, show: false })} 
-        />
-      )}
-      
+      {toast.show && <Toast message={toast.message} type={toast.type} onClose={()=>setToast({...toast, show:false})} />}
       <div className="max-w-7xl mx-auto">
-        {/* Navigation */}
         <Navigation activeSection={activeSection} setActiveSection={setActiveSection} />
-        
-        {/* Main Content */}
         {renderActiveSection()}
       </div>
     </div>

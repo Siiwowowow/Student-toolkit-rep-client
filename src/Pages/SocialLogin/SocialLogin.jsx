@@ -43,12 +43,10 @@ const SocialLogin = () => {
       }
 
       // 4. Show success toast
-      toast.success('Login successful!', { duration: 2000, position: 'top-center' });
+      toast.success('Login successful!', { duration: 1000, position: 'top-center' });
 
       // 5. Navigate after toast
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 1000);
+      navigate(from, { replace: true });
 
     } catch (error) {
       console.error('Google login error:', error);
@@ -56,7 +54,7 @@ const SocialLogin = () => {
         error.response?.data?.message ||
         error.message ||
         'Login failed. Please try again.';
-      toast.error(errorMessage, { duration: 4000, position: 'top-center' });
+        toast.error(errorMessage, { duration: 1000, position: 'top-center' });
     } finally {
       setIsLoading(false);
     }

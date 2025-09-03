@@ -1,12 +1,16 @@
-import React from "react";
+import React, { useContext } from "react";
+import { Link } from "react-router";
+import { AuthContext } from "../../Context/AuthContext";
 
 export default function App2() {
+  const { user } = useContext(AuthContext);
   return (
-    <div className="w-full mx-2 md:mx-auto p-px rounded-2xl bg-gradient-to-r from-purple-600/20 to-blue-500/30">
-      <div className="flex flex-col items-center justify-center text-center py-12 md:py-16 rounded-[15px] bg-gradient-to-r from-[#F3EAFF] to-[#E1EFFF] shadow-lg">
+    <div className="bg-base-200">
+      <div className="w-full sm:w-11/12 mb-5  sm:mx-auto  rounded-2xl ">
+      <div className="flex flex-col items-center justify-center text-center py-10 sm:py-12  md:py-16  rounded-[15px] bg-gradient-to-r from-[#F3EAFF] to-[#E1EFFF] shadow-lg">
         
         {/* Trusted Badge */}
-        <div className="flex items-center justify-center bg-white px-3 py-1.5 shadow gap-2 rounded-full text-xs mb-4">
+        <div className="flex items-center justify-center bg-white px-3 py-1.5 shadow gap-2 rounded-full text-xs sm:text-sm mb-4">
           <svg
             width="15"
             height="15"
@@ -24,29 +28,44 @@ export default function App2() {
             />
           </svg>
           <span className="bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent font-medium">
-            Trusted by Experts
+            Trusted by 10,000+ Students
           </span>
         </div>
 
         {/* Heading */}
-        <h2 className="text-2xl md:text-4xl font-bold mt-2">
-          Unlock Your Potential with <br />
+        <h2 className="text-xl sm:text-2xl md:text-4xl font-bold mt-2 leading-snug">
+          Organize Your Studies with <br />
           <span className="bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
-            Expert Guidance
+            Smart Tools
           </span>{" "}
-          & Proven Results!
+          & Stay Ahead!
         </h2>
 
         {/* Description */}
-        <p className="text-slate-500 mt-4 max-w-lg md:text-base text-sm">
-          Achieve your goals faster with personalized strategies, hands-on support, and results that speak for themselves.
+        <p className="text-slate-600 mt-4 max-w-lg text-sm sm:text-base md:text-lg">
+          From class scheduling to exam preparation, our Student Life Toolkit 
+          helps you save time, reduce stress, and achieve academic success with ease.
         </p>
 
-        {/* CTA Button */}
-        <button className="bg-gradient-to-r from-purple-600 to-blue-500 text-white text-sm px-6 py-2.5 rounded-xl font-medium mt-6 hover:scale-105 active:scale-95 transition-all duration-300">
-          Get Started Today
-        </button>
+        {/* CTA Button - Only show if NOT active */}
+        {!user ? (
+  // If no user → show Get Started button
+  <Link to="/signup">
+    <button className="bg-gradient-to-r from-purple-600 to-blue-500 text-white text-sm px-6 py-2.5 rounded-xl font-medium mt-6 hover:scale-105 active:scale-95 transition-all duration-300">
+      Get Started Today
+    </button>
+  </Link>
+) : (
+  // If user exists → show Welcome Back button
+  <Link to="/schedule">
+    <button className="bg-gradient-to-r from-purple-600 to-blue-500 text-white text-sm px-6 py-2.5 rounded-xl font-medium mt-6 hover:scale-105 active:scale-95 transition-all duration-300">
+      👋 Explore Now
+    </button>
+  </Link>
+)}
+
       </div>
+    </div>
     </div>
   );
 }

@@ -7,6 +7,8 @@ import ExamPrep from "../Components/ExamPrep/ExamPrep";
 import StudyPlanner from "../Components/StudyPlanner/StudyPlanner";
 import SignUp from "../Pages/SignUp/Signup";
 import Login from "../Pages/Login/Login";
+import AiAssistent from "../Components/AiAssistent/AiAssistent";
+import PrivateRoute from "../Context/PrivateRoute";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -19,19 +21,23 @@ export const router = createBrowserRouter([
         },
         {
           path:'/schedule',
-          element:<Schedule></Schedule>
+          element:<PrivateRoute><Schedule></Schedule></PrivateRoute>
         },
         {
           path:'/budget',
-          element:<Budget></Budget>
+          element:<PrivateRoute><Budget></Budget></PrivateRoute>
         },
         {
-          path:'/exam-pep',
-          element:<ExamPrep></ExamPrep>
+          path:'/exam-prep',
+          element:<PrivateRoute><ExamPrep></ExamPrep></PrivateRoute>
         },
         {
-          path:'/study-planer',
-          element:<StudyPlanner></StudyPlanner>
+          path:'/study-planner',
+          element:<PrivateRoute><StudyPlanner></StudyPlanner></PrivateRoute>
+        },
+        {
+          path:'/ai-planner',
+          element:<PrivateRoute><AiAssistent></AiAssistent></PrivateRoute>
         },
         {
           path:'/signUp',

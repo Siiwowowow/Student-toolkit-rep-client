@@ -3,11 +3,13 @@ import React, { useState } from "react";
 // Single FAQ Item Component
 const FAQItem = ({ question, answer, isOpen, onToggle }) => (
   <div
-    className="border-b  border-slate-200 py-4 cursor-pointer"
+    className="border-b border-slate-200 py-4 cursor-pointer"
     onClick={onToggle}
   >
     <div className="flex items-center justify-between">
-      <h3 className="text-base font-medium">{question}</h3>
+      <h3 className="text-base md:text-lg font-medium text-slate-800">
+        {question}
+      </h3>
       <svg
         width="18"
         height="18"
@@ -16,7 +18,7 @@ const FAQItem = ({ question, answer, isOpen, onToggle }) => (
         xmlns="http://www.w3.org/2000/svg"
         className={`${
           isOpen ? "rotate-180" : ""
-        } transition-all duration-500 ease-in-out`}
+        } transition-transform duration-300 ease-in-out`}
       >
         <path
           d="m4.5 7.2 3.793 3.793a1 1 0 0 0 1.414 0L13.5 7.2"
@@ -28,8 +30,10 @@ const FAQItem = ({ question, answer, isOpen, onToggle }) => (
       </svg>
     </div>
     <p
-      className={`text-sm text-slate-500 transition-all duration-500 ease-in-out max-w-md ${
-        isOpen ? "opacity-100 max-h-[300px] translate-y-0 pt-4" : "opacity-0 max-h-0 -translate-y-2"
+      className={`text-sm md:text-base text-slate-500 transition-all duration-500 ease-in-out overflow-hidden max-w-xl ${
+        isOpen
+          ? "opacity-100 max-h-[200px] translate-y-0 pt-3"
+          : "opacity-0 max-h-0 -translate-y-2"
       }`}
     >
       {answer}
@@ -42,32 +46,45 @@ const FAQ = ({ data, title, subtitle, image }) => {
   const [openIndex, setOpenIndex] = useState(null);
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-start justify-center gap-8 px-4 md:px-0">
-      {image && (
-        <img
-          className="max-w-sm w-full rounded-xl h-full"
-          src={image}
-          alt="FAQ Illustration"
-        />
-      )}
-      <div>
-        <p className="text-indigo-600 text-sm font-medium">FAQ</p>
-        <h1 className="text-3xl font-semibold">{title}</h1>
-        {subtitle && <p className="text-sm text-slate-500 mt-2 pb-4">{subtitle}</p>}
+    <section className="max-w-6xl mx-auto flex flex-col-reverse lg:flex-row items-center justify-between gap-10 px-6 py-12 md:py-20">
+      {/* FAQ Text Section */}
+      <div className="w-full lg:w-1/2">
+        <p className="text-indigo-600 text-sm font-medium uppercase tracking-wide">
+          FAQ
+        </p>
+        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="text-base text-slate-600 mt-3 mb-6">{subtitle}</p>
+        )}
 
-        {data.map((faq, index) => (
-          <FAQItem
-            key={index}
-            question={faq.question}
-            answer={faq.answer}
-            isOpen={openIndex === index}
-            onToggle={() =>
-              setOpenIndex(openIndex === index ? null : index)
-            }
-          />
-        ))}
+        <div className="space-y-4">
+          {data.map((faq, index) => (
+            <FAQItem
+              key={index}
+              question={faq.question}
+              answer={faq.answer}
+              isOpen={openIndex === index}
+              onToggle={() =>
+                setOpenIndex(openIndex === index ? null : index)
+              }
+            />
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Image Section */}
+      {image && (
+        <div className="w-full lg:w-1/2 flex justify-center">
+          <img
+            className="w-full max-w-md rounded-2xl shadow-lg object-cover"
+            src={image}
+            alt="FAQ Illustration"
+          />
+        </div>
+      )}
+    </section>
   );
 };
 
