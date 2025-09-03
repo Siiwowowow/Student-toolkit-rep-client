@@ -9,12 +9,15 @@ import SignUp from "../Pages/SignUp/Signup";
 import Login from "../Pages/Login/Login";
 import AiAssistent from "../Components/AiAssistent/AiAssistent";
 import PrivateRoute from "../Context/PrivateRoute";
+import Error from "../Components/Errorpage/Error";
 export const router = createBrowserRouter([
   {
     path: "/",
+    errorElement:<Error></Error>,
     element: <Root></Root>,
     children:[
         {
+
             index:true,
             path:'/',
             element:<Home></Home>
@@ -29,7 +32,7 @@ export const router = createBrowserRouter([
         },
         {
           path:'/exam-prep',
-          element:<PrivateRoute><ExamPrep></ExamPrep></PrivateRoute>
+          element:<ExamPrep></ExamPrep>
         },
         {
           path:'/study-planner',
@@ -37,7 +40,7 @@ export const router = createBrowserRouter([
         },
         {
           path:'/ai-planner',
-          element:<PrivateRoute><AiAssistent></AiAssistent></PrivateRoute>
+          element:<AiAssistent></AiAssistent>
         },
         {
           path:'/signUp',
