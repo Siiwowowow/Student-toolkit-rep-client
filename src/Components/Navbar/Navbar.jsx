@@ -27,6 +27,7 @@ const Navbar = () => {
     { name: "Budget", to: "/budget" },
     { name: "Exam Prep", to: "/exam-prep" },
     { name: "Study Planner", to: "/study-planner" },
+    { name: "Remainder", to: "/remainder" },
     { name: "Personal Assistant", to: "/ai-planner" },
   ];
 
@@ -153,7 +154,7 @@ const Navbar = () => {
                       </div>
                     </div>
                   </li>
-                  <li>
+                  {/* <li>
                     <Link
                       to="/profile"
                       className="flex items-center gap-2 hover:bg-gray-100 py-2 px-4 rounded-md"
@@ -172,7 +173,7 @@ const Navbar = () => {
                       <FiSettings className="h-4 w-4" />
                       Settings
                     </Link>
-                  </li>
+                  </li> */}
                   <li>
                     <button
                       onClick={handleLogout}

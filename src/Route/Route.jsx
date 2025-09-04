@@ -10,6 +10,7 @@ import Login from "../Pages/Login/Login";
 import AiAssistent from "../Components/AiAssistent/AiAssistent";
 import PrivateRoute from "../Context/PrivateRoute";
 import Error from "../Components/Errorpage/Error";
+import Remainder from "../Components/Reminder/Remainder";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -42,6 +43,11 @@ export const router = createBrowserRouter([
           path:'/ai-planner',
           element:<AiAssistent></AiAssistent>
         },
+        {
+          path:'/remainder',
+          element:<Remainder></Remainder>
+        },
+
         {
           path:'/signUp',
           element:<SignUp></SignUp>

@@ -1,0 +1,49 @@
+.smart-reminder-container {
+  max-width: 700px;
+  margin: 20px auto;
+  padding: 20px;
+  border-radius: 10px;
+  background: #f0f8ff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.task-form {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.task-form input, .task-form select, .task-form button {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.task-form button {
+  background-color: #0088FE;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.tasks-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tasks-list li {
+  padding: 8px;
+  margin-bottom: 5px;
+  background: #fff;
+  border-radius: 5px;
+  border-left: 5px solid #0088FE;
+}
+
+.ai-suggestions {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #FFF3CD;
+  border-radius: 5px;
+  font-weight: bold;
+}

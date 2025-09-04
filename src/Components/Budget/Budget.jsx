@@ -14,13 +14,13 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { AuthContext } from "../../Context/AuthContext"; // ✅ make sure path is correct
+import { AuthContext } from "../../Context/AuthContext";
 import "./Budget.css";
 
-const API_BASE = "http://localhost:3000"; // change for production
+const API_BASE = "http://localhost:3000";
 
 const Budget = () => {
-  const { user } = useContext(AuthContext); // ✅ get logged-in user
+  const { user } = useContext(AuthContext);
   const userEmail = user?.email;
 
   const [transactions, setTransactions] = useState([]);
@@ -38,6 +38,7 @@ const Budget = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [balanceWarning, setBalanceWarning] = useState("");
 
   // ✅ Categories
   const incomeCategories = [
@@ -85,12 +86,25 @@ const Budget = () => {
   // ✅ Add
   const addTransaction = async (transaction) => {
     try {
+      // Check if adding an expense would exceed available income
+      if (transaction.type === "expense") {
+        const expenseAmount = parseFloat(transaction.amount);
+        const currentBalance = calculateCurrentBalance();
+        
+        if (expenseAmount > currentBalance) {
+          setBalanceWarning(`Warning: This expense (${formatCurrency(expenseAmount)}) exceeds your available balance (${formatCurrency(currentBalance)})`);
+          return false;
+        }
+      }
+      
       const response = await fetch(`${API_BASE}/budget`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...transaction, email: userEmail }),
       });
       if (!response.ok) throw new Error("Failed to add transaction");
+      
+      setBalanceWarning(""); // Clear any previous warnings
       await fetchTransactions();
       return true;
     } catch (err) {
@@ -102,12 +116,36 @@ const Budget = () => {
   // ✅ Update
   const updateTransaction = async (id, transaction) => {
     try {
+      // Check if updating to an expense would exceed available income
+      if (transaction.type === "expense") {
+        const originalTransaction = transactions.find(t => t._id === id);
+        const originalAmount = originalTransaction ? parseFloat(originalTransaction.amount) : 0;
+        const newAmount = parseFloat(transaction.amount);
+        
+        // Calculate the net change (if switching from income to expense, it's a double impact)
+        let netChange = 0;
+        if (originalTransaction.type === "income") {
+          netChange = originalAmount + newAmount; // Losing income and adding expense
+        } else {
+          netChange = newAmount - originalAmount; // Just expense amount change
+        }
+        
+        const currentBalance = calculateCurrentBalance();
+        
+        if (netChange > currentBalance) {
+          setBalanceWarning(`Warning: This update would exceed your available balance (${formatCurrency(currentBalance)})`);
+          return false;
+        }
+      }
+      
       const response = await fetch(`${API_BASE}/budget/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...transaction, email: userEmail }),
       });
       if (!response.ok) throw new Error("Failed to update transaction");
+      
+      setBalanceWarning(""); // Clear any previous warnings
       await fetchTransactions();
       return true;
     } catch (err) {
@@ -129,6 +167,19 @@ const Budget = () => {
       setError(err.message);
       return false;
     }
+  };
+
+  // ✅ Calculate current balance (income minus expenses)
+  const calculateCurrentBalance = () => {
+    const totalIncome = transactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+    const totalExpenses = transactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+    return totalIncome - totalExpenses;
   };
 
   // ✅ Effects
@@ -214,6 +265,11 @@ const Budget = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    
+    // Clear balance warning when user changes input
+    if (name === "amount" || name === "type") {
+      setBalanceWarning("");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -262,6 +318,7 @@ const Budget = () => {
     });
     setEditingId(transaction._id);
     setShowForm(true);
+    setBalanceWarning(""); // Clear any previous warnings when editing
   };
 
   const handleDelete = async (id) => {
@@ -287,11 +344,15 @@ const Budget = () => {
     <div className="budget-container">
       <h2>Budget Management</h2>
       <button 
-              className="btn-primary mb-3"
-              onClick={() => setShowForm(true)}
-            >
-              Add Transaction
-            </button>
+        className="btn-primary mb-3"
+        onClick={() => {
+          setShowForm(true);
+          setBalanceWarning(""); // Clear warnings when opening form
+        }}
+      >
+        Add Transaction
+      </button>
+      
       {error && (
         <div className="error-message">
           Error: {error}. Please check your backend connection.
@@ -313,7 +374,7 @@ const Budget = () => {
         </div>
         
         <div className="metric-card balance">
-          <h3>Net Balance</h3>
+          <h3>Available Balance</h3>
           <div className={`amount ${netBalance < 0 ? 'negative' : ''}`}>
             {formatCurrency(netBalance)}
           </div>
@@ -426,7 +487,6 @@ const Budget = () => {
                 Expenses
               </button>
             </div>
-            
           </div>
         </div>
         
@@ -439,6 +499,11 @@ const Budget = () => {
           <div className="transaction-form-overlay">
             <div className="transaction-form">
               <h3>{editingId ? 'Edit Transaction' : 'Add New Transaction'}</h3>
+              {balanceWarning && (
+                <div className="balance-warning">
+                  ⚠️ {balanceWarning}
+                </div>
+              )}
               <form onSubmit={handleSubmit}>
                 <div className="form-row">
                   <div className="form-group">
@@ -525,11 +590,16 @@ const Budget = () => {
                         description: '',
                         date: new Date().toISOString().split('T')[0]
                       });
+                      setBalanceWarning("");
                     }}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn-primary">
+                  <button 
+                    type="submit" 
+                    className="btn-primary"
+                    disabled={balanceWarning && formData.type === "expense"}
+                  >
                     {editingId ? 'Update' : 'Add'} Transaction
                   </button>
                 </div>
@@ -609,10 +679,6 @@ const Budget = () => {
           )}
         </div>
       </div>
-      
-      <style jsx>{`
-        
-      `}</style>
     </div>
   );
 };
