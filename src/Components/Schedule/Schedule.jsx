@@ -22,6 +22,7 @@ const Schedule = () => {
   const [activeDay, setActiveDay] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [expandedDays, setExpandedDays] = useState({});
   const [formData, setFormData] = useState({
     subject: "",
     instructor: "",
@@ -443,7 +444,7 @@ const Schedule = () => {
       }, 0);
       
       const isToday = new Date().toLocaleString('en-us', { weekday: 'long' }) === day;
-      const [isExpanded, setIsExpanded] = useState(false);
+      const isExpanded = !!expandedDays[day];
       
       // Determine how many classes to show in collapsed view
       const maxVisibleClasses = 2;
@@ -471,7 +472,7 @@ const Schedule = () => {
               </span>
               {hasMoreClasses && (
                 <button 
-                  onClick={() => setIsExpanded(!isExpanded)}
+                  onClick={() => setExpandedDays(prev => ({ ...prev, [day]: !prev[day] }))}
                   className="ml-1 text-gray-500 hover:text-indigo-600 transition-colors"
                   title={isExpanded ? "Show less" : "Show more"}
                 >

@@ -932,7 +932,7 @@ const Insights = ({ entries, chartData }) => (
 );
 
 // Main Component
-const StudentWellnessDashboard = () => {
+const MoodHealthTracker = () => {
   const today = new Date().toISOString().split('T')[0];
 
   // State Management
@@ -1200,4 +1200,4 @@ const StudentWellnessDashboard = () => {
   );
 };
 
-export default StudentWellnessDashboard;
+export default MoodHealthTracker;

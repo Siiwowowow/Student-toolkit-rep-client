@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { AuthContext } from "../../Context/AuthContext";
 import "./Budget.css";
+import toast from "react-hot-toast";
 
 const API_BASE = "http://localhost:3000";
 
@@ -70,12 +71,13 @@ const Budget = () => {
     if (!userEmail) return;
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/budget?email=${userEmail}`);
+      const response = await fetch(`${API_BASE}/budgets?email=${userEmail}`);
       if (!response.ok) throw new Error("Failed to fetch transactions");
       const data = await response.json();
       setTransactions(data);
       setError(null);
     } catch (err) {
+      toast.error("Failed to fetch transactions ❌");
       setError(err.message);
       console.error("Error fetching transactions:", err);
     } finally {
@@ -86,28 +88,42 @@ const Budget = () => {
   // ✅ Add
   const addTransaction = async (transaction) => {
     try {
-      // Check if adding an expense would exceed available income
+      // 🔹 Check if adding an expense would exceed available income
       if (transaction.type === "expense") {
         const expenseAmount = parseFloat(transaction.amount);
         const currentBalance = calculateCurrentBalance();
-        
+  
         if (expenseAmount > currentBalance) {
-          setBalanceWarning(`Warning: This expense (${formatCurrency(expenseAmount)}) exceeds your available balance (${formatCurrency(currentBalance)})`);
+          setBalanceWarning(
+            `Warning: This expense (${formatCurrency(expenseAmount)}) exceeds your available balance (${formatCurrency(currentBalance)})`
+          );
           return false;
         }
       }
-      
-      const response = await fetch(`${API_BASE}/budget`, {
+  
+      const response = await fetch(`${API_BASE}/budgets`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...transaction, email: userEmail }),
       });
+  
       if (!response.ok) throw new Error("Failed to add transaction");
-      
+  
       setBalanceWarning(""); // Clear any previous warnings
       await fetchTransactions();
+  
+      // ✅ Dynamic toast based on transaction type
+      if (transaction.type === "income") {
+        toast.success("Income added successfully ✅");
+      } else if (transaction.type === "expense") {
+        toast.success("Expense added successfully ✅");
+      } else {
+        toast.success("Transaction added successfully ✅");
+      }
+  
       return true;
     } catch (err) {
+      toast.error("Failed to add transaction ❌");
       setError(err.message);
       return false;
     }
@@ -138,7 +154,7 @@ const Budget = () => {
         }
       }
       
-      const response = await fetch(`${API_BASE}/budget/${id}`, {
+      const response = await fetch(`${API_BASE}/budgets/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...transaction, email: userEmail }),
@@ -147,27 +163,17 @@ const Budget = () => {
       
       setBalanceWarning(""); // Clear any previous warnings
       await fetchTransactions();
+      toast.success("Transaction updated successfully ✅");
       return true;
     } catch (err) {
+      toast.error("Failed to update transaction ❌");
       setError(err.message);
+
       return false;
     }
   };
 
-  // ✅ Delete
-  const deleteTransaction = async (id) => {
-    try {
-      const response = await fetch(`${API_BASE}/budget/${id}?email=${userEmail}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Failed to delete transaction");
-      await fetchTransactions();
-      return true;
-    } catch (err) {
-      setError(err.message);
-      return false;
-    }
-  };
+ 
 
   // ✅ Calculate current balance (income minus expenses)
   const calculateCurrentBalance = () => {
@@ -320,12 +326,36 @@ const Budget = () => {
     setShowForm(true);
     setBalanceWarning(""); // Clear any previous warnings when editing
   };
+ // ✅ Delete
+ const deleteTransaction = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE}/budgets/${id}`, {
+      method: "DELETE",
+    });
 
-  const handleDelete = async (id) => {
-    const success = await deleteTransaction(id);
-    if (success) setDeleteConfirm(null);
-  };
+    if (!response.ok) {
+      throw new Error("Failed to delete transaction");
+    }
 
+    await fetchTransactions(); // refresh the list
+    return true;
+  } catch (err) {
+    toast.error("Failed to delete transaction ❌");
+    setError(err.message);
+    return false;
+  }
+};
+
+const handleDelete = async (id) => {
+  const success = await deleteTransaction(id);
+
+  if (success) {
+    toast.success("Transaction deleted ✅");
+    setDeleteConfirm(null);
+  } else {
+    toast.error("Failed to delete ❌");
+  }
+};
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
       amount
@@ -515,6 +545,8 @@ const Budget = () => {
                     >
                       <option value="income">Income</option>
                       <option value="expense">Expense</option>
+                      
+                      
                     </select>
                   </div>
                   
