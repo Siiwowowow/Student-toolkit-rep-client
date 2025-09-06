@@ -18,7 +18,7 @@ import { AuthContext } from "../../Context/AuthContext";
 import "./Budget.css";
 import toast from "react-hot-toast";
 
-const API_BASE = "http://localhost:3000";
+const API_BASE = "https://real-time-chat-server-rosy.vercel.app";
 
 const Budget = () => {
   const { user } = useContext(AuthContext);

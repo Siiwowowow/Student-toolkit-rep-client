@@ -98,7 +98,7 @@ const ExamPrep = () => {
       const topic = `${subject} - ${difficulty} difficulty`;
       
       // Call the backend API
-      const response = await axios.post("http://localhost:3000/generate-questions", {
+      const response = await axios.post("https://real-time-chat-server-rosy.vercel.app/generate-questions", {
         topic: topic
       });
       

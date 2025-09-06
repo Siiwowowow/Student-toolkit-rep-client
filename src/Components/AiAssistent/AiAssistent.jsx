@@ -36,7 +36,7 @@ const AiAssistant = () => {
 
     try {
       // In a real app, you would use your API endpoint
-      const res = await axios.post("http://localhost:3000/ai-chat", {
+      const res = await axios.post("https://real-time-chat-server-rosy.vercel.app/ai-chat", {
         message: userMessage,
       });
 
@@ -46,6 +46,7 @@ const AiAssistant = () => {
         timestamp: new Date() 
       }]);
     } catch (err) {
+      console.log(err)
       setError("Unable to connect to the AI service. Please try again.");
       setChat((prev) => [
         ...prev,

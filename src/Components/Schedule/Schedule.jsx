@@ -32,57 +32,91 @@ const Schedule = () => {
     location: "",
   });
 
-  const API_URL = "http://localhost:3000/classes";
+  const API_URL = "https://real-time-chat-server-rosy.vercel.app/class";
 
-  // Load from backend
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user?.email) return;
-      try {
-        setLoading(true);
-        const res = await axios.get(`${API_URL}?email=${user.email}`);
-        if (res.data.success) setClasses(res.data.data);
-        
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load schedule. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [user?.email]);
-
-  // Add class
-  const handleAddClass = async () => {
-    if (!formData.subject || !formData.instructor || !formData.startTime || !formData.endTime) {
-      toast.error("Please fill all required fields!");
-      return;
-    }
-    if (formData.startTime >= formData.endTime) {
-      toast.error("End time must be after start time.");
-      return;
-    }
-
-    const newClass = {
-      ...formData,
-      email: user.email, // Attach email
-      color: subjectColors[formData.subject] || { bg: "bg-gray-100", border: "border-gray-300", text: "text-gray-800", icon: "📝" },
-    };
-
+ 
+ // Load from backend
+useEffect(() => {
+  const fetchData = async () => {
+    if (!user?.email) return;
     try {
-      const res = await axios.post(API_URL, newClass);
+      setLoading(true);
+      const res = await axios.get(`${API_URL}?email=${user.email}`);
+      
+      console.log("GET Response:", res.data); // Debug what's returned
+      
+      // Handle both response formats
       if (res.data.success) {
-        setClasses([...classes, { ...newClass, _id: res.data.data._id }]);
-        setShowModal(false);
-        setFormData({ subject: "", instructor: "", day: "Monday", startTime: "", endTime: "", location: "" });
-        toast.success("Class added successfully!");
+        // Format 1: { success: true, data: [...] }
+        setClasses(res.data.data);
+      } else if (Array.isArray(res.data)) {
+        // Format 2: [...] (direct array)
+        setClasses(res.data);
+      } else {
+        // Unexpected format
+        console.warn("Unexpected response format:", res.data);
+        setClasses([]);
       }
+      
+      toast.success("Schedule loaded successfully ✅");
     } catch (error) {
-      console.error("Error adding class:", error);
-      toast.error("Failed to add class. Please try again.");
+      console.error("Error fetching data:", error);
+      console.error("Error response:", error.response?.data);
+      toast.error("Failed to load schedule. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
+  fetchData();
+}, [user?.email]);
+
+  // Add class
+  // Add class
+const handleAddClass = async () => {
+  if (!formData.subject || !formData.instructor || !formData.startTime || !formData.endTime) {
+    toast.error("Please fill all required fields!");
+    return;
+  }
+  if (formData.startTime >= formData.endTime) {
+    toast.error("End time must be after start time.");
+    return;
+  }
+
+  const newClass = {
+    ...formData,
+    email: user.email,
+    color: subjectColors[formData.subject] || { bg: "bg-gray-100", border: "border-gray-300", text: "text-gray-800", icon: "📝" },
+  };
+
+  try {
+    const res = await axios.post(API_URL, newClass);
+    
+    console.log("API Response:", res.data); // Debug what's returned
+    
+    // Handle both response formats
+    let addedClass;
+    if (res.data.success) {
+      // Format 1: { success: true, data: { ...classData, _id: result.insertedId } }
+      addedClass = res.data.data;
+    } else if (res.data._id) {
+      // Format 2: { ...classData, _id: result.insertedId } (direct object)
+      addedClass = res.data;
+    } else {
+      // Format 3: MongoDB result object { acknowledged: true, insertedId: "..." }
+      addedClass = { ...newClass, _id: res.data.insertedId || res.data._id };
+    }
+
+    setClasses([...classes, addedClass]);
+    setShowModal(false);
+    setFormData({ subject: "", instructor: "", day: "Monday", startTime: "", endTime: "", location: "" });
+    toast.success("Class added successfully ✅");
+    
+  } catch (error) {
+    console.error("Error adding class:", error);
+    console.error("Error response:", error.response?.data);
+    toast.error("Failed to add class. Please try again.");
+  }
+};
 
 
   // Delete class
@@ -97,11 +131,17 @@ const Schedule = () => {
               toast.dismiss(t.id);
               try {
                 await axios.delete(`${API_URL}/${id}?email=${user.email}`);
-                setClasses(classes.filter((c) => c._id !== id));
-                toast.success("Class deleted successfully!");
+                  setClasses(classes.filter((c) => c._id !== id));
+                toast.success("Class deleted successfully ✅");
+             
               } catch (error) {
                 console.error("Error deleting class:", error);
-                toast.error("Failed to delete class. Please try again.");
+            
+                // Just a safety measure
+                if (classes.find(c => c._id === id)) {
+                  setClasses(classes.filter(c => c._id !== id));
+                  toast.error("Failed to delete class. Please try again.");
+                }
               }
             }}
             className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
@@ -155,7 +195,7 @@ const Schedule = () => {
   // Clear search function
   const clearSearch = () => {
     setSearchTerm("");
-    toast.success("Search cleared");
+    toast.success("Search cleared ✅");
   };
 
   return (
@@ -219,7 +259,7 @@ const Schedule = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <span className="absolute left-3 top-3.5 text-gray-400">🔍</span>
+              <span className="absolute left-3 top-3.5 text-gray-400">🔍</span>
             {searchTerm && (
               <button
                 onClick={clearSearch}
@@ -237,10 +277,10 @@ const Schedule = () => {
                 key={day}
                 onClick={() => {
                   setActiveDay(day);
-                  if (day !== "All") {
-                    toast.success(`Viewing ${day}'s schedule`);
+                    if (day !== "All") {
+                    toast.success(`Viewing ${day}'s schedule ✅`);
                   } else {
-                    toast.success("Viewing all classes");
+                    toast.success("Viewing all classes ✅");
                   }
                 }}
                 className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap ${
@@ -386,7 +426,7 @@ const Schedule = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredClasses
+              {filteredClasses  // ✅ Use null coalescing operator
                 .sort((a, b) => new Date(`1970-01-01T${a.startTime}`) - new Date(`1970-01-01T${b.startTime}`))
                 .map((c) => {
                   const color = subjectColors[c.subject] || { bg: "bg-gray-100", border: "border-gray-300", text: "text-gray-800", icon: "📝" };
