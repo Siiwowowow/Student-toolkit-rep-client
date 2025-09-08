@@ -121,31 +121,7 @@ const ToastContainer = ({ toasts, removeToast }) => (
 // Components
 const Header = () => (
   <div className="bg-white shadow-sm border-b sticky top-0 z-50">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-center h-16">
-        <div className="flex items-center">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            WellnessHub
-          </h1>
-          <span className="ml-3 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
-            Student Edition
-          </span>
-        </div>
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-gray-600">
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </div>
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-            S
-          </div>
-        </div>
-      </div>
-    </div>
+   
   </div>
 );
 
@@ -938,7 +914,6 @@ const MoodHealthTracker = () => {
   // State Management
   const [entries, setEntries] = useState([]);
   const [goals, setGoals] = useState([]);
-  const [studySessions, setStudySessions] = useState([]);
   const [habits, setHabits] = useState([]);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [formData, setFormData] = useState({
@@ -1041,14 +1016,6 @@ const MoodHealthTracker = () => {
         completedSessions: prev.isBreak ? prev.completedSessions + 1 : prev.completedSessions,
       }));
       if (studyTimer.isBreak) {
-        const newSession = {
-          id: Date.now(),
-          type: studyTimer.sessionType.type,
-          duration: studyTimer.sessionType.duration,
-          date: today,
-          completed: true,
-        };
-        setStudySessions((prev) => [...prev, newSession]);
         addToast(`Completed ${studyTimer.sessionType.type} session!`, 'success');
       }
     }

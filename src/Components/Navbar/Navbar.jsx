@@ -25,9 +25,10 @@ const Navbar = () => {
     { name: "Home", to: "/" },
     { name: "Schedule", to: "/schedule" },
     { name: "Budget", to: "/budget" },
-    { name: "Exam Prep", to: "/exam-prep" },
+    
     { name: "Study Planner", to: "/study-planner" },
-    { name: "Remainder", to: "/remainder" },
+    { name: "Exam Prep", to: "/exam-prep" },
+    { name: "Wellness Hub", to: "/remainder" },
     { name: "Personal Assistant", to: "/ai-planner" },
   ];
 
