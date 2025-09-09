@@ -10,6 +10,8 @@ import {
 } from "firebase/auth";
 import { AuthContext } from "./AuthContext";
 import { auth } from "../Firebase/firebase.init";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -48,14 +50,35 @@ const AuthProvider = ({ children }) => {
 
   // track auth state
   useEffect(() => {
-    const unSubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => {
-      unSubscribe();
-    };
-  }, []);
+  const unSubscribe = onAuthStateChanged(auth, (currentUser) => {
+    setUser(currentUser);
+    setLoading(false);
+
+    if (currentUser?.email) {
+      const userData = { email: currentUser.email };
+
+      // Use environment variable for API base
+      const API_BASE = import.meta.env.VITE_API_BASE;
+
+      axios.post(`${API_BASE}/jwt`, userData, {
+        withCredentials: true
+      })
+        .then(res => {
+          console.log(res.data);
+        })
+        .catch((err) => {
+          console.log(err.message);
+          setLoading(false);
+          toast.error(err.message);
+        });
+    }
+  });
+
+  return () => {
+    unSubscribe();
+  };
+}, []);
+
 
   const AuthInfo = {
     createUser,

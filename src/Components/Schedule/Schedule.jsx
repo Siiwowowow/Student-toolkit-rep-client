@@ -32,7 +32,7 @@ const Schedule = () => {
     location: "",
   });
 
-  const API_URL = "https://real-time-chat-server-rosy.vercel.app/class";
+  const API_BASE = `${import.meta.env.VITE_API_BASE}/class`;
 
  
  // Load from backend
@@ -41,7 +41,7 @@ useEffect(() => {
     if (!user?.email) return;
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}?email=${user.email}`);
+      const res = await axios.get(`${API_BASE}?email=${user.email}`,{ withCredentials: true });
       
       console.log("GET Response:", res.data); // Debug what's returned
       
@@ -89,7 +89,7 @@ const handleAddClass = async () => {
   };
 
   try {
-    const res = await axios.post(API_URL, newClass);
+    const res = await axios.post(API_BASE, newClass);
     
     console.log("API Response:", res.data); // Debug what's returned
     
@@ -130,7 +130,7 @@ const handleAddClass = async () => {
             onClick={async () => {
               toast.dismiss(t.id);
               try {
-                await axios.delete(`${API_URL}/${id}?email=${user.email}`);
+                await axios.delete(`${API_BASE}/${id}?email=${user.email}`);
                   setClasses(classes.filter((c) => c._id !== id));
                 toast.success("Class deleted successfully ✅");
              

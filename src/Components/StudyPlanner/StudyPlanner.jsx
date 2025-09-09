@@ -770,7 +770,7 @@ const DashboardSection = ({
         <form onSubmit={addTask} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+              <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                 <MdSubject className="text-indigo-600" /> Subject *
               </label>
               <input
@@ -816,7 +816,7 @@ const DashboardSection = ({
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+              <label className=" text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                 <FaCalendarAlt className="text-indigo-600" /> Deadline *
               </label>
               <input
@@ -844,7 +844,7 @@ const DashboardSection = ({
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+              <label className=" text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                 <FaClock className="text-indigo-600" /> Duration (minutes) *
               </label>
               <input
@@ -861,7 +861,7 @@ const DashboardSection = ({
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+            <label className=" text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <MdNotes className="text-indigo-600" /> Notes
             </label>
             <textarea
@@ -1013,7 +1013,7 @@ const StudyPlanner = () => {
     notes: ''
   });
 
-  const API_BASE_URL = 'https://real-time-chat-server-rosy.vercel.app';
+  const API_BASE = import.meta.env.VITE_API_BASE;
 
   // Fetch tasks on mount
   useEffect(() => { 
@@ -1021,17 +1021,21 @@ const StudyPlanner = () => {
   }, [userEmail]);
 
   const fetchTasks = async () => {
-    if(!userEmail) return;
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/tasks`, { params: { email: userEmail } });
-      if(response.data.success) setTasks(response.data.data);
-    } catch(err) {
-      console.error(err);
-      showToast('Server error', 'error');
-    } finally { setLoading(false); }
-  };
-
+  if (!userEmail) return;
+  try {
+    setLoading(true);
+    const response = await axios.get(`${API_BASE}/tasks`, {
+      params: { email: userEmail },
+      withCredentials: true  // This should be in the config object, not params
+    });
+    if (response.data.success) setTasks(response.data.data);
+  } catch (err) {
+    console.error(err);
+    showToast('Server error', 'error');
+  } finally {
+    setLoading(false);
+  }
+};
   const showToast = (message, type='info') => { 
     setToast({ show:true, message, type });  
   };
@@ -1050,7 +1054,7 @@ const StudyPlanner = () => {
       
       if (formData._id) {
         // Update existing task
-        const response = await axios.put(`${API_BASE_URL}/tasks/${formData._id}`, { 
+        const response = await axios.put(`${API_BASE}/tasks/${formData._id}`, { 
           ...formData, 
           email: userEmail 
         });
@@ -1065,7 +1069,7 @@ const StudyPlanner = () => {
         }
       } else {
         // Create new task
-        const response = await axios.post(`${API_BASE_URL}/tasks`, { ...formData, email: userEmail });
+        const response = await axios.post(`${API_BASE}/tasks`, { ...formData, email: userEmail });
         
         if(response.data.success){
           setTasks([...tasks, response.data.data]);
@@ -1090,7 +1094,7 @@ const StudyPlanner = () => {
       const taskToUpdate = tasks.find(t=>t._id===id);
       if(!taskToUpdate) return;
       const updatedTask = { ...taskToUpdate, completed: !taskToUpdate.completed };
-      const response = await axios.put(`${API_BASE_URL}/tasks/${id}`, { 
+      const response = await axios.put(`${API_BASE}/tasks/${id}`, { 
         completed: updatedTask.completed, 
         email: userEmail 
       });
@@ -1130,7 +1134,7 @@ const StudyPlanner = () => {
     if(!window.confirm('Are you sure you want to delete this task?')) return;
     
     try{
-      const response = await axios.delete(`${API_BASE_URL}/tasks/${id}`, { 
+      const response = await axios.delete(`${API_BASE}/tasks/${id}`, { 
         params: { email: userEmail } 
       });
       

@@ -17,8 +17,9 @@ import {
 import { AuthContext } from "../../Context/AuthContext";
 import "./Budget.css";
 import toast from "react-hot-toast";
+import axios from "axios";
 
-const API_BASE = "https://real-time-chat-server-rosy.vercel.app";
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 const Budget = () => {
   const { user } = useContext(AuthContext);
@@ -67,23 +68,27 @@ const Budget = () => {
   ];
 
   // ✅ Fetch transactions (email based)
-  const fetchTransactions = async () => {
-    if (!userEmail) return;
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE}/budgets?email=${userEmail}`);
-      if (!response.ok) throw new Error("Failed to fetch transactions");
-      const data = await response.json();
-      setTransactions(data);
-      setError(null);
-    } catch (err) {
-      toast.error("Failed to fetch transactions ❌");
-      setError(err.message);
-      console.error("Error fetching transactions:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchTransactions = async () => {
+  if (!userEmail) return;
+  try {
+    setLoading(true);
+
+    const response = await axios.get(`${API_BASE}/budgets`, {
+      params: { email: userEmail },
+      withCredentials: true
+    });
+
+    setTransactions(response.data);
+    setError(null);
+  } catch (err) {
+    toast.error("Failed to fetch transactions ❌");
+    setError(err.message);
+    console.error("Error fetching transactions:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // ✅ Add
   const addTransaction = async (transaction) => {
