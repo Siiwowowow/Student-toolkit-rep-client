@@ -1,12 +1,58 @@
-# React + Vite
+# AcademiaX - Student Life Toolkit
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**AcademiaX** is a modern, all-in-one student toolkit web application designed to simplify and organize student life. It provides tools for class scheduling, budget tracking, exam preparation, study planning, wellness management, and personal assistance. This project is built with the **MERN stack** and modern UI libraries.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🌐 Live Demo
+Check out the live application here:  
+[https://student-toolkit-17af6.web.app/](https://student-toolkit-17af6.web.app/)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 📂 GitHub Repositories
+- **Client (React Frontend):** [GitHub Link](https://github.com/Siiwowowow/Student-toolkit-rep-client)  
+- **Server (Node.js Backend):** [GitHub Link](https://github.com/Siiwowowow/Student-toolkit-real-server)
+
+---
+
+## 🛠 Technologies Used
+
+- **Frontend:** React.js, Tailwind CSS, DaisyUI, Axios, React Icons, React Router DOM, React Hot Toast  
+- **Backend:** Node.js, Express.js, MongoDB (Native Driver), JWT Authentication  
+- **Other Libraries & Tools:** react-simple-typewriter, Firebase Authentication (optional)  
+
+---
+
+## 🚀 Features
+
+- **Class Schedule Tracker:** Add, edit, delete classes; color-coded timetable for organization.  
+- **Budget Tracker:** Track income, expenses, and savings for better financial management.  
+- **Exam Preparation:** Generate practice questions, track study progress, and prepare efficiently.  
+- **Study Planner:** Plan study tasks and goals with ease.  
+- **Wellness Hub:** Reminders and wellness tips for a balanced student life.  
+- **Personal Assistant:** AI-powered assistance for planning and scheduling tasks.  
+- **Authentication:** Secure sign-up and login system using email and password.  
+- **Interactive UI:** Neon-style cards, hover effects, and smooth animations.  
+- **Responsive Design:** Fully mobile-friendly layout using Tailwind CSS and DaisyUI.  
+
+---
+
+## 📸 Screenshots / UI Highlights
+
+- Colorful Neon Cards for features  
+- Animated backgrounds and hover effects  
+- Responsive Navbar with user avatar dropdown  
+- Smooth, interactive dashboards for classes, budget, exams, and study plans  
+
+---
+
+## 💻 Installation
+
+### Frontend:
+
+```bash
+git clone https://github.com/Siiwowowow/Student-toolkit-rep-client.git
+cd Student-toolkit-rep-client
+npm install
+npm start

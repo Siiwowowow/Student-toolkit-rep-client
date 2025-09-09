@@ -4,33 +4,18 @@ import Why from '../../Pages/HeroSection/Why/Why';
 
 import App from '../../Pages/Faq/app';
 import App2 from '../../Pages/Faq/App2';
-import ProcrastinationBuster from '../ProcrastinationBuster/ProcrastinationBuster';
-import MoodHealthTracker from '../ProcrastinationBuster/MoodHealthTracker';
 
 
 
 
 const Home = () => {
     return (
-        <div>
-            
-            <Hero1 />
-
-           
-            <TrustBrand />
-
-            
-            <Why />
-
-        
-            <App2 />
-           
-            <App />
-            
-            
-           
-            
-           
+        <div>          
+            <Hero1 />     
+            <TrustBrand />   
+            <Why />    
+            <App2 />          
+            <App />         
         </div>
     );
 };

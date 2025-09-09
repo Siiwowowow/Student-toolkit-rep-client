@@ -1,0 +1,60 @@
+/* Neon snake border base for all cards */
+.neon-card-purple {
+  position: relative;
+  border-radius: 12px; /* smooth corners */
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Neon Border Effect */
+.neon-card-purple::after {
+  --border-radius: 12px;
+  --border-width: 1px; /* thin border */
+  --m-i: linear-gradient(#000000, #ffcccc);
+  --m-o: content-box, padding-box;
+
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  padding: var(--border-width);
+  border-radius: var(--border-radius);
+
+  /* Purple Gradient Colors */
+  background-image: conic-gradient(
+    #a855f7,  /* violet-500 */
+    #9333ea,  /* purple-600 */
+    #7e22ce,  /* purple-700 */
+    #c084fc,  /* purple-300 */
+    #e879f9,  /* fuchsia-400 */
+    #a855f7   /* violet-500 again */
+  );
+
+  -webkit-mask-image: var(--m-i), var(--m-i);
+  mask-image: var(--m-i), var(--m-i);
+  -webkit-mask-origin: var(--m-o);
+  mask-origin: var(--m-o);
+  -webkit-mask-clip: var(--m-o);
+  mask-composite: exclude;
+  -webkit-mask-composite: destination-out;
+
+  filter: hue-rotate(0);
+  animation: rotate-hue linear 3s infinite; /* always running */
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Hue rotation animation */
+@keyframes rotate-hue {
+  to {
+    filter: hue-rotate(1turn);
+  }
+}
+
+/* Ensure card content is above border */
+.neon-card-purple > * {
+  position: relative;
+  z-index: 3;
+}
