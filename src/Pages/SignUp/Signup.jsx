@@ -90,7 +90,7 @@ const Signup = () => {
         firebaseUID: result.user.uid,
       };
 
-      const response = await axios.post("http://localhost:3000/users", userToSave);
+      const response = await axios.post("https://real-time-chat-server-rosy.vercel.app/users", userToSave);
       if (response.data.success) {
         toast.success("Account created successfully! Welcome! 🎉");
         navigate(from, { replace: true });
