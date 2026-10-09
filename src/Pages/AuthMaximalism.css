@@ -1,0 +1,566 @@
+/* ========================================================
+   MAXIMALISM AUTHENTICATION THEME (Login & Signup)
+   Vibrant, High-Energy, Tactile, Neo-Maximalist Aesthetic
+   ======================================================== */
+
+.auth-maximalist-wrap {
+  --m-ink: #0e121d;
+  --m-yellow: #f8fb38;
+  --m-pink: #ff3b8d;
+  --m-cyan: #06d6a0;
+  --m-blue: #3a86ff;
+  --m-violet: #8338ec;
+  --m-orange: #ff6b35;
+
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(24px, 4vw, 56px) 16px;
+  overflow: hidden;
+
+  /* Maximalist Multi-layer Background */
+  background-color: #0b0e17;
+  background-image:
+    /* Retro geometric dot-matrix grid */
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.16) 1.5px, transparent 0),
+    /* Chromatic mesh gradients */
+    radial-gradient(circle at 10% 15%, rgba(131, 56, 236, 0.45) 0%, transparent 42%),
+    radial-gradient(circle at 90% 20%, rgba(255, 59, 141, 0.4) 0%, transparent 45%),
+    radial-gradient(circle at 20% 85%, rgba(58, 134, 255, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 85% 85%, rgba(6, 214, 160, 0.35) 0%, transparent 48%),
+    radial-gradient(circle at 50% 50%, rgba(248, 251, 56, 0.15) 0%, transparent 55%),
+    linear-gradient(135deg, #0e1220 0%, #151828 50%, #0a0d18 100%);
+  background-size: 28px 28px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  color: var(--m-ink);
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Floating animated background aura orbs */
+.auth-bg-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(65px);
+  pointer-events: none;
+  opacity: 0.65;
+  will-change: transform;
+}
+
+.auth-bg-orb-1 {
+  width: 420px;
+  height: 420px;
+  top: -80px;
+  left: -80px;
+  background: radial-gradient(circle, #8338ec 0%, #ff3b8d 70%);
+  animation: authOrbFloat1 18s ease-in-out infinite alternate;
+}
+
+.auth-bg-orb-2 {
+  width: 480px;
+  height: 480px;
+  bottom: -120px;
+  right: -100px;
+  background: radial-gradient(circle, #3a86ff 0%, #06d6a0 70%);
+  animation: authOrbFloat2 22s ease-in-out infinite alternate;
+}
+
+.auth-bg-orb-3 {
+  width: 320px;
+  height: 320px;
+  top: 45%;
+  right: 12%;
+  background: radial-gradient(circle, #f8fb38 0%, #ff6b35 70%);
+  opacity: 0.35;
+  animation: authOrbFloat3 15s ease-in-out infinite alternate;
+}
+
+@keyframes authOrbFloat1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(60px, 80px) scale(1.15); }
+  100% { transform: translate(-40px, 120px) scale(0.95); }
+}
+
+@keyframes authOrbFloat2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-80px, -70px) scale(1.2); }
+  100% { transform: translate(50px, -110px) scale(0.9); }
+}
+
+@keyframes authOrbFloat3 {
+  0% { transform: translate(0, 0) scale(0.9); }
+  100% { transform: translate(-70px, -60px) scale(1.2); }
+}
+
+/* Floating decorative retro stickers */
+.auth-sticker {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  border: 2.5px solid var(--m-ink);
+  pointer-events: none;
+  user-select: none;
+  box-shadow: 4px 4px 0px var(--m-ink);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.auth-sticker-tl {
+  top: 36px;
+  left: 36px;
+  background: var(--m-yellow);
+  color: var(--m-ink);
+  transform: rotate(-6deg);
+  animation: authWiggle1 8s ease-in-out infinite alternate;
+}
+
+.auth-sticker-tr {
+  top: 44px;
+  right: 40px;
+  background: var(--m-pink);
+  color: #ffffff;
+  transform: rotate(5deg);
+  animation: authWiggle2 9s ease-in-out infinite alternate;
+}
+
+.auth-sticker-bl {
+  bottom: 40px;
+  left: 44px;
+  background: var(--m-cyan);
+  color: var(--m-ink);
+  transform: rotate(4deg);
+  animation: authWiggle2 10s ease-in-out infinite alternate;
+}
+
+.auth-sticker-br {
+  bottom: 38px;
+  right: 44px;
+  background: var(--m-yellow);
+  color: var(--m-ink);
+  transform: rotate(-5deg);
+  animation: authWiggle1 9s ease-in-out infinite alternate;
+}
+
+@keyframes authWiggle1 {
+  0% { transform: rotate(-6deg) translateY(0); }
+  50% { transform: rotate(-3deg) translateY(-8px); }
+  100% { transform: rotate(-8deg) translateY(6px); }
+}
+
+@keyframes authWiggle2 {
+  0% { transform: rotate(5deg) translateY(0); }
+  50% { transform: rotate(8deg) translateY(8px); }
+  100% { transform: rotate(3deg) translateY(-6px); }
+}
+
+/* Floating retro starbursts */
+.auth-starburst {
+  position: absolute;
+  color: #ffffff;
+  pointer-events: none;
+  opacity: 0.55;
+  animation: authRotateSlow 24s linear infinite;
+}
+
+.auth-starburst-1 {
+  top: 18%;
+  left: 12%;
+  font-size: 28px;
+  color: var(--m-yellow);
+}
+
+.auth-starburst-2 {
+  bottom: 22%;
+  right: 14%;
+  font-size: 36px;
+  color: var(--m-pink);
+}
+
+@keyframes authRotateSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* The Central Maximalist Card */
+.auth-maximalist-card {
+  position: relative;
+  z-index: 10;
+  width: min(480px, 100%);
+  background: #ffffff;
+  border: 3px solid var(--m-ink);
+  border-radius: 24px;
+  padding: clamp(28px, 6vw, 42px);
+  box-shadow:
+    10px 10px 0px var(--m-ink),
+    0 25px 60px rgba(0, 0, 0, 0.45);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.auth-maximalist-card:hover {
+  box-shadow:
+    12px 12px 0px var(--m-ink),
+    0 30px 70px rgba(0, 0, 0, 0.5);
+}
+
+/* Card Header */
+.auth-card-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--m-yellow);
+  color: var(--m-ink);
+  border: 2px solid var(--m-ink);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 2.5px 2.5px 0px var(--m-ink);
+  margin-bottom: 12px;
+}
+
+.auth-card-title {
+  font-size: clamp(28px, 5vw, 36px);
+  font-weight: 900;
+  color: var(--m-ink);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  margin: 0 0 8px;
+}
+
+.auth-card-title span {
+  background: linear-gradient(135deg, var(--m-blue), var(--m-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.auth-card-subtitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #5d677d;
+  margin: 0;
+}
+
+/* Form Styling */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--m-ink);
+  letter-spacing: -0.01em;
+}
+
+.auth-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-input-icon {
+  position: absolute;
+  left: 14px;
+  color: #798399;
+  font-size: 18px;
+  pointer-events: none;
+  transition: color 0.15s ease;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 13px 16px 13px 44px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--m-ink);
+  background: #f8fafc;
+  border: 2px solid #dbe1ec;
+  border-radius: 12px;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-input::placeholder {
+  color: #9aa3b5;
+  font-weight: 400;
+}
+
+.auth-input:hover {
+  background: #ffffff;
+  border-color: #b9c3d4;
+}
+
+.auth-input:focus {
+  background: #ffffff;
+  border-color: var(--m-ink);
+  box-shadow: 3px 3px 0px var(--m-ink);
+}
+
+.auth-input:focus + .auth-input-icon,
+.auth-input-wrapper:focus-within .auth-input-icon {
+  color: var(--m-blue);
+}
+
+.auth-input.has-error {
+  border-color: #ef4444;
+  background: #fff5f5;
+}
+
+.auth-eye-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #798399;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.auth-eye-btn:hover {
+  color: var(--m-ink);
+  background: #edf1f8;
+}
+
+.auth-error-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e11d48;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+/* Avatar upload area for Signup */
+.auth-avatar-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 2px dashed #cfd7e6;
+  border-radius: 14px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.auth-avatar-box:hover {
+  border-color: var(--m-ink);
+  background: #ffffff;
+}
+
+.auth-avatar-preview {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 2.5px solid var(--m-ink);
+  background: var(--m-yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 2.5px 2.5px 0px var(--m-ink);
+}
+
+.auth-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.auth-avatar-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  background: #ffffff;
+  color: var(--m-ink);
+  border: 2px solid var(--m-ink);
+  border-radius: 9px;
+  box-shadow: 2px 2px 0px var(--m-ink);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.auth-avatar-upload-btn:hover {
+  background: var(--m-yellow);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--m-ink);
+}
+
+.auth-avatar-upload-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--m-ink);
+}
+
+/* Extra row: Remember me & Forgot Password */
+.auth-extra-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5569;
+}
+
+.auth-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.auth-checkbox-label input {
+  accent-color: var(--m-ink);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.auth-link {
+  color: var(--m-blue);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.auth-link:hover {
+  color: var(--m-pink);
+  text-decoration: underline;
+}
+
+/* Primary Submit Button */
+.auth-submit-btn {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  background: var(--m-ink);
+  border: 2.5px solid var(--m-ink);
+  border-radius: 14px;
+  box-shadow:
+    4px 4px 0px var(--m-yellow),
+    4px 4px 0px 2.5px var(--m-ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin-top: 6px;
+}
+
+.auth-submit-btn:hover:not(:disabled) {
+  background: #1b2133;
+  transform: translate(-2px, -2px);
+  box-shadow:
+    6px 6px 0px var(--m-yellow),
+    6px 6px 0px 2.5px var(--m-ink);
+}
+
+.auth-submit-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow:
+    1px 1px 0px var(--m-yellow),
+    1px 1px 0px 2px var(--m-ink);
+}
+
+.auth-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 10px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+}
+
+.auth-divider span {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b95a8;
+}
+
+/* Footer Switch Link */
+.auth-switch-text {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.auth-switch-text a {
+  color: var(--m-ink);
+  font-weight: 900;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  margin-left: 4px;
+  transition: color 0.15s ease;
+}
+
+.auth-switch-text a:hover {
+  color: var(--m-pink);
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+  .auth-sticker-tl,
+  .auth-sticker-tr,
+  .auth-sticker-bl,
+  .auth-sticker-br {
+    display: none;
+  }
+}
