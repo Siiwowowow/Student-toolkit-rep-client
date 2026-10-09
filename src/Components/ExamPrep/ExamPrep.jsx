@@ -79,7 +79,7 @@ const ExamPrep = () => {
     setLoading(true);
     
     try {
-      const response = await axios.post("https://real-time-chat-server-rosy.vercel.app/generate-questions", {
+      const response = await axios.post("http://localhost:3000/generate-questions", {
         topic: `${subject} - ${difficulty} level`
       });
       
@@ -139,7 +139,7 @@ const ExamPrep = () => {
       const topic = `${subject} - ${difficulty} level`;
       
       // Call the backend API
-      const response = await axios.post("https://real-time-chat-server-rosy.vercel.app/generate-questions", {
+      const response = await axios.post("http://localhost:3000/generate-questions", {
         topic: topic
       });
       

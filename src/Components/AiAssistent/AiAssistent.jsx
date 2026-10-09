@@ -36,7 +36,7 @@ const AiAssistant = () => {
 
     try {
       // In a real app, you would use your API endpoint
-      const res = await axios.post("https://real-time-chat-server-rosy.vercel.app/ai-chat", {
+      const res = await axios.post("http://localhost:3000/ai-chat", {
         message: userMessage,
       });
 

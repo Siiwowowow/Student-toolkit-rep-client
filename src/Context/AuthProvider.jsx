@@ -50,34 +50,34 @@ const AuthProvider = ({ children }) => {
 
   // track auth state
   useEffect(() => {
-  const unSubscribe = onAuthStateChanged(auth, (currentUser) => {
-    setUser(currentUser);
-    setLoading(false);
+    const unSubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser?.email) {
+        setUser(currentUser);
+        setLoading(false);
+        return;
+      }
 
-    if (currentUser?.email) {
-      const userData = { email: currentUser.email };
+      setLoading(true);
+      try {
+        const API_BASE = import.meta.env.VITE_API_BASE;
+        await axios.post(
+          `${API_BASE}/jwt`,
+          { email: currentUser.email },
+          { withCredentials: true }
+        );
+      } catch (err) {
+        console.error("Failed to initialize API authentication:", err);
+        toast.error(err.message);
+      } finally {
+        setUser(currentUser);
+        setLoading(false);
+      }
+    });
 
-      // Use environment variable for API base
-      const API_BASE = import.meta.env.VITE_API_BASE;
-
-      axios.post(`${API_BASE}/jwt`, userData, {
-        withCredentials: true
-      })
-        .then(res => {
-          console.log(res.data);
-        })
-        .catch((err) => {
-          console.log(err.message);
-          setLoading(false);
-          toast.error(err.message);
-        });
-    }
-  });
-
-  return () => {
-    unSubscribe();
-  };
-}, []);
+    return () => {
+      unSubscribe();
+    };
+  }, []);
 
 
   const AuthInfo = {

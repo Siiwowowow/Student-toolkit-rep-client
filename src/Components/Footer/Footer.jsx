@@ -1,5 +1,4 @@
 import React from 'react';
-import  logo from '../../../public/logo.png'
 const Footer = () => {
     return (
         <div>
@@ -8,7 +7,7 @@ const Footer = () => {
 		<div className="lg:w-1/3">
 			<a rel="noopener noreferrer" href="#" className="flex justify-center space-x-3 lg:justify-start">
 				<div className="flex items-center justify-center   ">
-					<img className='w-50' src={logo} alt="" />
+					<img className='w-50' src="/logo.png" alt="Study Toolkit Logo" />
 				</div>
 			          
 			</a>

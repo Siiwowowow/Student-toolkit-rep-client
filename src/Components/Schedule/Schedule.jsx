@@ -32,7 +32,7 @@ const Schedule = () => {
     location: "",
   });
 
-  const API_BASE = `${import.meta.env.VITE_API_BASE}/class`;
+  const API_BASE = 'http://localhost:3000/classes';
 
  
  // Load from backend
@@ -41,7 +41,9 @@ useEffect(() => {
     if (!user?.email) return;
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE}?email=${user.email}`,{ withCredentials: true });
+      const res = await axios.get(API_BASE, {
+        params: { email: user.email },
+      });
       
       console.log("GET Response:", res.data); // Debug what's returned
       
@@ -204,11 +206,10 @@ const handleAddClass = async () => {
       <Toaster
         position="top-right"
         toastOptions={{
-          duration: 4000,
+          duration: 2000,
           style: {
             background: '#fff',
             color: '#374151',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
             borderRadius: '0.5rem',
             padding: '16px',
             fontSize: '14px',

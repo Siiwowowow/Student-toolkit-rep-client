@@ -30,16 +30,16 @@ const SocialLogin = () => {
       };
 
       // 3. Check if user already exists
-      const checkUser = await axios.get(`https://real-time-chat-server-rosy.vercel.app/users?email=${user.email}`);
+      const checkUser = await axios.get(`http://localhost:3000/users?email=${user.email}`);
 
       if (checkUser.data.exists) {
         // Update last_log_in if needed
-        await axios.put(`https://real-time-chat-server-rosy.vercel.app/users/${checkUser.data.user._id}`, {
+        await axios.put(`http://localhost:3000/users/${checkUser.data.user._id}`, {
           last_log_in: new Date().toISOString(),
         });
       } else {
         // Add new user
-        await axios.post("https://real-time-chat-server-rosy.vercel.app/users", userInfo);
+        await axios.post("http://localhost:3000/users", userInfo);
       }
 
       // 4. Show success toast

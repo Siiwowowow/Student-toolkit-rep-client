@@ -1031,7 +1031,7 @@ const StudyPlanner = () => {
     if (response.data.success) setTasks(response.data.data);
   } catch (err) {
     console.error(err);
-    showToast('Server error', 'error');
+    toast.error("Failed to load tasks. Please try again.");
   } finally {
     setLoading(false);
   }
@@ -1063,7 +1063,7 @@ const StudyPlanner = () => {
           setTasks(tasks.map(t => t._id === formData._id ? response.data.data : t));
           setFormData({ subject:'', topic:'', priority:'medium', deadline:'', timeSlot:'', duration:'', notes:'' });
           setShowModal(false);
-          showToast('Task updated successfully!', 'success');
+          toast.success("Task updated successfully! ✅");
         } else {
           showToast('Failed to update task', 'error');
         }
@@ -1075,14 +1075,14 @@ const StudyPlanner = () => {
           setTasks([...tasks, response.data.data]);
           setFormData({ subject:'', topic:'', priority:'medium', deadline:'', timeSlot:'', duration:'', notes:'' });
           setShowModal(false);
-          showToast('Task added successfully!', 'success');
+          toast.success("Task added successfully! ✅");
         } else {
           showToast('Failed to add task', 'error');
         }
       }
     } catch(err){ 
       console.error(err); 
-      showToast('Error saving task', 'error'); 
+      toast.error("Error saving task. Please try again."); 
     } finally { 
       setLoading(false); 
     }
@@ -1105,13 +1105,13 @@ const StudyPlanner = () => {
           setShowConfetti(true); 
           setTimeout(()=>setShowConfetti(false),5000);
         }
-        showToast('Task status updated!', 'info');
+        toast.success("Task status updated! ✅");
       } else {
-        showToast('Failed to update task', 'error');
+        toast.error("Failed to update task. Please try again.");
       }
     } catch(err){ 
       console.error(err); 
-      showToast('Error updating task', 'error'); 
+      toast.error("Error updating task. Please try again."); 
     }
   };
 
@@ -1140,13 +1140,13 @@ const StudyPlanner = () => {
       
       if(response.data.success){
         setTasks(tasks.filter(t=>t._id!==id));
-        showToast('Task deleted!', 'warning');
+        toast.success("Task deleted! ✅");
       } else {
-        showToast('Failed to delete task', 'error');
+        toast.error("Failed to delete task. Please try again.");
       }
     } catch(err){ 
       console.error(err); 
-      showToast('Error deleting task', 'error'); 
+      toast.error("Error deleting task. Please try again."); 
     }
   };
 
