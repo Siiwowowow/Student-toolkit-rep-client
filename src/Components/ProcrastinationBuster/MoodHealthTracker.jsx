@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect,  } from 'react';
 import {
   ResponsiveContainer,
   LineChart,

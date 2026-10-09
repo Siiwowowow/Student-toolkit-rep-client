@@ -10,8 +10,6 @@ import {
 } from "firebase/auth";
 import { AuthContext } from "./AuthContext";
 import { auth } from "../Firebase/firebase.init";
-import axios from "axios";
-import toast from "react-hot-toast";
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -50,28 +48,9 @@ const AuthProvider = ({ children }) => {
 
   // track auth state
   useEffect(() => {
-    const unSubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser?.email) {
-        setUser(currentUser);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const API_BASE = import.meta.env.VITE_API_BASE;
-        await axios.post(
-          `${API_BASE}/jwt`,
-          { email: currentUser.email },
-          { withCredentials: true }
-        );
-      } catch (err) {
-        console.error("Failed to initialize API authentication:", err);
-        toast.error(err.message);
-      } finally {
-        setUser(currentUser);
-        setLoading(false);
-      }
+    const unSubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
     });
 
     return () => {

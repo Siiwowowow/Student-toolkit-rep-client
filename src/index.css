@@ -1,2 +1,17 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+:root {
+  --site-paper: #f5f0e5;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body,
+#root {
+  background-color: var(--site-paper);
+}

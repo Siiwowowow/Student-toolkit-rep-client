@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE } from "../../api";
 
 const subjects = [
   "English Vocabulary",
@@ -79,7 +80,7 @@ const ExamPrep = () => {
     setLoading(true);
     
     try {
-      const response = await axios.post("http://localhost:3000/generate-questions", {
+      const response = await axios.post(`${API_BASE}/generate-questions`, {
         topic: `${subject} - ${difficulty} level`
       });
       
@@ -139,7 +140,7 @@ const ExamPrep = () => {
       const topic = `${subject} - ${difficulty} level`;
       
       // Call the backend API
-      const response = await axios.post("http://localhost:3000/generate-questions", {
+      const response = await axios.post(`${API_BASE}/generate-questions`, {
         topic: topic
       });
       

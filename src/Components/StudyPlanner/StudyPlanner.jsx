@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from "../../Context/AuthContext";
+import { API_BASE } from "../../api";
 import { 
   FaPlus, FaCheck, FaExclamationTriangle, FaCalendarAlt, FaClock, FaBook, 
   FaTrash, FaTasks, FaTimes, FaFilter, FaListUl, FaRunning, FaCheckCircle, 
-  FaSync, FaChartBar, FaTrophy, FaFire, FaHome, FaBars, FaEdit, FaBell,
+  FaSync, FaChartBar, FaTrophy, FaFire, FaHome, FaEdit, FaBell,
   FaGraduationCap, FaUserGraduate, FaRegSmileBeam, FaRegCalendarCheck,
   FaHourglassHalf, FaRegClock, FaSortAmountDownAlt, FaSearch
 } from 'react-icons/fa';
@@ -12,6 +13,16 @@ import { MdSubject, MdNotes, MdAccessTime } from 'react-icons/md';
 import { IoIosAddCircleOutline } from 'react-icons/io';
 import Confetti from 'react-confetti';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area } from 'recharts';
+import './StudyPlanner.css';
+
+const toDateKey = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getTaskDateKey = (task) => String(task.deadline || '').slice(0, 10);
 
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
@@ -90,7 +101,7 @@ const CountdownTimer = ({ deadline, timeSlot }) => {
 
 // Task Card Component
 const TaskCard = ({ task, toggleCompletion, deleteTask, editTask, getPriorityBadge, isOverdue }) => (
-  <div className={`border-l-4 rounded-lg p-4 mb-3 shadow-sm transition-all duration-200 hover:shadow-md ${task.completed ? 'bg-green-50 border-green-500' : 'bg-white border-indigo-500'} ${isOverdue(task.deadline, task.timeSlot) && !task.completed ? 'border-red-500 bg-red-50' : ''}`}>
+  <div className={`planner-list-task-card border-l-4 rounded-lg p-4 mb-3 shadow-sm transition-all duration-200 hover:shadow-md ${task.completed ? 'bg-green-50 border-green-500' : 'bg-white border-indigo-500'} ${isOverdue(task.deadline, task.timeSlot) && !task.completed ? 'border-red-500 bg-red-50' : ''}`}>
     <div className="flex justify-between items-start">
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
@@ -349,14 +360,19 @@ const StudentActivityChart = ({ tasks }) => {
   const COLORS = ['#FF4560', '#008FFB', '#00E396', '#FEB019'];
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-        <FaChartBar className="text-indigo-600" /> Study Analytics
-      </h2>
+    <section className="planner-analytics">
+      <header className="planner-section-hero">
+        <div>
+          <span className="planner-eyebrow"><FaChartBar /> YOUR LEARNING SNAPSHOT</span>
+          <h1>Progress that <span>keeps you moving.</span></h1>
+          <p>See what you have accomplished and where to focus next.</p>
+        </div>
+        <div className="planner-analytics-hero-icon"><FaChartBar /></div>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="planner-analytics-stats">
         {/* Completion Rate Card */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg p-4">
+        <article className="planner-analytics-stat is-blue">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold">Completion Rate</h3>
             <FaTrophy className="text-lg" />
@@ -367,20 +383,20 @@ const StudentActivityChart = ({ tasks }) => {
              completionRate >= 50 ? 'Good progress! 👍' :
              'Keep going! 💪'}
           </p>
-        </div>
+        </article>
 
         {/* Total Tasks Card */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <article className="planner-analytics-stat is-violet">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-800">Total Tasks</h3>
             <FaTasks className="text-lg text-blue-500" />
           </div>
           <div className="text-2xl font-bold text-blue-600">{tasks.length}</div>
           <p className="text-gray-500 text-xs">All your study tasks</p>
-        </div>
+        </article>
 
         {/* Study Time Card */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <article className="planner-analytics-stat is-green">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-800">Study Time</h3>
             <MdAccessTime className="text-lg text-green-500" />
@@ -389,10 +405,10 @@ const StudentActivityChart = ({ tasks }) => {
             {Math.floor(totalStudyTime / 60)}h {totalStudyTime % 60}m
           </div>
           <p className="text-gray-500 text-xs">Time spent studying</p>
-        </div>
+        </article>
 
         {/* Pending Tasks Card */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <article className="planner-analytics-stat is-orange">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-800">Pending Tasks</h3>
             <FaRunning className="text-lg text-orange-500" />
@@ -401,16 +417,16 @@ const StudentActivityChart = ({ tasks }) => {
             {tasks.filter(t => !t.completed).length}
           </div>
           <p className="text-gray-500 text-xs">Tasks to complete</p>
-        </div>
+        </article>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="planner-analytics-chart-grid">
         {/* Subjects Bar Chart */}
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <article className="planner-chart-card">
           <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <FaBook className="text-indigo-500" /> Tasks by Subject
           </h3>
-          <div className="h-64">
+          <div className="planner-chart-area h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={subjectChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -423,14 +439,14 @@ const StudentActivityChart = ({ tasks }) => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </article>
 
         {/* Priority Pie Chart */}
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <article className="planner-chart-card">
           <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <FaExclamationTriangle className="text-indigo-500" /> Task Priority
           </h3>
-          <div className="h-64">
+          <div className="planner-chart-area h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -452,15 +468,15 @@ const StudentActivityChart = ({ tasks }) => {
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </article>
       </div>
 
       {/* Weekly Activity Chart */}
-      <div className="bg-gray-50 p-4 rounded-lg">
+      <article className="planner-chart-card planner-weekly-chart">
         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <FaFire className="text-indigo-500" /> Weekly Activity
         </h3>
-        <div className="h-64">
+        <div className="planner-chart-area h-64">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={weeklyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -471,85 +487,39 @@ const StudentActivityChart = ({ tasks }) => {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-      </div>
-    </div>
+        </article>
+      </section>
   );
 };
 
 // Navigation Component
 const Navigation = ({ activeSection, setActiveSection }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <FaHome className="mr-2" /> },
-    { id: 'analytics', label: 'Analytics', icon: <FaChartBar className="mr-2" /> },
-    { id: 'tasks', label: 'All Tasks', icon: <FaListUl className="mr-2" /> }
+    { id: 'dashboard', label: 'Dashboard', icon: <FaHome /> },
+    { id: 'analytics', label: 'Analytics', icon: <FaChartBar /> },
+    { id: 'tasks', label: 'All Tasks', icon: <FaListUl /> }
   ];
 
   return (
-    <nav className="bg-white shadow-md mb-6 rounded-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <span className="flex items-center text-xl font-semibold text-gray-800">
-              <FaGraduationCap className="text-indigo-600 mr-2" /> Study Planner
-            </span>
-          </div>
-          
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-2">
-            {navItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors ${
-                  activeSection === item.id
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                {item.icon}
-                {item.label}
-              </button>
-            ))}
-          </div>
-          
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none transition-colors"
-            >
-              <FaBars className="block h-6 w-6" />
-            </button>
-          </div>
-        </div>
+    <nav className="planner-navigation">
+      <div className="planner-navigation-brand">
+        <span className="planner-brand-mark"><FaGraduationCap /></span>
+        <span>Study Planner</span>
       </div>
-      
-      {/* Mobile Navigation Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-t">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            {navItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveSection(item.id);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2 rounded-md text-base font-medium flex items-center transition-colors ${
-                  activeSection === item.id
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                {item.icon}
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="planner-navigation-tabs" role="tablist" aria-label="Study planner sections">
+        {navItems.map(item => (
+          <button
+            key={item.id}
+            role="tab"
+            aria-selected={activeSection === item.id}
+            onClick={() => setActiveSection(item.id)}
+            className={`planner-navigation-tab${activeSection === item.id ? ' is-active' : ''}`}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </div>
     </nav>
   );
 };
@@ -557,10 +527,24 @@ const Navigation = ({ activeSection, setActiveSection }) => {
 // Dashboard Section Component
 const DashboardSection = ({ 
   tasks, loading, filter, setFilter, showModal, setShowModal, 
-  toggleCompletion, deleteTask, editTask, getPriorityBadge, isOverdue, 
+  toggleCompletion, deleteTask, editTask, isOverdue, 
   fetchTasks, completedTasksCount, totalTasksCount, progressPercentage,
-  formData, handleInputChange, addTask, searchTerm, setSearchTerm
+  formData, setFormData, handleInputChange, addTask, searchTerm, setSearchTerm
 }) => {
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const openTaskForm = (date = selectedDate) => {
+    setFormData({
+      subject: '',
+      topic: '',
+      priority: 'medium',
+      deadline: toDateKey(date),
+      timeSlot: '',
+      duration: '',
+      notes: ''
+    });
+    setShowModal(true);
+  };
+
   // Get tasks due this week (next 7 days)
   const getThisWeekTasks = () => {
     const today = new Date();
@@ -580,12 +564,6 @@ const DashboardSection = ({
   const getPendingTasks = () => {
     return tasks.filter(task => !task.completed)
       .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-  };
-
-  // Get completed tasks
-  const getCompletedTasks = () => {
-    return tasks.filter(task => task.completed)
-      .sort((a, b) => new Date(b.deadline) - new Date(a.deadline));
   };
 
   // Get urgent tasks (due in next 48 hours)
@@ -616,153 +594,256 @@ const DashboardSection = ({
   // Billboard data
   const upcomingTasks = getThisWeekTasks();
   const pendingTasks = getPendingTasks();
-  const completedTasksList = getCompletedTasks();
   const urgentTasks = getUrgentTasks();
+  const weekStart = new Date(selectedDate);
+  weekStart.setDate(selectedDate.getDate() - ((selectedDate.getDay() + 6) % 7));
+  weekStart.setHours(0, 0, 0, 0);
+  const weekDays = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + index);
+    return date;
+  });
+  const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+  const calendarStart = new Date(monthStart);
+  calendarStart.setDate(1 - ((monthStart.getDay() + 6) % 7));
+  const calendarDays = Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(calendarStart);
+    date.setDate(calendarStart.getDate() + index);
+    return date;
+  });
+  const selectedDateKey = toDateKey(selectedDate);
+  const selectedDayTasks = tasks
+    .filter((task) => getTaskDateKey(task) === selectedDateKey)
+    .sort((first, second) => first.timeSlot.localeCompare(second.timeSlot));
+  const visibleWeekTasks = (day) => tasks
+    .filter((task) => getTaskDateKey(task) === toDateKey(day))
+    .filter((task) => {
+      const matchesSearch = !searchTerm ||
+        `${task.subject} ${task.topic}`.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = filter === 'all' ||
+        (filter === 'completed' && task.completed) ||
+        (filter === 'pending' && !task.completed) ||
+        (filter === 'urgent' && urgentTasks.some((urgent) => urgent._id === task._id));
+      return matchesSearch && matchesFilter;
+    })
+    .sort((first, second) => first.timeSlot.localeCompare(second.timeSlot));
+  const weekTasks = weekDays.flatMap(visibleWeekTasks);
+  const weekCompleted = weekTasks.filter((task) => task.completed).length;
 
   return (
     <>
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl p-6 mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold mb-1">Welcome to Your Study Planner!</h1>
-            <p className="text-indigo-100">You have {pendingTasks.length} task{pendingTasks.length !== 1 ? 's' : ''} to complete</p>
+      <div className="study-planner-dashboard">
+        <header className="planner-hero">
+          <div className="planner-hero-copy">
+            <span className="planner-eyebrow"><FaGraduationCap /> YOUR STUDY PLANNER</span>
+            <h1>Plan today.<br /><span>Achieve tomorrow.</span></h1>
+            <p>Break your big goals into small steps and stay consistent.</p>
+            <div className="planner-hero-actions">
+              <button className="planner-primary-button" onClick={() => openTaskForm()}><FaPlus /> Add a study task</button>
+              <button className="planner-quiet-button" onClick={fetchTasks}><FaSync className={loading ? 'planner-spin' : ''} /> Refresh plan</button>
+            </div>
           </div>
-          <div className="hidden md:block">
-            <FaUserGraduate className="text-4xl text-white opacity-80" />
+          <div className="planner-hero-art" aria-hidden="true">
+            <div className="planner-art-orbit planner-art-orbit-one" />
+            <div className="planner-art-orbit planner-art-orbit-two" />
+            <div className="planner-art-icon"><FaUserGraduate /></div>
+            <div className="planner-book-stack"><span>PLAN</span><span>FOCUS</span><span>GROW</span></div>
+            <span className="planner-art-spark planner-art-spark-one">✦</span>
+            <span className="planner-art-spark planner-art-spark-two">✦</span>
           </div>
-        </div>
-      </div>
+        </header>
 
-      {/* Progress Overview Card */}
-      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-            <FaTasks className="text-indigo-600" /> Progress Overview
-          </h2>
-          <button
-            onClick={fetchTasks}
-            className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 transition-colors"
-            title="Refresh tasks"
-          >
-            <FaSync className={loading ? 'animate-spin' : ''} />
-            <span>Refresh</span>
-          </button>
-        </div>
-        
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-gray-600">Completed: <span className="font-semibold text-green-600">{completedTasksCount}/{totalTasksCount}</span></p>
-            <p className="text-gray-600">Pending: <span className="font-semibold text-orange-600">{totalTasksCount - completedTasksCount}</span></p>
-          </div>
-          <div className="text-2xl font-bold text-indigo-600">{progressPercentage}%</div>
-        </div>
-        
-        <div className="w-full bg-gray-200 rounded-full h-4 mb-2">
-          <div 
-            className="bg-indigo-600 h-4 rounded-full transition-all duration-500" 
-            style={{ width: `${progressPercentage}%` }}
-          ></div>
-        </div>
-        <p className="text-xs text-gray-500 text-center">
-          {progressPercentage >= 80 ? "You're doing amazing! Keep it up! 🎉" :
-           progressPercentage >= 50 ? "Good progress! You're more than halfway there! 👍" :
-           "Every task completed is a step forward! 💪"}
-        </p>
-      </div>
+        <section className="planner-stat-grid" aria-label="Study task overview">
+          <article className="planner-stat planner-stat-blue">
+            <span className="planner-stat-icon"><FaTasks /></span>
+            <span className="planner-stat-label">TOTAL TASKS</span>
+            <strong>{totalTasksCount}</strong>
+            <small>Across your study plan</small>
+          </article>
+          <article className="planner-stat planner-stat-green">
+            <span className="planner-stat-icon"><FaCheckCircle /></span>
+            <span className="planner-stat-label">COMPLETED</span>
+            <strong>{completedTasksCount}</strong>
+            <small>{progressPercentage}% completion rate</small>
+          </article>
+          <article className="planner-stat planner-stat-violet">
+            <span className="planner-stat-icon"><FaCalendarAlt /></span>
+            <span className="planner-stat-label">THIS WEEK</span>
+            <strong>{upcomingTasks.length}</strong>
+            <small>Upcoming study sessions</small>
+          </article>
+          <article className="planner-stat planner-stat-orange">
+            <span className="planner-stat-icon"><FaBell /></span>
+            <span className="planner-stat-label">DUE SOON</span>
+            <strong>{urgentTasks.length}</strong>
+            <small>Within the next 48 hours</small>
+          </article>
+        </section>
 
-      {/* Search and Filter Bar */}
-      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-        <div className="relative flex-1">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaSearch className="text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search tasks by subject or topic..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        
-        <div className="flex gap-2">
-          <button 
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
-          >
-            <FaPlus /> Add Task
-          </button>
-          
-          <div className="flex items-center gap-2 bg-white rounded-xl shadow-md px-4 border border-gray-200">
-            <FaFilter className="text-indigo-600" />
-            <select 
-              value={filter} 
-              onChange={(e) => setFilter(e.target.value)}
-              className="py-2 pl-2 pr-8 border-0 focus:ring-0 focus:outline-none bg-transparent"
-            >
-              <option value="all">All Tasks</option>
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-              <option value="urgent">Urgent</option>
-            </select>
-          </div>
-        </div>
-      </div>
+        <div className="planner-workspace">
+          <section className="planner-calendar-panel">
+            <div className="planner-panel-heading planner-calendar-heading">
+              <div>
+                <span className="planner-eyebrow">YOUR WEEK AT A GLANCE</span>
+                <h2>Study schedule</h2>
+              </div>
+              <div className="planner-calendar-controls">
+                <label className="planner-search">
+                  <FaSearch />
+                  <input
+                    type="search"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search tasks"
+                    aria-label="Search tasks"
+                  />
+                </label>
+                <label className="planner-filter">
+                  <FaFilter />
+                  <select value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Filter tasks">
+                    <option value="all">All tasks</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </label>
+                <button className="planner-icon-button" onClick={() => setSelectedDate(new Date())} title="Go to today">Today</button>
+                <button className="planner-icon-button planner-week-nav" onClick={() => setSelectedDate((date) => new Date(date.getFullYear(), date.getMonth(), date.getDate() - 7))} aria-label="Previous week"><FaSortAmountDownAlt /></button>
+                <button className="planner-icon-button planner-week-nav" onClick={() => setSelectedDate((date) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + 7))} aria-label="Next week"><FaSortAmountDownAlt className="planner-next-arrow" /></button>
+              </div>
+            </div>
 
-      {/* Billboard Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <BillboardCard 
-          title="Urgent Tasks" 
-          count={urgentTasks.length}
-          icon={<FaBell className="text-red-500 text-xl" />}
-          color="text-red-500"
-          tasks={urgentTasks}
-          toggleCompletion={toggleCompletion}
-          deleteTask={deleteTask}
-          editTask={editTask}
-          getPriorityBadge={getPriorityBadge}
-          isOverdue={isOverdue}
-        />
-        
-        <BillboardCard 
-          title="Upcoming Tasks" 
-          count={upcomingTasks.length}
-          icon={<FaCalendarAlt className="text-blue-500 text-xl" />}
-          color="text-blue-500"
-          tasks={upcomingTasks}
-          toggleCompletion={toggleCompletion}
-          deleteTask={deleteTask}
-          editTask={editTask}
-          getPriorityBadge={getPriorityBadge}
-          isOverdue={isOverdue}
-        />
-        
-        <BillboardCard 
-          title="Pending Tasks" 
-          count={pendingTasks.length}
-          icon={<FaRunning className="text-orange-500 text-xl" />}
-          color="text-orange-500"
-          tasks={pendingTasks}
-          toggleCompletion={toggleCompletion}
-          deleteTask={deleteTask}
-          editTask={editTask}
-          getPriorityBadge={getPriorityBadge}
-          isOverdue={isOverdue}
-        />
-        
-        <BillboardCard 
-          title="Completed Tasks" 
-          count={completedTasksList.length}
-          icon={<FaCheckCircle className="text-green-500 text-xl" />}
-          color="text-green-500"
-          tasks={completedTasksList}
-          toggleCompletion={toggleCompletion}
-          deleteTask={deleteTask}
-          editTask={editTask}
-          getPriorityBadge={getPriorityBadge}
-          isOverdue={isOverdue}
-        />
+            <div className="planner-week-label">
+              {weekDays[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – {weekDays[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </div>
+
+            {loading && tasks.length === 0 ? (
+              <div className="planner-empty-state"><FaSync className="planner-spin" /> Loading your study plan…</div>
+            ) : (
+              <div className="planner-week-grid">
+                {weekDays.map((day) => {
+                  const dateKey = toDateKey(day);
+                  const dayTasks = visibleWeekTasks(day);
+                  const isToday = dateKey === toDateKey(new Date());
+                  const isSelected = dateKey === selectedDateKey;
+                  return (
+                    <article className={`planner-day-column${isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}`} key={dateKey}>
+                      <button className="planner-day-heading" onClick={() => setSelectedDate(day)}>
+                        <span>{day.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                        <strong>{day.getDate()}</strong>
+                      </button>
+                      <div className="planner-day-task-list">
+                        {dayTasks.length ? dayTasks.map((task, index) => (
+                          <article className={`planner-task-card planner-task-color-${index % 5}${task.completed ? ' is-completed' : ''}${isOverdue(task.deadline, task.timeSlot) && !task.completed ? ' is-overdue' : ''}`} key={task._id}>
+                            <div className="planner-task-card-top">
+                              <span className="planner-task-time">{task.timeSlot}</span>
+                              <span className={`planner-priority priority-${task.priority}`}>{task.priority}</span>
+                            </div>
+                            <strong title={task.subject}>{task.subject}</strong>
+                            <span className="planner-task-topic" title={task.topic}>{task.topic}</span>
+                            <small><FaClock /> {task.duration} min</small>
+                            <div className="planner-task-actions">
+                              <button onClick={() => toggleCompletion(task._id)} title={task.completed ? 'Mark pending' : 'Mark complete'} aria-label={task.completed ? 'Mark pending' : 'Mark complete'}><FaCheck /></button>
+                              <button onClick={() => editTask(task)} title="Edit task" aria-label="Edit task"><FaEdit /></button>
+                              <button onClick={() => deleteTask(task._id)} title="Delete task" aria-label="Delete task"><FaTrash /></button>
+                            </div>
+                          </article>
+                        )) : (
+                          <button className="planner-add-slot" onClick={() => {
+                            setSelectedDate(day);
+                            openTaskForm(day);
+                          }}><FaPlus /> Add task</button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="planner-schedule-footer">
+              <span><FaCheckCircle /> {weekCompleted} of {weekTasks.length} visible tasks completed</span>
+              <span>{weekTasks.length - weekCompleted} left this week</span>
+            </div>
+          </section>
+
+          <aside className="planner-sidebar">
+            <section className="planner-side-panel">
+              <div className="planner-panel-heading planner-mini-heading">
+                <div>
+                  <span className="planner-eyebrow">PICK A DAY</span>
+                  <h2>{selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h2>
+                </div>
+                <div className="planner-month-controls">
+                  <button onClick={() => setSelectedDate((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1))} aria-label="Previous month"><FaSortAmountDownAlt /></button>
+                  <button onClick={() => setSelectedDate((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1))} aria-label="Next month"><FaSortAmountDownAlt className="planner-next-arrow" /></button>
+                </div>
+              </div>
+              <div className="planner-month-grid">
+                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => <span className="planner-month-weekday" key={`${day}-${index}`}>{day}</span>)}
+                {calendarDays.map((day) => {
+                  const dateKey = toDateKey(day);
+                  const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
+                  const hasTask = tasks.some((task) => getTaskDateKey(task) === dateKey);
+                  return (
+                    <button
+                      className={`${isCurrentMonth ? '' : 'is-outside'}${dateKey === selectedDateKey ? ' is-active' : ''}${dateKey === toDateKey(new Date()) ? ' is-today' : ''}${hasTask ? ' has-task' : ''}`}
+                      key={dateKey}
+                      onClick={() => setSelectedDate(day)}
+                      aria-label={day.toLocaleDateString('en-US', { dateStyle: 'full' })}
+                      aria-pressed={dateKey === selectedDateKey}
+                    >
+                      {day.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="planner-side-panel planner-today-panel">
+              <div className="planner-panel-heading planner-mini-heading">
+                <div>
+                  <span className="planner-eyebrow">SELECTED DAY</span>
+                  <h2>{selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</h2>
+                </div>
+                <span className="planner-task-count">{selectedDayTasks.length}</span>
+              </div>
+              <div className="planner-selected-progress">
+                <span><i style={{ width: `${selectedDayTasks.length ? (selectedDayTasks.filter((task) => task.completed).length / selectedDayTasks.length) * 100 : 0}%` }} /></span>
+                <small>{selectedDayTasks.filter((task) => task.completed).length}/{selectedDayTasks.length} complete</small>
+              </div>
+              {selectedDayTasks.length ? (
+                <div className="planner-selected-list">
+                  {selectedDayTasks.slice(0, 5).map((task) => (
+                    <div className={`planner-selected-task${task.completed ? ' is-completed' : ''}`} key={task._id}>
+                      <button className="planner-complete-toggle" onClick={() => toggleCompletion(task._id)} aria-label={task.completed ? 'Mark pending' : 'Mark complete'}><FaCheck /></button>
+                      <span className="planner-selected-task-icon"><FaBook /></span>
+                      <button className="planner-selected-task-copy" onClick={() => editTask(task)}>
+                        <strong>{task.subject}</strong><span>{task.topic}</span><small>{task.timeSlot} · {task.duration} min</small>
+                      </button>
+                      <button className="planner-more-button" onClick={() => editTask(task)} aria-label="Edit task"><FaEdit /></button>
+                    </div>
+                  ))}
+                  {selectedDayTasks.length > 5 && <span className="planner-more-note">+ {selectedDayTasks.length - 5} more scheduled</span>}
+                </div>
+              ) : (
+                <div className="planner-side-empty">No tasks scheduled for this day yet.</div>
+              )}
+              <button className="planner-outline-button" onClick={() => openTaskForm()}><FaPlus /> Add task for this day</button>
+            </section>
+
+            <section className="planner-side-panel planner-progress-panel">
+              <div className="planner-panel-heading planner-mini-heading">
+                <div><span className="planner-eyebrow">KEEP IT UP</span><h2>Your progress</h2></div>
+                <FaTrophy />
+              </div>
+              <div className="planner-progress-value">{progressPercentage}<span>%</span></div>
+              <div className="planner-progress-track"><i style={{ width: `${progressPercentage}%` }} /></div>
+              <p>{completedTasksCount} completed · {pendingTasks.length} still to go</p>
+              <button className="planner-outline-button" onClick={() => setFilter('pending')}><FaListUl /> View pending tasks</button>
+            </section>
+          </aside>
+        </div>
       </div>
 
       {/* Modal for Add/Edit Task Form */}
@@ -903,8 +984,8 @@ const AnalyticsSection = ({ tasks }) => (
 
 // Tasks Section Component
 const TasksSection = ({ 
-  tasks, loading, filter, toggleCompletion, deleteTask, editTask, 
-  getPriorityBadge, isOverdue, searchTerm 
+  tasks, loading, filter, setFilter, toggleCompletion, deleteTask, editTask,
+  getPriorityBadge, isOverdue, searchTerm, setSearchTerm, setShowModal
 }) => {
   // Filter tasks based on selected filter and search term
   const filteredTasks = tasks.filter(task => {
@@ -944,18 +1025,61 @@ const TasksSection = ({
   });
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-          <FaListUl className="text-indigo-600" />
-          {filter === 'all' ? 'All Study Tasks' : 
-            filter === 'pending' ? 'Pending Tasks' : 
-            filter === 'completed' ? 'Completed Tasks' : 'Urgent Tasks'}
-        </h2>
-        <span className="text-sm text-gray-500">
-          {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
-        </span>
+    <section className="planner-tasks-section">
+      <header className="planner-section-hero planner-tasks-hero">
+        <div>
+          <span className="planner-eyebrow"><FaListUl /> YOUR STUDY LIBRARY</span>
+          <h1>Every task. <span>One clear plan.</span></h1>
+          <p>Search, update, and stay on top of everything you want to learn.</p>
+        </div>
+        <button className="planner-primary-button" onClick={() => setShowModal(true)}><FaPlus /> Add a study task</button>
+      </header>
+      <div className="planner-task-toolbar">
+        <label className="planner-task-search">
+          <FaSearch />
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search by subject or topic"
+            aria-label="Search tasks by subject or topic"
+          />
+        </label>
+        <div className="planner-task-filters" role="group" aria-label="Filter tasks">
+          {[
+            { id: 'all', label: 'All tasks', count: tasks.length },
+            { id: 'pending', label: 'Pending', count: tasks.filter((task) => !task.completed).length },
+            { id: 'completed', label: 'Completed', count: tasks.filter((task) => task.completed).length },
+            { id: 'urgent', label: 'Urgent', count: tasks.filter((task) => {
+              if (task.completed) return false;
+              const date = new Date(task.deadline);
+              const [hours, minutes] = task.timeSlot.split(':');
+              date.setHours(Number(hours), Number(minutes), 0, 0);
+              const remaining = date.getTime() - Date.now();
+              return remaining >= 0 && remaining <= 48 * 60 * 60 * 1000;
+            }).length }
+          ].map((item) => (
+            <button
+              key={item.id}
+              className={filter === item.id ? 'is-active' : ''}
+              onClick={() => setFilter(item.id)}
+              aria-pressed={filter === item.id}
+            >
+              {item.label}<span>{item.count}</span>
+            </button>
+          ))}
+        </div>
       </div>
+      <div className="planner-task-list-panel">
+        <div className="planner-task-list-heading">
+          <div>
+            <span className="planner-eyebrow">TASK OVERVIEW</span>
+            <h2>{filter === 'all' ? 'All study tasks' :
+              filter === 'pending' ? 'Tasks to work on' :
+              filter === 'completed' ? 'Completed tasks' : 'Urgent tasks'}</h2>
+          </div>
+          <span className="planner-task-result-count">{filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}</span>
+        </div>
       
       {loading ? (
         <div className="flex justify-center py-8">
@@ -973,7 +1097,7 @@ const TasksSection = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="planner-task-list">
           {sortedTasks.map(task => (
             <TaskCard 
               key={task._id} 
@@ -987,7 +1111,8 @@ const TasksSection = ({
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </section>
   );
 };
 
@@ -1013,8 +1138,6 @@ const StudyPlanner = () => {
     notes: ''
   });
 
-  const API_BASE = import.meta.env.VITE_API_BASE;
-
   // Fetch tasks on mount
   useEffect(() => { 
     if(userEmail) fetchTasks(); 
@@ -1024,9 +1147,8 @@ const StudyPlanner = () => {
   if (!userEmail) return;
   try {
     setLoading(true);
-    const response = await axios.get(`${API_BASE}/tasks`, {
+    const response = await axios.get(`${API_BASE}/study-tasks`, {
       params: { email: userEmail },
-      withCredentials: true  // This should be in the config object, not params
     });
     if (response.data.success) setTasks(response.data.data);
   } catch (err) {
@@ -1054,13 +1176,13 @@ const StudyPlanner = () => {
       
       if (formData._id) {
         // Update existing task
-        const response = await axios.put(`${API_BASE}/tasks/${formData._id}`, { 
+        const response = await axios.put(`${API_BASE}/study-tasks/${formData._id}`, { 
           ...formData, 
           email: userEmail 
         });
         
         if(response.data.success){
-          setTasks(tasks.map(t => t._id === formData._id ? response.data.data : t));
+          setTasks(tasks.map(t => t._id === formData._id ? { ...t, ...formData } : t));
           setFormData({ subject:'', topic:'', priority:'medium', deadline:'', timeSlot:'', duration:'', notes:'' });
           setShowModal(false);
           toast.success("Task updated successfully! ✅");
@@ -1069,7 +1191,7 @@ const StudyPlanner = () => {
         }
       } else {
         // Create new task
-        const response = await axios.post(`${API_BASE}/tasks`, { ...formData, email: userEmail });
+        const response = await axios.post(`${API_BASE}/study-tasks`, { ...formData, email: userEmail });
         
         if(response.data.success){
           setTasks([...tasks, response.data.data]);
@@ -1094,7 +1216,7 @@ const StudyPlanner = () => {
       const taskToUpdate = tasks.find(t=>t._id===id);
       if(!taskToUpdate) return;
       const updatedTask = { ...taskToUpdate, completed: !taskToUpdate.completed };
-      const response = await axios.put(`${API_BASE}/tasks/${id}`, { 
+      const response = await axios.put(`${API_BASE}/study-tasks/${id}`, { 
         completed: updatedTask.completed, 
         email: userEmail 
       });
@@ -1134,7 +1256,7 @@ const StudyPlanner = () => {
     if(!window.confirm('Are you sure you want to delete this task?')) return;
     
     try{
-      const response = await axios.delete(`${API_BASE}/tasks/${id}`, { 
+      const response = await axios.delete(`${API_BASE}/study-tasks/${id}`, { 
         params: { email: userEmail } 
       });
       
@@ -1190,10 +1312,10 @@ const StudyPlanner = () => {
             tasks={tasks} loading={loading} filter={filter} setFilter={setFilter}
             showModal={showModal} setShowModal={setShowModal} 
             toggleCompletion={toggleCompletion} deleteTask={deleteTask} editTask={editTask}
-            getPriorityBadge={getPriorityBadge} isOverdue={isOverdue} fetchTasks={fetchTasks}
+            isOverdue={isOverdue} fetchTasks={fetchTasks}
             completedTasksCount={completedTasksCount} totalTasksCount={totalTasksCount} 
             progressPercentage={progressPercentage}
-            formData={formData} handleInputChange={handleInputChange} addTask={addTask}
+            formData={formData} setFormData={setFormData} handleInputChange={handleInputChange} addTask={addTask}
             searchTerm={searchTerm} setSearchTerm={setSearchTerm}
           />
         );
@@ -1202,10 +1324,10 @@ const StudyPlanner = () => {
       case 'tasks':
         return (
           <TasksSection 
-            tasks={tasks} loading={loading} filter={filter} 
+            tasks={tasks} loading={loading} filter={filter} setFilter={setFilter}
             toggleCompletion={toggleCompletion} deleteTask={deleteTask} editTask={editTask}
             getPriorityBadge={getPriorityBadge} isOverdue={isOverdue} 
-            searchTerm={searchTerm}
+            searchTerm={searchTerm} setSearchTerm={setSearchTerm} setShowModal={setShowModal}
           />
         );
       default: 
@@ -1214,7 +1336,7 @@ const StudyPlanner = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="study-planner-page min-h-screen">
       {showConfetti && <Confetti recycle={false} numberOfPieces={200} />}
       {toast.show && (
         <Toast 

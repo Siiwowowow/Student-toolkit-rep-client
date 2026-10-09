@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router';
 import toast from 'react-hot-toast';
 import useAuth from '../../Context/useAuth';
 import axios from 'axios';
+import { API_BASE } from '../../api';
 
 const SocialLogin = () => {
   const { signInWithGoogle } = useAuth();
@@ -29,18 +30,8 @@ const SocialLogin = () => {
         last_log_in: new Date().toISOString(),
       };
 
-      // 3. Check if user already exists
-      const checkUser = await axios.get(`http://localhost:3000/users?email=${user.email}`);
-
-      if (checkUser.data.exists) {
-        // Update last_log_in if needed
-        await axios.put(`http://localhost:3000/users/${checkUser.data.user._id}`, {
-          last_log_in: new Date().toISOString(),
-        });
-      } else {
-        // Add new user
-        await axios.post("http://localhost:3000/users", userInfo);
-      }
+      // The backend creates missing users and returns existing users on repeat login.
+      await axios.post(`${API_BASE}/users`, userInfo);
 
       // 4. Show success toast
       toast.success('Login successful!', { duration: 1000, position: 'top-center' });

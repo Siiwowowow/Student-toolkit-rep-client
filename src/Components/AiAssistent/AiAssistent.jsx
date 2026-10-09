@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import { API_BASE } from "../../api";
 
 const AiAssistant = () => {
   const [message, setMessage] = useState("");
@@ -36,7 +37,7 @@ const AiAssistant = () => {
 
     try {
       // In a real app, you would use your API endpoint
-      const res = await axios.post("http://localhost:3000/ai-chat", {
+      const res = await axios.post(`${API_BASE}/ai-chat`, {
         message: userMessage,
       });
 
