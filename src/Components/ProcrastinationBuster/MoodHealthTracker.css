@@ -1,45 +1,1157 @@
-.mood-health-container {
-  max-width: 700px;
-  margin: 20px auto;
-  padding: 20px;
-  border-radius: 10px;
-  background: #f5f5f5;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+/* ========================================================
+   STUDENT WELLNESS HUB - MAXIMALISM THEME
+   Vibrant Chromatic Aesthetics, Neo-Brutalist Tactile Controls,
+   Retro Dot-Matrix Grid & High-Voltage Study Energy
+   ======================================================== */
+
+.wellness-page {
+  --m-ink: #0e121d;
+  --m-yellow: #f8fb38;
+  --m-pink: #ff3b8d;
+  --m-cyan: #06d6a0;
+  --m-blue: #3a86ff;
+  --m-violet: #8338ec;
+  --m-orange: #ff6b35;
+  --m-lime: #a7f722;
+  --m-card-bg: #ffffff;
+  --m-subtle-bg: #f8fafc;
+
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  padding-bottom: 72px;
+  overflow-x: hidden;
+
+  /* Multi-Layer Chromatic Dot-Matrix Background */
+  background-color: #0b0e17;
+  background-image:
+    radial-gradient(circle at 1.5px 1.5px, rgba(255, 255, 255, 0.15) 1.5px, transparent 0),
+    radial-gradient(circle at 12% 10%, rgba(131, 56, 236, 0.42) 0%, transparent 45%),
+    radial-gradient(circle at 88% 18%, rgba(255, 59, 141, 0.38) 0%, transparent 45%),
+    radial-gradient(circle at 18% 85%, rgba(58, 134, 255, 0.38) 0%, transparent 50%),
+    radial-gradient(circle at 85% 82%, rgba(6, 214, 160, 0.35) 0%, transparent 48%),
+    radial-gradient(circle at 50% 50%, rgba(248, 251, 56, 0.14) 0%, transparent 55%),
+    linear-gradient(135deg, #0e1220 0%, #161a2b 50%, #0a0d18 100%);
+  background-size: 28px 28px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  color: var(--m-ink);
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-.mood-form {
+.wellness-page *,
+.wellness-page *::before,
+.wellness-page *::after {
+  box-sizing: border-box;
+}
+
+.wellness-page > .max-w-7xl {
+  position: relative;
+  z-index: 5;
+  width: min(1340px, 100%);
+}
+
+/* Ambient Floating Glow Orbs */
+.wellness-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(75px);
+  pointer-events: none;
+  opacity: 0.55;
+  will-change: transform;
+  z-index: 1;
+}
+
+.wellness-orb-1 {
+  width: 420px;
+  height: 420px;
+  top: 40px;
+  left: -80px;
+  background: radial-gradient(circle, #8338ec 0%, #ff3b8d 70%);
+  animation: wellnessFloat1 18s ease-in-out infinite alternate;
+}
+
+.wellness-orb-2 {
+  width: 480px;
+  height: 480px;
+  top: 45%;
+  right: -100px;
+  background: radial-gradient(circle, #3a86ff 0%, #06d6a0 70%);
+  animation: wellnessFloat2 22s ease-in-out infinite alternate;
+}
+
+.wellness-orb-3 {
+  width: 360px;
+  height: 360px;
+  bottom: 80px;
+  left: 20%;
+  background: radial-gradient(circle, #f8fb38 0%, #ff6b35 70%);
+  opacity: 0.28;
+  animation: wellnessFloat3 16s ease-in-out infinite alternate;
+}
+
+@keyframes wellnessFloat1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, 60px) scale(1.15); }
+  100% { transform: translate(-30px, 90px) scale(0.95); }
+}
+
+@keyframes wellnessFloat2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-60px, -50px) scale(1.18); }
+  100% { transform: translate(40px, -80px) scale(0.9); }
+}
+
+@keyframes wellnessFloat3 {
+  0% { transform: translate(0, 0) scale(0.9); }
+  100% { transform: translate(-50px, -40px) scale(1.2); }
+}
+
+/* Floating Retro Maximalist Sticker Badges */
+.wellness-sticker {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  border: 2.5px solid var(--m-ink);
+  pointer-events: none;
+  user-select: none;
+  box-shadow: 4px 4px 0px var(--m-ink);
+}
+
+.wellness-sticker-tl {
+  top: 36px;
+  left: 28px;
+  background: var(--m-yellow);
+  color: var(--m-ink);
+  transform: rotate(-5deg);
+  animation: wellnessWiggle1 8s ease-in-out infinite alternate;
+}
+
+.wellness-sticker-tr {
+  top: 48px;
+  right: 32px;
+  background: var(--m-pink);
+  color: #ffffff;
+  transform: rotate(6deg);
+  animation: wellnessWiggle2 9s ease-in-out infinite alternate;
+}
+
+.wellness-sticker-br {
+  bottom: 80px;
+  right: 36px;
+  background: var(--m-cyan);
+  color: var(--m-ink);
+  transform: rotate(-4deg);
+  animation: wellnessWiggle1 10s ease-in-out infinite alternate;
+}
+
+@keyframes wellnessWiggle1 {
+  0% { transform: rotate(-5deg) translateY(0); }
+  50% { transform: rotate(-2deg) translateY(-8px); }
+  100% { transform: rotate(-7deg) translateY(6px); }
+}
+
+@keyframes wellnessWiggle2 {
+  0% { transform: rotate(6deg) translateY(0); }
+  50% { transform: rotate(9deg) translateY(8px); }
+  100% { transform: rotate(3deg) translateY(-6px); }
+}
+
+@media (max-width: 1100px) {
+  .wellness-sticker {
+    display: none !important;
+  }
+}
+
+/* ========================================================
+   PAGE HERO HEADER
+   ======================================================== */
+.wellness-page-heading {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 24px;
+  padding: clamp(24px, 4vw, 36px) clamp(22px, 5vw, 42px);
+  border: 3px solid var(--m-ink);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow:
+    8px 8px 0px var(--m-ink),
+    0 20px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.wellness-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--m-ink);
+}
+
+.wellness-page-heading .wellness-kicker {
+  background: var(--m-yellow);
+  border: 2px solid var(--m-ink);
+  padding: 5px 14px;
+  border-radius: 999px;
+  box-shadow: 2.5px 2.5px 0px var(--m-ink);
+}
+
+.wellness-page-heading h1 {
+  margin: 14px 0 8px;
+  font-size: clamp(32px, 4.8vw, 50px);
+  font-weight: 950;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+  color: var(--m-ink);
+}
+
+.wellness-page-heading h1 span {
+  background: linear-gradient(135deg, var(--m-blue), var(--m-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.wellness-page-heading p {
+  max-width: 580px;
+  margin: 10px 0 0;
+  color: #4b5569;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.wellness-heading-art {
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  width: 140px;
+  height: 140px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 3px solid var(--m-ink);
+  border-radius: 24px;
+  background: var(--m-yellow);
+  box-shadow: 5px 5px 0px var(--m-ink);
+  color: var(--m-ink);
+  font-size: 58px;
+  transform: rotate(3deg);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.wellness-heading-art:hover {
+  transform: rotate(-2deg) scale(1.05);
+}
+
+.wellness-heading-art i {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  color: var(--m-pink);
+  font-size: 22px;
+  font-style: normal;
+}
+
+.wellness-heading-art b {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  color: var(--m-blue);
+  font-size: 20px;
+}
+
+/* ========================================================
+   MAXIMALIST NAVIGATION TABS
+   ======================================================== */
+.wellness-nav-bar {
+  position: sticky;
+  top: 16px;
+  z-index: 40;
+  margin-bottom: 24px;
+  padding: 8px;
+  background: #ffffff;
+  border: 3px solid var(--m-ink);
+  border-radius: 18px;
+  box-shadow: 6px 6px 0px var(--m-ink);
+  backdrop-filter: blur(12px);
+}
+
+.wellness-nav-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px;
+}
+
+.wellness-nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.wellness-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  font-size: 13.5px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: #4b5569;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.wellness-nav-btn:hover {
+  background: #f1f5f9;
+  color: var(--m-ink);
+  border-color: #cbd5e1;
+}
+
+.wellness-nav-btn.is-active {
+  background: var(--m-yellow);
+  color: var(--m-ink);
+  border-color: var(--m-ink);
+  box-shadow: 3px 3px 0px var(--m-ink);
+  transform: translate(-1px, -1px);
+}
+
+.wellness-nav-badge {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 7px;
+  background: var(--m-pink);
+  color: #ffffff;
+  border-radius: 999px;
+  border: 1.5px solid var(--m-ink);
+  text-transform: uppercase;
+  margin-left: 4px;
+}
+
+/* ========================================================
+   GENERIC MAXIMALIST CARD WRAPPERS
+   ======================================================== */
+.wellness-page .bg-white,
+.wellness-card {
+  position: relative;
+  background: #ffffff !important;
+  border: 3px solid var(--m-ink) !important;
+  border-radius: 20px !important;
+  box-shadow: 6px 6px 0px var(--m-ink) !important;
+  padding: clamp(20px, 3.5vw, 28px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wellness-page .bg-white:hover,
+.wellness-card:hover {
+  box-shadow: 8px 8px 0px var(--m-ink) !important;
+}
+
+.wellness-section-heading {
   margin-bottom: 20px;
 }
 
-.mood-form label {
+.wellness-section-heading .wellness-kicker {
+  background: var(--m-yellow);
+  border: 2px solid var(--m-ink);
+  padding: 4px 12px;
+  border-radius: 999px;
+  box-shadow: 2px 2px 0px var(--m-ink);
+  margin-bottom: 8px;
+}
+
+.wellness-section-heading h2 {
+  font-size: clamp(24px, 3.2vw, 32px);
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  color: var(--m-ink);
+  margin: 6px 0 4px;
+}
+
+.wellness-section-heading p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ========================================================
+   QUICK STATS GRID
+   ======================================================== */
+.wellness-stat-card {
+  position: relative;
+  border: 3px solid var(--m-ink);
+  border-radius: 18px;
+  padding: 20px 22px;
+  box-shadow: 5px 5px 0px var(--m-ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.wellness-stat-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px var(--m-ink);
+}
+
+.wellness-stat-mood { background: #3a86ff; color: #ffffff; }
+.wellness-stat-water { background: #06d6a0; color: var(--m-ink); }
+.wellness-stat-study { background: #8338ec; color: #ffffff; }
+.wellness-stat-streak { background: #ff6b35; color: #ffffff; }
+
+.wellness-stat-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.9;
+  margin: 0 0 4px;
+}
+
+.wellness-stat-val {
+  font-size: clamp(28px, 3.5vw, 36px);
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin: 0;
+}
+
+.wellness-stat-icon {
+  font-size: 38px;
+  opacity: 0.95;
+  filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.25));
+}
+
+/* ========================================================
+   FOCUS STUDY TIMER WIDGET
+   ======================================================== */
+.wellness-focus-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(200px, 0.9fr) minmax(230px, 1.1fr) minmax(280px, 1.2fr);
+  align-items: center;
+  gap: 24px;
+  padding: clamp(22px, 3.5vw, 32px);
+  border: 3px solid var(--m-ink);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 8px 8px 0px var(--m-ink);
+}
+
+.wellness-focus-card.is-break {
+  background: #eefcf6;
+}
+
+.wellness-focus-copy .wellness-kicker {
+  background: var(--m-yellow);
+  border: 2px solid var(--m-ink);
+  padding: 4px 12px;
+  border-radius: 999px;
+  box-shadow: 2px 2px 0px var(--m-ink);
+}
+
+.wellness-focus-copy h2 {
+  font-size: clamp(26px, 3.2vw, 34px);
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  color: var(--m-ink);
+  margin: 10px 0 8px;
+}
+
+.wellness-focus-copy p {
+  color: #4b5569;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.wellness-focus-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--m-ink);
+  background: #f1f5f9;
+  border: 2px solid var(--m-ink);
+  padding: 5px 12px;
+  border-radius: 999px;
+  box-shadow: 2px 2px 0px var(--m-ink);
+}
+
+.wellness-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #94a3b8;
+  border: 1.5px solid var(--m-ink);
+}
+
+.wellness-status-dot.is-running {
+  background: var(--m-cyan);
+  animation: wellnessPulse 1.2s infinite;
+}
+
+@keyframes wellnessPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.wellness-focus-console {
   display: flex;
   flex-direction: column;
-  font-weight: 500;
+  align-items: center;
+  gap: 18px;
 }
 
-.mood-form input, .mood-form select {
-  padding: 5px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+.wellness-timer-ring {
+  display: grid;
+  width: clamp(200px, 18vw, 240px);
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 50%;
+  border: 3.5px solid var(--m-ink);
+  background: conic-gradient(var(--timer-accent, var(--m-blue)) var(--timer-progress, 0%), #e2e8f0 var(--timer-progress, 0%));
+  box-shadow: 5px 5px 0px var(--m-ink);
+  transform: rotate(-90deg);
 }
 
-.mood-form button {
-  grid-column: span 2;
-  padding: 10px;
-  background-color: #0088FE;
-  color: white;
-  border: none;
-  border-radius: 5px;
+.wellness-timer-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% - 20px);
+  height: calc(100% - 20px);
+  border-radius: 50%;
+  border: 2.5px solid var(--m-ink);
+  background: #ffffff;
+  transform: rotate(90deg);
+}
+
+.wellness-timer-face > span {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: var(--m-ink);
+  background: var(--m-yellow);
+  padding: 2px 10px;
+  border: 1.5px solid var(--m-ink);
+  border-radius: 999px;
+}
+
+.wellness-timer-face > strong {
+  font-size: clamp(42px, 4.5vw, 54px);
+  font-weight: 950;
+  color: var(--m-ink);
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin: 6px 0 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wellness-timer-face > small {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.wellness-timer-controls {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 250px;
+}
+
+.wellness-timer-start {
+  flex: 1;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--m-ink);
+  background: var(--m-yellow);
+  border: 2.5px solid var(--m-ink);
+  border-radius: 12px;
+  box-shadow: 3px 3px 0px var(--m-ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wellness-timer-start:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--m-ink);
+  background: #fcfd6b;
+}
+
+.wellness-timer-start:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--m-ink);
+}
+
+.wellness-timer-reset {
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #4b5569;
+  background: #ffffff;
+  border: 2.5px solid var(--m-ink);
+  border-radius: 12px;
+  box-shadow: 3px 3px 0px var(--m-ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wellness-timer-reset:hover {
+  background: #f1f5f9;
+  color: var(--m-ink);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--m-ink);
+}
+
+.wellness-timer-reset:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--m-ink);
+}
+
+/* Session Picker */
+.wellness-session-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wellness-picker-heading span {
+  display: block;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--m-ink);
+}
+
+.wellness-picker-heading small {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.wellness-session-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wellness-session-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: 2px solid var(--m-ink);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 3px 3px 0px var(--m-ink);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: left;
+}
+
+.wellness-session-option:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--m-ink);
+}
+
+.wellness-session-option.is-selected {
+  background: var(--m-yellow);
+  border-color: var(--m-ink);
+  box-shadow: 4px 4px 0px var(--m-ink);
+  transform: translate(-2px, -2px);
+}
+
+.wellness-session-label strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--m-ink);
+}
+
+.wellness-session-label small {
+  font-size: 11px;
+  color: #4b5569;
+  font-weight: 600;
+}
+
+.wellness-session-duration {
+  font-size: 13px;
+  font-weight: 900;
+  background: var(--m-ink);
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.wellness-session-count {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4b5569;
+  margin-top: 6px;
+}
+
+.wellness-session-count span {
+  font-weight: 900;
+  color: var(--m-ink);
+  background: var(--m-yellow);
+  padding: 2px 7px;
+  border: 1.5px solid var(--m-ink);
+  border-radius: 6px;
+  margin-right: 4px;
+}
+
+@media (max-width: 980px) {
+  .wellness-focus-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================================
+   QUICK ACTIONS & HABITS
+   ======================================================== */
+.wellness-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 12px;
+  border: 2.5px solid var(--m-ink);
+  border-radius: 16px;
+  box-shadow: 4px 4px 0px var(--m-ink);
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: center;
+}
+
+.wellness-action-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--m-ink);
+}
+
+.wellness-action-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0px var(--m-ink);
+}
+
+.wellness-action-water:hover { background: #d7f7ee; }
+.wellness-action-mood:hover { background: #fed8e9; }
+.wellness-action-study:hover { background: #efe4ff; }
+.wellness-action-goals:hover { background: #fff8cc; }
+
+/* Habit Row */
+.wellness-habit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 2px solid var(--m-ink);
+  border-radius: 14px;
+  box-shadow: 3px 3px 0px var(--m-ink);
+  margin-bottom: 10px;
+  transition: transform 0.15s ease;
+}
+
+.wellness-habit-row:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--m-ink);
+}
+
+.wellness-check-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2.5px solid var(--m-ink);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wellness-check-circle.is-done {
+  background: var(--m-cyan);
+  color: var(--m-ink);
+  box-shadow: 1.5px 1.5px 0px var(--m-ink);
+}
+
+/* ========================================================
+   NEW FEATURE 1: AMBIENT LO-FI STUDY SOUNDSCAPES
+   ======================================================== */
+.wellness-soundscape-card {
+  position: relative;
+  background: #ffffff;
+  border: 3px solid var(--m-ink);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 6px 6px 0px var(--m-ink);
+  margin-bottom: 24px;
+}
+
+.wellness-sound-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.wellness-sound-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 2.5px solid var(--m-ink);
+  border-radius: 14px;
+  background: #f8fafc;
+  box-shadow: 3px 3px 0px var(--m-ink);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.wellness-sound-tile:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px var(--m-ink);
+  background: #ffffff;
+}
+
+.wellness-sound-tile.is-playing {
+  background: var(--m-yellow);
+  box-shadow: 4px 4px 0px var(--m-ink);
+  transform: translate(-1px, -1px);
+}
+
+.wellness-sound-tile-icon {
+  font-size: 26px;
+}
+
+.wellness-sound-tile-info strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 900;
+  color: var(--m-ink);
+}
+
+.wellness-sound-tile-info small {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Equalizer Bars */
+.wellness-equalizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+  margin-left: auto;
+}
+
+.wellness-eq-bar {
+  width: 4px;
+  background: var(--m-ink);
+  border-radius: 2px;
+  animation: eqBounce 0.8s ease-in-out infinite alternate;
+}
+
+.wellness-eq-bar:nth-child(2) { animation-delay: 0.2s; }
+.wellness-eq-bar:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes eqBounce {
+  0% { height: 4px; }
+  100% { height: 18px; }
+}
+
+/* Volume control */
+.wellness-sound-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 12px 18px;
+  background: #f1f5f9;
+  border: 2px solid var(--m-ink);
+  border-radius: 12px;
+}
+
+.wellness-volume-slider {
+  flex: 1;
+  accent-color: var(--m-ink);
   cursor: pointer;
 }
 
-.suggestion {
-  margin-bottom: 20px;
-  padding: 10px;
-  background-color: #FFF3CD;
-  border-radius: 5px;
-  font-weight: bold;
+/* ========================================================
+   NEW FEATURE 2: BURNOUT SHIELD & GUIDED BOX BREATHING
+   ======================================================== */
+.wellness-burnout-meter-card {
+  border: 3px solid var(--m-ink);
+  border-radius: 20px;
+  padding: 24px;
+  background: #ffffff;
+  box-shadow: 6px 6px 0px var(--m-ink);
+  margin-bottom: 24px;
+}
+
+.wellness-gauge-bar-wrap {
+  width: 100%;
+  height: 22px;
+  border: 2.5px solid var(--m-ink);
+  border-radius: 999px;
+  background: #f1f5f9;
+  box-shadow: 2px 2px 0px var(--m-ink);
+  overflow: hidden;
+  margin: 12px 0 8px;
+  position: relative;
+}
+
+.wellness-gauge-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.wellness-gauge-bar-fill.is-low { background: linear-gradient(90deg, #06d6a0, #a7f722); }
+.wellness-gauge-bar-fill.is-mid { background: linear-gradient(90deg, #f8fb38, #ff6b35); }
+.wellness-gauge-bar-fill.is-high { background: linear-gradient(90deg, #ff3b8d, #dc2626); }
+
+/* Guided Box Breathing */
+.wellness-breathing-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: #f8fafc;
+  border: 2.5px solid var(--m-ink);
+  border-radius: 20px;
+  box-shadow: 4px 4px 0px var(--m-ink);
+  text-align: center;
+}
+
+.wellness-breathing-circle-outer {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 18px 0;
+}
+
+.wellness-breathing-circle {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 3.5px solid var(--m-ink);
+  background: var(--m-cyan);
+  box-shadow: 5px 5px 0px var(--m-ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wellness-breathing-circle.inhale {
+  transform: scale(1.45);
+  background: var(--m-yellow);
+}
+
+.wellness-breathing-circle.hold-in {
+  transform: scale(1.45);
+  background: var(--m-pink);
+  color: #ffffff;
+}
+
+.wellness-breathing-circle.exhale {
+  transform: scale(0.9);
+  background: var(--m-cyan);
+}
+
+.wellness-breathing-circle.hold-out {
+  transform: scale(0.9);
+  background: var(--m-violet);
+  color: #ffffff;
+}
+
+.wellness-breathing-text {
+  font-size: 15px;
+  font-weight: 950;
+  letter-spacing: -0.01em;
+  color: var(--m-ink);
+}
+
+.wellness-breathing-countdown {
+  font-size: 26px;
+  font-weight: 950;
+  line-height: 1;
+  margin-top: 4px;
+}
+
+/* Brain Dump Scratchpad */
+.wellness-braindump-area {
+  width: 100%;
+  min-height: 110px;
+  border: 2px solid var(--m-ink);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #ffffff;
+  color: var(--m-ink);
+  box-shadow: 3px 3px 0px var(--m-ink);
+  outline: none;
+  resize: vertical;
+}
+
+.wellness-braindump-area:focus {
+  background: #fffdf0;
+  border-color: var(--m-ink);
+}
+
+/* ========================================================
+   NEW FEATURE 3: GAMIFIED STUDENT WELLNESS BADGES
+   ======================================================== */
+.wellness-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.wellness-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 2.5px solid var(--m-ink);
+  border-radius: 14px;
+  background: #f8fafc;
+  box-shadow: 3px 3px 0px var(--m-ink);
+  transition: all 0.15s ease;
+}
+
+.wellness-badge-item.is-unlocked {
+  background: var(--m-yellow);
+  box-shadow: 4px 4px 0px var(--m-ink);
+  transform: translate(-1px, -1px);
+}
+
+.wellness-badge-item.is-locked {
+  opacity: 0.6;
+  filter: grayscale(0.8);
+}
+
+.wellness-badge-icon {
+  font-size: 28px;
+}
+
+.wellness-badge-name {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--m-ink);
+  line-height: 1.2;
+}
+
+.wellness-badge-req {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+/* ========================================================
+   TACTILE BUTTONS & FORM INPUTS
+   ======================================================== */
+.wellness-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 24px;
+  font-size: 14.5px;
+  font-weight: 900;
+  color: var(--m-ink);
+  background: var(--m-yellow);
+  border: 2.5px solid var(--m-ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0px var(--m-ink);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.wellness-btn-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--m-ink);
+  background: #fcfd6b;
+}
+
+.wellness-btn-primary:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0px var(--m-ink);
+}
+
+.wellness-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #4b5569;
+  background: #ffffff;
+  border: 2.5px solid var(--m-ink);
+  border-radius: 12px;
+  box-shadow: 3px 3px 0px var(--m-ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wellness-btn-secondary:hover {
+  background: #f1f5f9;
+  color: var(--m-ink);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--m-ink);
+}
+
+.wellness-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--m-ink);
+  background: #ffffff;
+  border: 2px solid var(--m-ink);
+  border-radius: 10px;
+  box-shadow: 2px 2px 0px var(--m-ink);
+  outline: none;
+}
+
+.wellness-input:focus {
+  background: #fffdf0;
 }

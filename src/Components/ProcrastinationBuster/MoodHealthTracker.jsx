@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ResponsiveContainer,
   LineChart,
@@ -12,13 +12,14 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
+import './MoodHealthTracker.css';
 
-// Constants
+// Constants & Icons
 const icons = {
   dashboard: '📊',
   tracker: '📝',
   goals: '🎯',
-  insights: '💡',
+  insights: '📈',
   study: '📚',
   nutrition: '🍎',
   exercise: '🏃‍♂️',
@@ -26,39 +27,39 @@ const icons = {
   water: '💧',
   mood: '😊',
   stress: '🧘‍♂️',
-  schedule: '📅',
   habits: '✅',
   analytics: '📈',
-  settings: '⚙️',
-  calendar: '📆',
   timer: '⏱️',
-  bell: '🔔',
   trophy: '🏆',
   fire: '🔥',
   star: '⭐',
+  headphones: '🎧',
+  shield: '🛡️',
+  brain: '🧠',
+  lightning: '⚡',
 };
 
 const moods = [
-  { label: '😰 Overwhelmed', value: 1, color: '#dc2626', description: 'Feeling stressed and overwhelmed' },
-  { label: '😔 Low', value: 2, color: '#ea580c', description: 'Feeling down or unmotivated' },
-  { label: '😐 Neutral', value: 3, color: '#eab308', description: 'Feeling okay, nothing special' },
-  { label: '😊 Good', value: 4, color: '#65a30d', description: 'Feeling positive and content' },
-  { label: '🎉 Excellent', value: 5, color: '#16a34a', description: 'Feeling amazing and energetic' },
+  { label: '😰 Overwhelmed', value: 1, color: '#dc2626', description: 'Feeling stressed and heavy' },
+  { label: '😔 Low', value: 2, color: '#ea580c', description: 'Down or unmotivated' },
+  { label: '😐 Neutral', value: 3, color: '#eab308', description: 'Okay, regular study flow' },
+  { label: '😊 Good', value: 4, color: '#06d6a0', description: 'Positive, clear, and ready' },
+  { label: '🚀 Hyper-Focused', value: 5, color: '#8338ec', description: 'Unstoppable academic flow' },
 ];
 
 const studySessionTypes = [
-  { type: 'Deep Focus', duration: 90, break: 20, color: '#3b82f6' },
-  { type: 'Regular Study', duration: 45, break: 15, color: '#06b6d4' },
-  { type: 'Quick Review', duration: 25, break: 5, color: '#8b5cf6' },
-  { type: 'Group Study', duration: 60, break: 10, color: '#ec4899' },
+  { type: 'Deep Focus', duration: 90, break: 20, color: '#3a86ff' },
+  { type: 'Pomodoro Standard', duration: 45, break: 15, color: '#06d6a0' },
+  { type: 'Quick Sprint', duration: 25, break: 5, color: '#f8fb38' },
+  { type: 'Group Study', duration: 60, break: 10, color: '#ff3b8d' },
 ];
 
 const goalTemplates = [
   { category: 'Sleep', goal: 'Get 7-8 hours of sleep daily', target: 7.5, unit: 'hours' },
   { category: 'Water', goal: 'Drink 8 glasses of water daily', target: 8, unit: 'glasses' },
-  { category: 'Exercise', goal: 'Exercise 30 minutes daily', target: 30, unit: 'minutes' },
-  { category: 'Study', goal: 'Study 4 hours daily', target: 240, unit: 'minutes' },
-  { category: 'Meditation', goal: 'Meditate 10 minutes daily', target: 10, unit: 'minutes' },
+  { category: 'Exercise', goal: 'Exercise or stretch 30 min daily', target: 30, unit: 'minutes' },
+  { category: 'Study', goal: 'Deep study 4 hours daily', target: 240, unit: 'minutes' },
+  { category: 'Meditation', goal: 'Meditate or de-stress 10 min daily', target: 10, unit: 'minutes' },
 ];
 
 // Utility Functions
@@ -87,242 +88,461 @@ const getStreakEmoji = (streak) => {
   return '⭐';
 };
 
-// Toast Component
+// Web Audio Ambient Synthesizer Class
+class AmbientAudioEngine {
+  constructor() {
+    this.ctx = null;
+    this.nodes = {};
+    this.isPlaying = false;
+    this.currentTrack = null;
+    this.volume = 0.5;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
+      }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  playRain() {
+    this.stop();
+    this.init();
+    if (!this.ctx) return;
+
+    const bufferSize = this.ctx.sampleRate * 2;
+    const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.153852;
+      b3 = 0.8665 * b3 + white * 0.3104856;
+      b4 = 0.55 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.016898;
+      output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.08;
+      b6 = white * 0.115926;
+    }
+    const whiteNoise = this.ctx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+    whiteNoise.loop = true;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 850;
+
+    const gainNode = this.ctx.createGain();
+    gainNode.gain.value = this.volume;
+
+    whiteNoise.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(this.ctx.destination);
+
+    whiteNoise.start();
+    this.nodes = { source: whiteNoise, gain: gainNode };
+    this.isPlaying = true;
+    this.currentTrack = 'rain';
+  }
+
+  playBrownNoise() {
+    this.stop();
+    this.init();
+    if (!this.ctx) return;
+
+    const bufferSize = this.ctx.sampleRate * 2;
+    const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    let lastOut = 0.0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      output[i] = (lastOut + 0.02 * white) / 1.02;
+      lastOut = output[i];
+      output[i] *= 3.5;
+    }
+    const source = this.ctx.createBufferSource();
+    source.buffer = noiseBuffer;
+    source.loop = true;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 450;
+
+    const gainNode = this.ctx.createGain();
+    gainNode.gain.value = this.volume;
+
+    source.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(this.ctx.destination);
+
+    source.start();
+    this.nodes = { source, gain: gainNode };
+    this.isPlaying = true;
+    this.currentTrack = 'brown';
+  }
+
+  playAlphaWaves() {
+    this.stop();
+    this.init();
+    if (!this.ctx) return;
+
+    // 200Hz + 210Hz = 10Hz Alpha Focus Wave
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    osc1.type = 'sine';
+    osc2.type = 'sine';
+    osc1.frequency.value = 200;
+    osc2.frequency.value = 210;
+
+    const merger = this.ctx.createChannelMerger(2);
+    const gain1 = this.ctx.createGain();
+    const gain2 = this.ctx.createGain();
+    gain1.gain.value = 0.25;
+    gain2.gain.value = 0.25;
+
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    gain1.connect(merger, 0, 0);
+    gain2.connect(merger, 0, 1);
+
+    const masterGain = this.ctx.createGain();
+    masterGain.gain.value = this.volume;
+    merger.connect(masterGain);
+    masterGain.connect(this.ctx.destination);
+
+    osc1.start();
+    osc2.start();
+
+    this.nodes = { osc1, osc2, gain: masterGain };
+    this.isPlaying = true;
+    this.currentTrack = 'alpha';
+  }
+
+  playZenChimes() {
+    this.stop();
+    this.init();
+    if (!this.ctx) return;
+
+    const osc = this.ctx.createOscillator();
+    const subOsc = this.ctx.createOscillator();
+    osc.type = 'sine';
+    subOsc.type = 'triangle';
+    osc.frequency.value = 432;
+    subOsc.frequency.value = 216;
+
+    const gainNode = this.ctx.createGain();
+    gainNode.gain.value = this.volume * 0.35;
+
+    osc.connect(gainNode);
+    subOsc.connect(gainNode);
+    gainNode.connect(this.ctx.destination);
+
+    osc.start();
+    subOsc.start();
+
+    this.nodes = { osc, subOsc, gain: gainNode };
+    this.isPlaying = true;
+    this.currentTrack = 'zen';
+  }
+
+  setVolume(val) {
+    this.volume = val;
+    if (this.nodes.gain) {
+      this.nodes.gain.gain.value = val;
+    }
+  }
+
+  stop() {
+    try {
+      if (this.nodes.source) this.nodes.source.stop();
+      if (this.nodes.osc) this.nodes.osc.stop();
+      if (this.nodes.subOsc) this.nodes.subOsc.stop();
+      if (this.nodes.osc1) this.nodes.osc1.stop();
+      if (this.nodes.osc2) this.nodes.osc2.stop();
+    } catch (e) {
+      // Ignored if already stopped
+    }
+    this.nodes = {};
+    this.isPlaying = false;
+    this.currentTrack = null;
+  }
+}
+
+// Global audio engine singleton
+const audioEngine = new AmbientAudioEngine();
+
+// Toast Notifications
 const Toast = ({ id, message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose(id);
-    }, 3000);
+    }, 3200);
     return () => clearTimeout(timer);
   }, [id, onClose]);
 
   return (
     <div
-      className={`p-4 rounded-lg shadow-lg mb-4 flex items-center space-x-3 transition-all duration-300 transform translate-x-0 ${
-        type === 'success' ? 'bg-green-100 text-green-800' : type === 'info' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
-      }`}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '12px 18px',
+        background: '#ffffff',
+        border: '2.5px solid #0e121d',
+        borderRadius: '14px',
+        boxShadow: '4px 4px 0px #0e121d',
+        fontWeight: '800',
+        fontSize: '13px',
+        color: '#0e121d',
+        animation: 'slideIn 0.2s ease',
+      }}
     >
-      <span className="text-lg">{type === 'success' ? '✅' : type === 'info' ? 'ℹ️' : '⚠️'}</span>
-      <span className="text-sm font-medium">{message}</span>
-      <button onClick={() => onClose(id)} className="text-sm font-semibold">×</button>
+      <span style={{ fontSize: '18px' }}>
+        {type === 'success' ? '⚡' : type === 'info' ? '💧' : '💡'}
+      </span>
+      <span>{message}</span>
+      <button
+        onClick={() => onClose(id)}
+        style={{
+          marginLeft: 'auto',
+          background: 'none',
+          border: 'none',
+          fontWeight: '900',
+          cursor: 'pointer',
+        }}
+      >
+        ✕
+      </button>
     </div>
   );
 };
 
-// Toast Container
 const ToastContainer = ({ toasts, removeToast }) => (
-  <div className="fixed bottom-4 right-4 z-50 space-y-2">
+  <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '8px' }}>
     {toasts.map((toast) => (
       <Toast key={toast.id} {...toast} onClose={removeToast} />
     ))}
   </div>
 );
 
-// Components
-const Header = () => (
-  <div className="bg-white shadow-sm border-b sticky top-0 z-50">
-   
-  </div>
-);
-
+// Navigation Component
 const Navigation = ({ activeTab, setActiveTab }) => {
   const mainTabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: icons.dashboard },
-    { id: 'tracker', label: 'Daily Tracker', icon: icons.tracker },
-    { id: 'study', label: 'Study Tools', icon: icons.study },
+    { id: 'dashboard', label: 'Command Center', icon: icons.dashboard },
+    { id: 'focus', label: 'Deep Focus Lab', icon: icons.timer },
+    { id: 'destress', label: 'De-Stress & Soundscapes', icon: icons.headphones, badge: 'NEW' },
+    { id: 'tracker', label: 'Daily Check-In', icon: icons.tracker },
     { id: 'goals', label: 'Goals & Habits', icon: icons.goals },
-    { id: 'insights', label: 'Insights', icon: icons.insights },
+    { id: 'insights', label: 'Analytics & Trends', icon: icons.insights },
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm mb-6 p-2">
-      <div className="flex overflow-x-auto">
+    <nav className="wellness-nav-bar">
+      <div className="wellness-nav-scroll">
         {mainTabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md'
-                : 'text-gray-600 hover:bg-gray-50'
-            }`}
+            className={`wellness-nav-btn ${activeTab === tab.id ? 'is-active' : ''}`}
           >
-            <span className="text-lg mr-2">{tab.icon}</span>
-            {tab.label}
+            <span>{tab.icon}</span>
+            <span>{tab.label}</span>
+            {tab.badge && <span className="wellness-nav-badge">{tab.badge}</span>}
           </button>
         ))}
       </div>
-    </div>
+    </nav>
   );
 };
 
+// Quick Stats Component
 const QuickStats = ({ formData, quickActions, studyTimer, goals }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-blue-100 text-sm">Today's Mood</p>
-          <p className="text-2xl font-bold">{moods.find((m) => m.label === formData.mood)?.label.split(' ')[0] || '😐'}</p>
-        </div>
-        <div className="text-3xl opacity-80">{icons.mood}</div>
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="wellness-stat-card wellness-stat-mood">
+      <div>
+        <p className="wellness-stat-title">Current Mood</p>
+        <p className="wellness-stat-val">
+          {moods.find((m) => m.label === formData.mood)?.label.split(' ')[0] || '😐'}
+        </p>
       </div>
+      <div className="wellness-stat-icon">{icons.mood}</div>
     </div>
-    <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-green-100 text-sm">Water Intake</p>
-          <p className="text-2xl font-bold">{quickActions.waterGlasses}/8</p>
-        </div>
-        <div className="text-3xl opacity-80">{icons.water}</div>
+    <div className="wellness-stat-card wellness-stat-water">
+      <div>
+        <p className="wellness-stat-title">Hydration</p>
+        <p className="wellness-stat-val">{quickActions.waterGlasses} / 8 <small style={{ fontSize: '16px' }}>glasses</small></p>
       </div>
+      <div className="wellness-stat-icon">{icons.water}</div>
     </div>
-    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-purple-100 text-sm">Study Sessions</p>
-          <p className="text-2xl font-bold">{studyTimer.completedSessions}</p>
-        </div>
-        <div className="text-3xl opacity-80">{icons.study}</div>
+    <div className="wellness-stat-card wellness-stat-study">
+      <div>
+        <p className="wellness-stat-title">Focus Sessions</p>
+        <p className="wellness-stat-val">{studyTimer.completedSessions} <small style={{ fontSize: '16px' }}>done</small></p>
       </div>
+      <div className="wellness-stat-icon">{icons.study}</div>
     </div>
-    <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-orange-100 text-sm">Goals Streak</p>
-          <p className="text-2xl font-bold">
-            {Math.max(...goals.map((g) => g.streak || 0))} {getStreakEmoji(Math.max(...goals.map((g) => g.streak || 0)))}
-          </p>
-        </div>
-        <div className="text-3xl opacity-80">{icons.fire}</div>
+    <div className="wellness-stat-card wellness-stat-streak">
+      <div>
+        <p className="wellness-stat-title">Top Streak</p>
+        <p className="wellness-stat-val">
+          {Math.max(...goals.map((g) => g.streak || 0))} {getStreakEmoji(Math.max(...goals.map((g) => g.streak || 0)))}
+        </p>
       </div>
+      <div className="wellness-stat-icon">{icons.fire}</div>
     </div>
   </div>
 );
 
-const StudyTimerWidget = ({ studyTimer, toggleTimer, resetTimer, startStudyTimer }) => (
-  <div className="bg-white rounded-xl shadow-sm p-6">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-xl font-semibold text-gray-800 flex items-center">
-        <span className="mr-2">{icons.timer}</span>
-        Focus Timer
-      </h3>
-      <div className="flex items-center space-x-2">
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-medium ${
-            studyTimer.isBreak ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-          }`}
-        >
-          {studyTimer.isBreak ? 'Break Time' : studyTimer.sessionType.type}
+// Focus Timer Widget Component
+const StudyTimerWidget = ({ studyTimer, toggleTimer, resetTimer, startStudyTimer }) => {
+  const phaseDuration = (studyTimer.isBreak ? studyTimer.sessionType.break : studyTimer.sessionType.duration) * 60;
+  const elapsedProgress = phaseDuration ? ((phaseDuration - studyTimer.timeLeft) / phaseDuration) * 100 : 0;
+  const ringColor = studyTimer.isBreak ? '#06d6a0' : studyTimer.sessionType.color;
+
+  return (
+    <section className={`wellness-focus-card ${studyTimer.isBreak ? 'is-break' : ''}`}>
+      <div className="wellness-focus-copy">
+        <span className="wellness-kicker">
+          {studyTimer.isBreak ? '🌿 RECOVER & RESET' : '⚡ ACADEMIC FOCUS ZONE'}
         </span>
+        <h2>{studyTimer.isBreak ? 'Step back & recharge.' : 'Enter Flow State.'}</h2>
+        <p>
+          {studyTimer.isBreak
+            ? 'Rest your eyes, hydrate, and stretch. Your brain synthesizes what you learned while resting.'
+            : 'Single-task only. Silence distractions and immerse yourself in your academic goals.'}
+        </p>
+        <div className="wellness-focus-status">
+          <span className={`wellness-status-dot ${studyTimer.isActive ? 'is-running' : ''}`} />
+          <span>{studyTimer.isActive ? 'Timer Active' : studyTimer.isBreak ? 'Break Ready' : 'Ready'}</span>
+          <span>·</span>
+          <span>{studyTimer.isBreak ? `${studyTimer.sessionType.break}m Break` : `${studyTimer.sessionType.type} (${studyTimer.sessionType.duration}m)`}</span>
+        </div>
       </div>
-    </div>
-    <div className="flex flex-col md:flex-row items-center justify-between">
-      <div className="text-center mb-4 md:mb-0">
-        <div className="text-6xl font-bold text-gray-800 mb-2">{formatTime(studyTimer.timeLeft)}</div>
-        <p className="text-gray-600">{studyTimer.isBreak ? 'Break time - relax!' : 'Stay focused!'}</p>
-      </div>
-      <div className="flex flex-col space-y-3">
-        <div className="flex space-x-3">
-          <button
-            onClick={toggleTimer}
-            className={`px-6 py-3 rounded-lg font-medium transition-all ${
-              studyTimer.isActive ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'
-            }`}
-          >
-            {studyTimer.isActive ? 'Pause' : 'Start'}
+
+      <div className="wellness-focus-console">
+        <div
+          className="wellness-timer-ring"
+          style={{ '--timer-progress': `${elapsedProgress}%`, '--timer-accent': ringColor }}
+          role="timer"
+          aria-label={`${formatTime(studyTimer.timeLeft)} remaining`}
+        >
+          <div className="wellness-timer-face">
+            <span>{studyTimer.isBreak ? 'BREAK TIME' : 'STUDY FOCUS'}</span>
+            <strong>{formatTime(studyTimer.timeLeft)}</strong>
+            <small>{studyTimer.isActive ? 'In Progress' : 'Remaining'}</small>
+          </div>
+        </div>
+        <div className="wellness-timer-controls">
+          <button className="wellness-timer-start" onClick={toggleTimer}>
+            {studyTimer.isActive ? '⏸ Pause' : studyTimer.isBreak ? '▶ Start Break' : '▶ Start Focus'}
           </button>
-          <button
-            onClick={resetTimer}
-            className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all"
-          >
-            Reset
+          <button className="wellness-timer-reset" onClick={resetTimer}>
+            ↺ Reset
           </button>
         </div>
-        <div className="flex space-x-2">
-          {studySessionTypes.map((session, index) => (
+      </div>
+
+      <div className="wellness-session-picker">
+        <div className="wellness-picker-heading">
+          <span>Choose Focus Rhythm</span>
+          <small>Tailored for student productivity cycles</small>
+        </div>
+        <div className="wellness-session-options">
+          {studySessionTypes.map((session) => (
             <button
-              key={index}
+              key={session.type}
+              className={`wellness-session-option ${studyTimer.sessionType.type === session.type ? 'is-selected' : ''}`}
               onClick={() => startStudyTimer(session)}
-              className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-all"
-              style={{ borderLeft: `4px solid ${session.color}` }}
             >
-              {session.duration}m
+              <div className="wellness-session-label">
+                <strong>{session.type}</strong>
+                <small>{session.duration}m Focus · {session.break}m Break</small>
+              </div>
+              <span className="wellness-session-duration">{session.duration}m</span>
             </button>
           ))}
         </div>
+        <p className="wellness-session-count">
+          <span>{studyTimer.completedSessions}</span> sessions conquered today!
+        </p>
       </div>
-    </div>
-  </div>
-);
+    </section>
+  );
+};
 
+// Quick Actions Component
 const QuickActions = ({ addWaterGlass, setActiveTab, quickActions }) => (
-  <div className="bg-white rounded-xl shadow-sm p-6">
-    <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-      <span className="mr-2">⚡</span>
-      Quick Actions
-    </h3>
+  <div className="wellness-card">
+    <div className="wellness-section-heading" style={{ marginBottom: '14px' }}>
+      <span className="wellness-kicker">⚡ QUICK POWER MOVES</span>
+      <h2>Instant Study Wellness Actions</h2>
+    </div>
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <button
-        onClick={addWaterGlass}
-        className="flex flex-col items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all"
-      >
-        <span className="text-3xl mb-2">{icons.water}</span>
-        <span className="text-sm font-medium text-blue-800">Add Water</span>
-        <span className="text-xs text-blue-600">{quickActions.waterGlasses} glasses</span>
+      <button onClick={addWaterGlass} className="wellness-action-btn wellness-action-water">
+        <span style={{ fontSize: '32px', marginBottom: '6px' }}>{icons.water}</span>
+        <strong style={{ fontSize: '14px', color: 'var(--m-ink)' }}>+1 Glass Water</strong>
+        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>{quickActions.waterGlasses} logged today</span>
       </button>
-      <button
-        onClick={() => setActiveTab('tracker')}
-        className="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-all"
-      >
-        <span className="text-3xl mb-2">{icons.mood}</span>
-        <span className="text-sm font-medium text-green-800">Log Mood</span>
-        <span className="text-xs text-green-600">Track feelings</span>
+      <button onClick={() => setActiveTab('destress')} className="wellness-action-btn wellness-action-study">
+        <span style={{ fontSize: '32px', marginBottom: '6px' }}>{icons.headphones}</span>
+        <strong style={{ fontSize: '14px', color: 'var(--m-ink)' }}>Lo-Fi Audio Lab</strong>
+        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>Rain & Alpha Waves</span>
       </button>
-      <button
-        onClick={() => setActiveTab('study')}
-        className="flex flex-col items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all"
-      >
-        <span className="text-3xl mb-2">{icons.study}</span>
-        <span className="text-sm font-medium text-purple-800">Start Study</span>
-        <span className="text-xs text-purple-600">Focus session</span>
+      <button onClick={() => setActiveTab('tracker')} className="wellness-action-btn wellness-action-mood">
+        <span style={{ fontSize: '32px', marginBottom: '6px' }}>{icons.mood}</span>
+        <strong style={{ fontSize: '14px', color: 'var(--m-ink)' }}>Log Daily Mood</strong>
+        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>Track energy levels</span>
       </button>
-      <button
-        onClick={() => setActiveTab('goals')}
-        className="flex flex-col items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-all"
-      >
-        <span className="text-3xl mb-2">{icons.goals}</span>
-        <span className="text-sm font-medium text-orange-800">Check Goals</span>
-        <span className="text-xs text-orange-600">Track progress</span>
+      <button onClick={() => setActiveTab('focus')} className="wellness-action-btn wellness-action-goals">
+        <span style={{ fontSize: '32px', marginBottom: '6px' }}>{icons.timer}</span>
+        <strong style={{ fontSize: '14px', color: 'var(--m-ink)' }}>Launch Pomodoro</strong>
+        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>Crush today's tasks</span>
       </button>
     </div>
   </div>
 );
 
+// Habits Tracker Component
 const HabitsTracker = ({ habits, toggleHabit }) => (
-  <div className="bg-white rounded-xl shadow-sm p-6">
-    <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-      <span className="mr-2">{icons.habits}</span>
-      Today's Habits
-    </h3>
-    <div className="space-y-3">
+  <div className="wellness-card">
+    <div className="wellness-section-heading" style={{ marginBottom: '14px' }}>
+      <span className="wellness-kicker">✅ DAILY ACADEMIC ROUTINES</span>
+      <h2>Today's Keystone Habits</h2>
+    </div>
+    <div>
       {habits.map((habit) => (
-        <div key={habit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-          <div className="flex items-center">
+        <div key={habit.id} className="wellness-habit-row">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
               onClick={() => toggleHabit(habit.id)}
-              className={`w-6 h-6 rounded-full border-2 mr-3 flex items-center justify-center transition-all ${
-                habit.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400'
-              }`}
+              className={`wellness-check-circle ${habit.completed ? 'is-done' : ''}`}
             >
-              {habit.completed && '✓'}
+              {habit.completed ? '✓' : ''}
             </button>
-            <span className={`font-medium ${habit.completed ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
-              {habit.name}
-            </span>
+            <div>
+              <span
+                style={{
+                  fontSize: '14.5px',
+                  fontWeight: '800',
+                  color: habit.completed ? '#94a3b8' : 'var(--m-ink)',
+                  textDecoration: habit.completed ? 'line-through' : 'none',
+                }}
+              >
+                {habit.name}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">{habit.streak} day streak</span>
-            <span className="text-lg">{getStreakEmoji(habit.streak)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#64748b' }}>
+              {habit.streak} day streak
+            </span>
+            <span style={{ fontSize: '18px' }}>{getStreakEmoji(habit.streak)}</span>
           </div>
         </div>
       ))}
@@ -330,79 +550,449 @@ const HabitsTracker = ({ habits, toggleHabit }) => (
   </div>
 );
 
+// Weekly Overview Chart Component
 const WeeklyOverviewChart = ({ chartData }) => (
-  <div className="bg-white rounded-xl shadow-sm p-6">
-    <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-      <span className="mr-2">{icons.analytics}</span>
-      Weekly Overview
-    </h3>
-    <div className="h-80">
+  <div className="wellness-card">
+    <div className="wellness-section-heading">
+      <span className="wellness-kicker">📊 7-DAY VITALS OVERVIEW</span>
+      <h2>Study Rhythm & Energy Flow</h2>
+      <p>Tracking correlation between study hours, sleep restoration, and mood score.</p>
+    </div>
+    <div style={{ height: '320px', width: '100%', marginTop: '16px' }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="date" stroke="#666" />
-          <YAxis stroke="#666" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="date" stroke="#0e121d" style={{ fontWeight: 800, fontSize: '12px' }} />
+          <YAxis stroke="#0e121d" style={{ fontWeight: 800, fontSize: '12px' }} />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#fff',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              backgroundColor: '#ffffff',
+              border: '2.5px solid #0e121d',
+              borderRadius: '12px',
+              boxShadow: '4px 4px 0px #0e121d',
+              fontWeight: 800,
             }}
           />
-          <Area type="monotone" dataKey="mood" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.6} />
-          <Area type="monotone" dataKey="energy" stackId="2" stroke="#10b981" fill="#10b981" fillOpacity={0.6} />
-          <Area type="monotone" dataKey="sleep" stackId="3" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.6} />
+          <Area type="monotone" dataKey="mood" stackId="1" stroke="#3a86ff" fill="#3a86ff" fillOpacity={0.65} name="Mood Score" />
+          <Area type="monotone" dataKey="energy" stackId="2" stroke="#06d6a0" fill="#06d6a0" fillOpacity={0.65} name="Energy Level" />
+          <Area type="monotone" dataKey="sleep" stackId="3" stroke="#8338ec" fill="#8338ec" fillOpacity={0.65} name="Sleep (Hours)" />
         </AreaChart>
       </ResponsiveContainer>
     </div>
   </div>
 );
 
+// ========================================================
+// BRAND NEW FEATURE COMPONENT: DE-STRESS & SOUNDSCAPES LAB
+// ========================================================
+const DestressAndSoundLab = ({ formData, addToast }) => {
+  // Soundscapes State
+  const [activeSound, setActiveSound] = useState(null);
+  const [volume, setVolume] = useState(0.5);
+
+  // Box Breathing State
+  const [breathingActive, setBreathingActive] = useState(false);
+  const [breathPhase, setBreathPhase] = useState('inhale'); // inhale, hold-in, exhale, hold-out
+  const [breathTimer, setBreathTimer] = useState(4);
+  const [completedCycles, setCompletedCycles] = useState(0);
+
+  // Brain Dump State
+  const [brainDumpText, setBrainDumpText] = useState('');
+
+  // Sounds List
+  const soundTracks = [
+    { id: 'rain', name: 'Library Window Rain', desc: 'Soothing pink noise blocking dormitory chatter', icon: '🌧️' },
+    { id: 'brown', name: 'Campus Cafe Brown Noise', desc: 'Deep warm frequency for ADHD focus & reading', icon: '☕' },
+    { id: 'alpha', name: '10Hz Alpha Focus Waves', desc: 'Binaural beat stimulating laser focus & retention', icon: '🌊' },
+    { id: 'zen', name: '432Hz Zen Drone', desc: 'Acoustic calm harmonic frequency for pre-exam zen', icon: '🔔' },
+  ];
+
+  // Sound Controller
+  const handleToggleSound = (id) => {
+    if (activeSound === id) {
+      audioEngine.stop();
+      setActiveSound(null);
+      addToast('Ambient audio stopped', 'info');
+    } else {
+      if (id === 'rain') audioEngine.playRain();
+      else if (id === 'brown') audioEngine.playBrownNoise();
+      else if (id === 'alpha') audioEngine.playAlphaWaves();
+      else if (id === 'zen') audioEngine.playZenChimes();
+      audioEngine.setVolume(volume);
+      setActiveSound(id);
+      addToast(`Playing ${soundTracks.find((s) => s.id === id)?.name}! 🎧`, 'success');
+    }
+  };
+
+  const handleVolumeChange = (newVol) => {
+    setVolume(newVol);
+    audioEngine.setVolume(newVol);
+  };
+
+  // Box Breathing Lifecycle
+  useEffect(() => {
+    let interval = null;
+    if (breathingActive) {
+      interval = setInterval(() => {
+        setBreathTimer((prev) => {
+          if (prev <= 1) {
+            // Transition phase
+            setBreathPhase((currentPhase) => {
+              if (currentPhase === 'inhale') return 'hold-in';
+              if (currentPhase === 'hold-in') return 'exhale';
+              if (currentPhase === 'exhale') return 'hold-out';
+              if (currentPhase === 'hold-out') {
+                setCompletedCycles((c) => c + 1);
+                return 'inhale';
+              }
+              return 'inhale';
+            });
+            return 4;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      setBreathTimer(4);
+      setBreathPhase('inhale');
+    }
+    return () => clearInterval(interval);
+  }, [breathingActive]);
+
+  // Burnout Score Calculation
+  const calculateBurnoutScore = () => {
+    let score = 25;
+    if (formData.stressLevel >= 4) score += 30;
+    else if (formData.stressLevel === 3) score += 15;
+
+    if (formData.sleep < 6) score += 30;
+    else if (formData.sleep < 7) score += 15;
+
+    if (formData.studyTime > 300 && formData.sleep < 7) score += 20;
+    if (formData.water < 4) score += 10;
+    if (formData.meditation >= 10) score -= 15;
+    if (formData.exercise >= 30) score -= 15;
+
+    return Math.max(8, Math.min(score, 94));
+  };
+
+  const burnoutScore = calculateBurnoutScore();
+  const getBurnoutSeverity = (score) => {
+    if (score < 38) return { label: 'Optimal Academic Energy', class: 'is-low', tag: '🟢 Thriving', advice: 'Your sleep and stress levels are balanced! Great time for demanding study sessions.' };
+    if (score < 68) return { label: 'Moderate Cognitive Fatigue', class: 'is-mid', tag: '🟡 Watch Out', advice: 'You are pushing hard. Take a 15-minute screen-free walk and drink 2 glasses of water.' };
+    return { label: 'High Burnout Warning', class: 'is-high', tag: '🔴 Take a Break', advice: 'Urgent: High stress & sleep deficit detected. Stop cramming, do Box Breathing, and aim for 8 hours of sleep tonight!' };
+  };
+
+  const severity = getBurnoutSeverity(burnoutScore);
+
+  // Clear Brain Dump
+  const clearBrainDump = () => {
+    if (!brainDumpText.trim()) return;
+    setBrainDumpText('');
+    addToast('Mental clutter vanished! Your brain is clear for deep focus. 🧠✨', 'success');
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* 1. Student Burnout & Exam Fatigue Shield */}
+      <div className="wellness-burnout-meter-card">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          <div>
+            <span className="wellness-kicker">🛡️ AI BURNOUT & EXAM SHIELD</span>
+            <h2 style={{ fontSize: '26px', fontWeight: 950, margin: '8px 0 4px', color: 'var(--m-ink)' }}>
+              Live Student Fatigue Index
+            </h2>
+            <p style={{ fontSize: '13.5px', color: '#64748b', fontWeight: 600 }}>
+              Calculated dynamically from your recent sleep ({formData.sleep}h), logged study time, and stress input.
+            </p>
+          </div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', background: 'var(--m-yellow)', border: '2px solid var(--m-ink)', borderRadius: '999px', boxShadow: '2px 2px 0px var(--m-ink)', fontWeight: 900 }}>
+            <span>{severity.tag}</span>
+            <span>{burnoutScore}% Risk</span>
+          </div>
+        </div>
+
+        {/* Meter Gauge */}
+        <div className="wellness-gauge-bar-wrap">
+          <div className={`wellness-gauge-bar-fill ${severity.class}`} style={{ width: `${burnoutScore}%` }} />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 800, color: '#64748b' }}>
+          <span>0% (Peak Freshness)</span>
+          <span>50% (Pacing Zone)</span>
+          <span>100% (High Exhaustion)</span>
+        </div>
+
+        <div style={{ marginTop: '16px', padding: '14px 18px', background: '#f8fafc', border: '2px solid var(--m-ink)', borderRadius: '14px', boxShadow: '2.5px 2.5px 0px var(--m-ink)' }}>
+          <strong style={{ display: 'block', fontSize: '13.5px', color: 'var(--m-ink)', marginBottom: '4px' }}>
+            💡 Tactical Academic Suggestion:
+          </strong>
+          <span style={{ fontSize: '13px', color: '#475569', fontWeight: 600 }}>
+            {severity.advice}
+          </span>
+        </div>
+      </div>
+
+      {/* 2. Web Audio Ambient Lo-Fi Soundscapes */}
+      <div className="wellness-soundscape-card">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          <div>
+            <span className="wellness-kicker">🎧 AMBIENT SOUNDSCAPES & BINAURAL BEATS</span>
+            <h2 style={{ fontSize: '26px', fontWeight: 950, margin: '8px 0 4px', color: 'var(--m-ink)' }}>
+              Study Sound Generator
+            </h2>
+            <p style={{ fontSize: '13.5px', color: '#64748b', fontWeight: 600 }}>
+              Generates pure audio directly in your browser. Block dorm distractions & accelerate concentration.
+            </p>
+          </div>
+          {activeSound && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', background: 'var(--m-cyan)', border: '2px solid var(--m-ink)', borderRadius: '999px', boxShadow: '2px 2px 0px var(--m-ink)', fontWeight: 900, fontSize: '12px' }}>
+              <span>ACTIVE AUDIO</span>
+              <div className="wellness-equalizer">
+                <span className="wellness-eq-bar" />
+                <span className="wellness-eq-bar" />
+                <span className="wellness-eq-bar" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="wellness-sound-grid">
+          {soundTracks.map((sound) => (
+            <div
+              key={sound.id}
+              onClick={() => handleToggleSound(sound.id)}
+              className={`wellness-sound-tile ${activeSound === sound.id ? 'is-playing' : ''}`}
+            >
+              <span className="wellness-sound-tile-icon">{sound.icon}</span>
+              <div className="wellness-sound-tile-info">
+                <strong>{sound.name}</strong>
+                <small>{sound.desc}</small>
+              </div>
+              {activeSound === sound.id && (
+                <div className="wellness-equalizer">
+                  <span className="wellness-eq-bar" />
+                  <span className="wellness-eq-bar" />
+                  <span className="wellness-eq-bar" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Master Volume Controller */}
+        <div className="wellness-sound-controls">
+          <span style={{ fontSize: '14px', fontWeight: 800 }}>🔊 Master Soundscape Volume:</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={volume}
+            onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+            className="wellness-volume-slider"
+          />
+          <span style={{ fontSize: '13px', fontWeight: 900, width: '40px' }}>{Math.round(volume * 100)}%</span>
+          {activeSound && (
+            <button
+              onClick={() => handleToggleSound(activeSound)}
+              className="wellness-btn-secondary"
+              style={{ padding: '6px 14px', fontSize: '12px' }}
+            >
+              ⏹ Stop Audio
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Interactive Box Breathing (4-4-4-4) & Brain Dump Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Box Breathing Pacer */}
+        <div className="wellness-card">
+          <div className="wellness-section-heading">
+            <span className="wellness-kicker">🧘 4-4-4-4 PROTOCOL</span>
+            <h2>Guided Box Breathing</h2>
+            <p>Clinically proven to reset cortisol and panic before exams or intense presentations.</p>
+          </div>
+
+          <div className="wellness-breathing-box">
+            <div className="wellness-breathing-circle-outer">
+              <div className={`wellness-breathing-circle ${breathingActive ? breathPhase : ''}`}>
+                <span className="wellness-breathing-text">
+                  {!breathingActive
+                    ? 'READY'
+                    : breathPhase === 'inhale'
+                    ? 'BREATHE IN'
+                    : breathPhase === 'hold-in'
+                    ? 'HOLD'
+                    : breathPhase === 'exhale'
+                    ? 'EXHALE'
+                    : 'HOLD'}
+                </span>
+                <span className="wellness-breathing-countdown">
+                  {breathingActive ? breathTimer : '✦'}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <button
+                onClick={() => setBreathingActive(!breathingActive)}
+                className="wellness-btn-primary"
+              >
+                {breathingActive ? '⏸ Pause Pacer' : '▶ Start 4-4-4-4 Reset'}
+              </button>
+              {completedCycles > 0 && (
+                <span style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--m-ink)' }}>
+                  🎉 {completedCycles} cycles completed!
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Pre-Study Brain Dump Scratchpad */}
+        <div className="wellness-card">
+          <div className="wellness-section-heading">
+            <span className="wellness-kicker">🧠 MENTAL DECLUTTER</span>
+            <h2>Pre-Study Brain Dump</h2>
+            <p>Empty all anxieties, unfinished chores, or random thoughts here so your mind can focus 100%.</p>
+          </div>
+
+          <textarea
+            value={brainDumpText}
+            onChange={(e) => setBrainDumpText(e.target.value)}
+            placeholder="Dump mental clutter here... (e.g., 'Worried about tomorrow's math quiz', 'Need to reply to team email', 'Forgot to buy notebook'). Write it all out and shred it!"
+            className="wellness-braindump-area"
+          />
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>
+              {brainDumpText.length} characters dumped
+            </span>
+            <button
+              onClick={clearBrainDump}
+              className="wellness-btn-primary"
+              disabled={!brainDumpText.trim()}
+              style={{ background: 'var(--m-pink)', color: '#ffffff' }}
+            >
+              🔥 Clear & Shred Anxieties ➔
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Gamified Student Wellness Badges */}
+      <div className="wellness-card">
+        <div className="wellness-section-heading">
+          <span className="wellness-kicker">🏆 ACADEMIC WELLNESS TROPHIES</span>
+          <h2>Your Wellness Badges</h2>
+          <p>Hit healthy study targets to unlock energetic maximalist stickers!</p>
+        </div>
+
+        <div className="wellness-badge-grid">
+          <div className={`wellness-badge-item ${formData.water >= 8 ? 'is-unlocked' : 'is-locked'}`}>
+            <span className="wellness-badge-icon">💧</span>
+            <div>
+              <span className="wellness-badge-name">Hydration Overlord</span>
+              <span className="wellness-badge-req">{formData.water >= 8 ? 'UNLOCKED! ✦' : 'Need 8 glasses/day'}</span>
+            </div>
+          </div>
+          <div className={`wellness-badge-item ${formData.sleep >= 7.5 ? 'is-unlocked' : 'is-locked'}`}>
+            <span className="wellness-badge-icon">🌙</span>
+            <div>
+              <span className="wellness-badge-name">Sleep Champion</span>
+              <span className="wellness-badge-req">{formData.sleep >= 7.5 ? 'UNLOCKED! ✦' : 'Need 7.5+ hours'}</span>
+            </div>
+          </div>
+          <div className={`wellness-badge-item ${completedCycles >= 2 ? 'is-unlocked' : 'is-locked'}`}>
+            <span className="wellness-badge-icon">🧘</span>
+            <div>
+              <span className="wellness-badge-name">Zen Master</span>
+              <span className="wellness-badge-req">{completedCycles >= 2 ? 'UNLOCKED! ✦' : 'Complete 2 breathing rounds'}</span>
+            </div>
+          </div>
+          <div className={`wellness-badge-item ${formData.studyTime >= 180 ? 'is-unlocked' : 'is-locked'}`}>
+            <span className="wellness-badge-icon">⚡</span>
+            <div>
+              <span className="wellness-badge-name">Deep Work Titan</span>
+              <span className="wellness-badge-req">{formData.studyTime >= 180 ? 'UNLOCKED! ✦' : 'Need 3+ hours study'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Daily Tracker Component
 const DailyTracker = ({ formData, handleFormChange, saveEntry, currentBMI, today }) => (
-  <div className="space-y-6">
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
-        <span className="mr-3">{icons.tracker}</span>
-        Daily Wellness Tracker
-      </h3>
+  <div className="wellness-tracker-section space-y-6">
+    <div className="wellness-card">
+      <div className="wellness-section-heading">
+        <span className="wellness-kicker">📝 DAILY WELLNESS LOG</span>
+        <h2>Daily Check-in & Self Audit</h2>
+        <p>Notice how you feel, record your fuel and rest, and keep your body ready for learning.</p>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+          {/* Date */}
+          <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '14px', border: '2px solid var(--m-ink)' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '6px' }}>Date</label>
             <input
               type="date"
               value={formData.date}
               max={today}
               onChange={(e) => handleFormChange('date', e.target.value)}
-              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="wellness-input"
             />
           </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-3">How are you feeling today?</label>
+
+          {/* Mood Picker */}
+          <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '14px', border: '2px solid var(--m-ink)' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '10px' }}>
+              How are you feeling today?
+            </label>
             <div className="grid grid-cols-1 gap-2">
               {moods.map((mood) => (
                 <button
                   key={mood.value}
+                  type="button"
                   onClick={() => handleFormChange('mood', mood.label)}
-                  className={`p-4 rounded-lg border-2 text-left transition-all ${
-                    formData.mood === mood.label ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    border: '2px solid var(--m-ink)',
+                    background: formData.mood === mood.label ? 'var(--m-yellow)' : '#ffffff',
+                    boxShadow: formData.mood === mood.label ? '3px 3px 0px var(--m-ink)' : 'none',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
                 >
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">{mood.label.split(' ')[0]}</span>
-                    <div>
-                      <div className="font-medium text-gray-800">{mood.label.split(' ')[1]}</div>
-                      <div className="text-sm text-gray-600">{mood.description}</div>
-                    </div>
+                  <span style={{ fontSize: '24px' }}>{mood.label.split(' ')[0]}</span>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '13.5px', color: 'var(--m-ink)' }}>
+                      {mood.label.split(' ').slice(1).join(' ')}
+                    </strong>
+                    <small style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600 }}>
+                      {mood.description}
+                    </small>
                   </div>
                 </button>
               ))}
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sleep Hours: <span className="text-blue-600 font-semibold">{formData.sleep} hours</span>
+
+          {/* Sleep Hours Slider */}
+          <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '14px', border: '2px solid var(--m-ink)' }}>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 800, marginBottom: '6px' }}>
+              <span>Sleep Hours</span>
+              <span style={{ color: 'var(--m-violet)', fontWeight: 900 }}>{formData.sleep} hours</span>
             </label>
             <input
               type="range"
@@ -411,61 +1001,60 @@ const DailyTracker = ({ formData, handleFormChange, saveEntry, currentBMI, today
               step="0.5"
               value={formData.sleep}
               onChange={(e) => handleFormChange('sleep', parseFloat(e.target.value))}
-              className="w-full h-3 bg-blue-100 rounded-lg appearance-none cursor-pointer"
+              style={{ width: '100%', accentColor: 'var(--m-ink)', cursor: 'pointer' }}
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 800, color: '#64748b', marginTop: '4px' }}>
               <span>0h</span>
-              <span className={`${formData.sleep >= 7 && formData.sleep <= 9 ? 'text-green-600 font-bold' : ''}`}>
+              <span style={{ color: formData.sleep >= 7 && formData.sleep <= 9 ? 'var(--m-cyan)' : '#64748b', fontWeight: 900 }}>
                 Ideal: 7-9h
               </span>
               <span>12h</span>
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Water Intake: <span className="text-blue-600 font-semibold">{formData.water} glasses</span>
+
+          {/* Water Intake */}
+          <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '14px', border: '2px solid var(--m-ink)' }}>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>
+              <span>Water Intake</span>
+              <span style={{ color: 'var(--m-blue)', fontWeight: 900 }}>{formData.water} glasses</span>
             </label>
-            <div className="grid grid-cols-5 gap-2 mb-3">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '6px', marginBottom: '10px' }}>
               {[...Array(10)].map((_, i) => (
-                <div key={i} className={`h-8 rounded-lg ${i < formData.water ? 'bg-blue-500' : 'bg-blue-100'}`} />
+                <div
+                  key={i}
+                  style={{
+                    height: '24px',
+                    borderRadius: '6px',
+                    border: '1.5px solid var(--m-ink)',
+                    background: i < formData.water ? 'var(--m-cyan)' : '#ffffff',
+                  }}
+                />
               ))}
             </div>
-            <div className="flex space-x-2">
+            <div style={{ display: 'flex', gap: '8px' }}>
               {[1, 2, 3, 4].map((amount) => (
                 <button
                   key={amount}
+                  type="button"
                   onClick={() => handleFormChange('water', formData.water + amount)}
-                  className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+                  className="wellness-btn-secondary"
+                  style={{ flex: 1, padding: '8px' }}
                 >
-                  +{amount}
+                  +{amount} 💧
                 </button>
               ))}
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Exercise: <span className="text-green-600 font-semibold">{formData.exercise} minutes</span>
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="180"
-              step="5"
-              value={formData.exercise}
-              onChange={(e) => handleFormChange('exercise', parseInt(e.target.value))}
-              className="w-full h-3 bg-green-100 rounded-lg appearance-none cursor-pointer"
-            />
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
-              <span>0min</span>
-              <span className="text-green-600 font-bold">Goal: 30min</span>
-              <span>3hrs</span>
-            </div>
-          </div>
         </div>
+
         <div className="space-y-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Study Time: <span className="text-purple-600 font-semibold">{Math.floor(formData.studyTime / 60)}h {formData.studyTime % 60}m</span>
+          {/* Study Time Slider */}
+          <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '14px', border: '2px solid var(--m-ink)' }}>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 800, marginBottom: '6px' }}>
+              <span>Study Time Logged</span>
+              <span style={{ color: 'var(--m-pink)', fontWeight: 900 }}>
+                {Math.floor(formData.studyTime / 60)}h {formData.studyTime % 60}m
+              </span>
             </label>
             <input
               type="range"
@@ -474,129 +1063,131 @@ const DailyTracker = ({ formData, handleFormChange, saveEntry, currentBMI, today
               step="15"
               value={formData.studyTime}
               onChange={(e) => handleFormChange('studyTime', parseInt(e.target.value))}
-              className="w-full h-3 bg-purple-100 rounded-lg appearance-none cursor-pointer"
+              style={{ width: '100%', accentColor: 'var(--m-ink)', cursor: 'pointer' }}
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
-              <span>0min</span>
-              <span className="text-purple-600 font-bold">Goal: 4hrs</span>
-              <span>8hrs</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 800, color: '#64748b', marginTop: '4px' }}>
+              <span>0m</span>
+              <span>Goal: 4h</span>
+              <span>8h</span>
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Stress Level: <span className="text-red-600 font-semibold">{formData.stressLevel}/5</span>
+
+          {/* Stress Level */}
+          <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '14px', border: '2px solid var(--m-ink)' }}>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>
+              <span>Stress Level</span>
+              <span style={{ color: 'var(--m-orange)', fontWeight: 900 }}>{formData.stressLevel} / 5</span>
             </label>
-            <div className="flex space-x-2">
+            <div style={{ display: 'flex', gap: '8px' }}>
               {[1, 2, 3, 4, 5].map((level) => (
                 <button
                   key={level}
+                  type="button"
                   onClick={() => handleFormChange('stressLevel', level)}
-                  className={`flex-1 py-3 rounded-lg border-2 transition-all ${
-                    formData.stressLevel === level ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-red-300 bg-white'
-                  }`}
+                  style={{
+                    flex: 1,
+                    padding: '10px 4px',
+                    borderRadius: '10px',
+                    border: '2px solid var(--m-ink)',
+                    background: formData.stressLevel === level ? 'var(--m-yellow)' : '#ffffff',
+                    boxShadow: formData.stressLevel === level ? '2px 2px 0px var(--m-ink)' : 'none',
+                    fontWeight: 900,
+                    cursor: 'pointer',
+                  }}
                 >
-                  <div className="text-center">
-                    <div className="text-lg">{['😌', '🙂', '😐', '😰', '😫'][level - 1]}</div>
-                    <div className="text-xs text-gray-600">{level}</div>
-                  </div>
+                  <div style={{ fontSize: '18px' }}>{['😌', '🙂', '😐', '😰', '😫'][level - 1]}</div>
+                  <div style={{ fontSize: '11px' }}>{level}</div>
                 </button>
               ))}
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Energy Level: <span className="text-yellow-600 font-semibold">{formData.energy}/5</span>
+
+          {/* Energy Level */}
+          <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '14px', border: '2px solid var(--m-ink)' }}>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 800, marginBottom: '8px' }}>
+              <span>Energy Level</span>
+              <span style={{ color: 'var(--m-cyan)', fontWeight: 900 }}>{formData.energy} / 5</span>
             </label>
-            <div className="flex space-x-2">
+            <div style={{ display: 'flex', gap: '8px' }}>
               {[1, 2, 3, 4, 5].map((level) => (
                 <button
                   key={level}
+                  type="button"
                   onClick={() => handleFormChange('energy', level)}
-                  className={`flex-1 py-3 rounded-lg border-2 transition-all ${
-                    formData.energy === level ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200 hover:border-yellow-300 bg-white'
-                  }`}
+                  style={{
+                    flex: 1,
+                    padding: '10px 4px',
+                    borderRadius: '10px',
+                    border: '2px solid var(--m-ink)',
+                    background: formData.energy === level ? 'var(--m-yellow)' : '#ffffff',
+                    boxShadow: formData.energy === level ? '2px 2px 0px var(--m-ink)' : 'none',
+                    fontWeight: 900,
+                    cursor: 'pointer',
+                  }}
                 >
-                  <div className="text-center">
-                    <div className="text-lg">{['😴', '🥱', '😐', '😊', '🚀'][level - 1]}</div>
-                    <div className="text-xs text-gray-600">{level}</div>
-                  </div>
+                  <div style={{ fontSize: '18px' }}>{['😴', '🥱', '😐', '😊', '🚀'][level - 1]}</div>
+                  <div style={{ fontSize: '11px' }}>{level}</div>
                 </button>
               ))}
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Meditation: <span className="text-indigo-600 font-semibold">{formData.meditation} minutes</span>
+
+          {/* Exercise & Meditation */}
+          <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '14px', border: '2px solid var(--m-ink)' }}>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 800, marginBottom: '6px' }}>
+              <span>Physical Movement / Exercise</span>
+              <span style={{ color: 'var(--m-lime)', fontWeight: 900 }}>{formData.exercise} min</span>
             </label>
             <input
               type="range"
               min="0"
-              max="60"
+              max="180"
               step="5"
-              value={formData.meditation}
-              onChange={(e) => handleFormChange('meditation', parseInt(e.target.value))}
-              className="w-full h-3 bg-indigo-100 rounded-lg appearance-none cursor-pointer"
+              value={formData.exercise}
+              onChange={(e) => handleFormChange('exercise', parseInt(e.target.value))}
+              style={{ width: '100%', accentColor: 'var(--m-ink)', cursor: 'pointer' }}
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
-              <span>0min</span>
-              <span className="text-indigo-600 font-bold">Goal: 10min</span>
-              <span>1hr</span>
-            </div>
           </div>
         </div>
       </div>
-      <div className="mt-8 flex justify-center">
-        <button
-          onClick={saveEntry}
-          className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-medium hover:shadow-lg transition-all"
-        >
-          Save Today's Entry
+
+      <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center' }}>
+        <button onClick={saveEntry} className="wellness-btn-primary" style={{ padding: '14px 36px', fontSize: '16px' }}>
+          💾 Save Daily Check-in ➔
         </button>
       </div>
     </div>
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-        <span className="mr-2">📏</span>
-        Health Metrics
-      </h3>
+
+    {/* Baseline Health Metrics */}
+    <div className="wellness-card">
+      <div className="wellness-section-heading">
+        <span className="wellness-kicker">📏 PHYSICAL BASELINE</span>
+        <h2>Body Metrics & BMI</h2>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gray-50 rounded-lg p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg)</label>
+        <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '14px', border: '2px solid var(--m-ink)' }}>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '6px' }}>Weight (kg)</label>
           <input
             type="number"
             value={formData.weight}
             onChange={(e) => handleFormChange('weight', parseFloat(e.target.value))}
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="wellness-input"
           />
         </div>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Height (cm)</label>
+        <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '14px', border: '2px solid var(--m-ink)' }}>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, marginBottom: '6px' }}>Height (cm)</label>
           <input
             type="number"
             value={formData.height}
             onChange={(e) => handleFormChange('height', parseFloat(e.target.value))}
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="wellness-input"
           />
         </div>
         {currentBMI && (
-          <div className="bg-blue-50 rounded-lg p-4 flex flex-col justify-center">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Your BMI</p>
-              <p className="text-2xl font-bold text-blue-600">{currentBMI.bmi}</p>
-              <p
-                className={`text-sm font-medium ${
-                  currentBMI.category === 'Normal'
-                    ? 'text-green-600'
-                    : currentBMI.category === 'Overweight'
-                    ? 'text-yellow-600'
-                    : currentBMI.category === 'Obese'
-                    ? 'text-red-600'
-                    : 'text-blue-600'
-                }`}
-              >
-                {currentBMI.category}
-              </p>
-            </div>
+          <div style={{ background: 'var(--m-yellow)', padding: '14px', borderRadius: '14px', border: '2.5px solid var(--m-ink)', boxShadow: '3px 3px 0px var(--m-ink)', textAlign: 'center' }}>
+            <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase' }}>Calculated BMI</span>
+            <p style={{ fontSize: '32px', fontWeight: 950, margin: '4px 0 0' }}>{currentBMI.bmi}</p>
+            <span style={{ fontSize: '13px', fontWeight: 900, color: 'var(--m-ink)' }}>{currentBMI.category}</span>
           </div>
         )}
       </div>
@@ -604,305 +1195,106 @@ const DailyTracker = ({ formData, handleFormChange, saveEntry, currentBMI, today
   </div>
 );
 
-const StudyTools = ({ studyTimer, toggleTimer, resetTimer, startStudyTimer, formData }) => (
+// Focus Mode Component
+const FocusMode = ({ studyTimer, toggleTimer, resetTimer, startStudyTimer, formData }) => (
   <div className="space-y-6">
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
-        <span className="mr-3">{icons.timer}</span>
-        Advanced Study Timer
-      </h3>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="text-center">
-          <div className="w-64 h-64 mx-auto mb-6 relative">
-            <div className="w-full h-full rounded-full border-8 border-gray-200 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-gray-800">{formatTime(studyTimer.timeLeft)}</div>
-                <p className="text-gray-600 mt-2">{studyTimer.isBreak ? 'Break Time' : studyTimer.sessionType.type}</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-center space-x-4">
-            <button
-              onClick={toggleTimer}
-              className={`px-8 py-3 rounded-lg font-medium transition-all ${
-                studyTimer.isActive ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'
-              }`}
-            >
-              {studyTimer.isActive ? 'Pause' : 'Start'}
-            </button>
-            <button
-              onClick={resetTimer}
-              className="px-8 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all"
-            >
-              Reset
-            </button>
-          </div>
-        </div>
-        <div className="space-y-4">
-          <h4 className="text-lg font-semibold text-gray-800">Choose Study Session</h4>
-          {studySessionTypes.map((session, index) => (
-            <button
-              key={index}
-              onClick={() => startStudyTimer(session)}
-              className="w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all text-left"
-              style={{ borderLeft: `6px solid ${session.color}` }}
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <h5 className="font-medium text-gray-800">{session.type}</h5>
-                  <p className="text-sm text-gray-600">
-                    {session.duration} min study + {session.break} min break
-                  </p>
-                </div>
-                <div className="text-2xl">{icons.study}</div>
-              </div>
-            </button>
-          ))}
-          <div className="bg-purple-50 rounded-lg p-4 mt-6">
-            <h5 className="font-semibold text-purple-800 mb-3">Today's Progress</h5>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-purple-700">Completed Sessions:</span>
-                <span className="font-medium">{studyTimer.completedSessions}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-purple-700">Total Study Time:</span>
-                <span className="font-medium">{Math.floor(formData.studyTime / 60)}h {formData.studyTime % 60}m</span>
-              </div>
-            </div>
-          </div>
-        </div>
+    <StudyTimerWidget
+      studyTimer={studyTimer}
+      toggleTimer={toggleTimer}
+      resetTimer={resetTimer}
+      startStudyTimer={startStudyTimer}
+    />
+
+    <div className="wellness-card">
+      <div className="wellness-section-heading">
+        <span className="wellness-kicker">💡 ACADEMIC FOCUS PROTOCOLS</span>
+        <h2>High-Performance Study Principles</h2>
       </div>
-    </div>
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-        <span className="mr-2">{icons.insights}</span>
-        Study Tips for Better Focus
-      </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-blue-800 mb-2">📚 Active Reading</h4>
-          <p className="text-sm text-gray-700">Take notes, ask questions, and summarize key points while reading.</p>
+        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '14px', border: '2px solid var(--m-ink)', boxShadow: '3px 3px 0px var(--m-ink)' }}>
+          <h4 style={{ fontWeight: 900, fontSize: '14px', marginBottom: '6px' }}>📚 Active Recall Method</h4>
+          <p style={{ fontSize: '12.5px', color: '#4b5569', fontWeight: 600 }}>Test yourself after every reading block instead of passively re-reading slides.</p>
         </div>
-        <div className="bg-green-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-green-800 mb-2">🎯 Goal Setting</h4>
-          <p className="text-sm text-gray-700">Set specific, achievable goals for each study session.</p>
+        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '14px', border: '2px solid var(--m-ink)', boxShadow: '3px 3px 0px var(--m-ink)' }}>
+          <h4 style={{ fontWeight: 900, fontSize: '14px', marginBottom: '6px' }}>🎯 50-10 Rhythm</h4>
+          <p style={{ fontSize: '12.5px', color: '#4b5569', fontWeight: 600 }}>Work 50 mins, then 10 mins screen-free walk. Protects mental stamina for finals.</p>
         </div>
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-purple-800 mb-2">🧠 Spaced Repetition</h4>
-          <p className="text-sm text-gray-700">Review material at increasing intervals to improve retention.</p>
-        </div>
-        <div className="bg-yellow-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-yellow-800 mb-2">🔕 Distraction-Free</h4>
-          <p className="text-sm text-gray-700">Put away devices and create a clean, organized study space.</p>
-        </div>
-        <div className="bg-red-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-red-800 mb-2">⏰ Time Blocking</h4>
-          <p className="text-sm text-gray-700">Dedicate specific time blocks to different subjects or tasks.</p>
-        </div>
-        <div className="bg-indigo-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-indigo-800 mb-2">🤝 Study Groups</h4>
-          <p className="text-sm text-gray-700">Collaborate with classmates to discuss and review material.</p>
+        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '14px', border: '2px solid var(--m-ink)', boxShadow: '3px 3px 0px var(--m-ink)' }}>
+          <h4 style={{ fontWeight: 900, fontSize: '14px', marginBottom: '6px' }}>🔕 Friction-Engineered Phone</h4>
+          <p style={{ fontSize: '12.5px', color: '#4b5569', fontWeight: 600 }}>Leave your phone in a backpack or outside your study room to preserve cognitive bandwidth.</p>
         </div>
       </div>
     </div>
   </div>
 );
 
+// Goals & Habits Component
 const GoalsAndHabits = ({ goals, habits, toggleHabit }) => (
   <div className="space-y-6">
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
-        <span className="mr-3">{icons.goals}</span>
-        Your Wellness Goals
-      </h3>
+    <div className="wellness-card">
+      <div className="wellness-section-heading">
+        <span className="wellness-kicker">🎯 PERSONAL MILESTONES</span>
+        <h2>Academic & Health Goals</h2>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {goals.map((goal) => (
-          <div key={goal.id} className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-gray-800">{goal.category}</h4>
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  goal.isCompleted ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}
-              >
-                {goal.isCompleted ? 'Completed' : 'In Progress'}
+          <div key={goal.id} style={{ background: '#f8fafc', padding: '16px', borderRadius: '14px', border: '2px solid var(--m-ink)', boxShadow: '3px 3px 0px var(--m-ink)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <strong style={{ fontSize: '14px', color: 'var(--m-ink)' }}>{goal.category}</strong>
+              <span style={{ fontSize: '11px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px', background: goal.isCompleted ? 'var(--m-cyan)' : 'var(--m-yellow)', border: '1.5px solid var(--m-ink)' }}>
+                {goal.isCompleted ? 'Achieved ✦' : 'In Progress'}
               </span>
             </div>
-            <p className="text-sm text-gray-600 mb-3">{goal.goal}</p>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Progress</span>
-                <span>{Math.round((goal.progress / goal.target) * 100)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min((goal.progress / goal.target) * 100, 100)}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>{goal.progress.toFixed(1)} {goal.unit}</span>
-                <span>{goal.target} {goal.unit}</span>
-              </div>
+            <p style={{ fontSize: '13px', color: '#64748b', fontWeight: 600, marginBottom: '10px' }}>{goal.goal}</p>
+            <div style={{ width: '100%', height: '10px', background: '#e2e8f0', borderRadius: '999px', border: '1.5px solid var(--m-ink)', overflow: 'hidden' }}>
+              <div style={{ width: `${Math.min((goal.progress / goal.target) * 100, 100)}%`, height: '100%', background: 'var(--m-blue)' }} />
             </div>
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-lg">{getStreakEmoji(goal.streak)}</span>
-                <span className="text-sm text-gray-600">{goal.streak} day streak</span>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px', fontWeight: 800 }}>
+              <span>{goal.progress.toFixed(1)} {goal.unit}</span>
+              <span>Target: {goal.target} {goal.unit}</span>
             </div>
           </div>
         ))}
       </div>
     </div>
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-        <span className="mr-2">{icons.habits}</span>
-        Daily Habits Tracker
-      </h3>
-      <div className="space-y-4">
-        {habits.map((habit) => (
-          <div key={habit.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center">
-              <button
-                onClick={() => toggleHabit(habit.id)}
-                className={`w-8 h-8 rounded-full border-2 mr-4 flex items-center justify-center transition-all ${
-                  habit.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400'
-                }`}
-              >
-                {habit.completed && '✓'}
-              </button>
-              <div>
-                <span className={`font-medium ${habit.completed ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
-                  {habit.name}
-                </span>
-                <p className="text-sm text-gray-600">{habit.completed ? 'Completed today!' : 'Click to mark as done'}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="text-right">
-                <div className="text-sm font-medium text-gray-800">{habit.streak} days</div>
-                <div className="text-xs text-gray-600">Current streak</div>
-              </div>
-              <span className="text-2xl">{getStreakEmoji(habit.streak)}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h4 className="font-semibold text-blue-800 mb-2">Habit Building Tips</h4>
-        <ul className="text-sm text-gray-700 space-y-1">
-          <li>• Start small - consistency matters more than intensity</li>
-          <li>• Stack new habits onto existing routines</li>
-          <li>• Track your progress visually</li>
-          <li>• Celebrate small wins along the way</li>
-        </ul>
-      </div>
-    </div>
+
+    <HabitsTracker habits={habits} toggleHabit={toggleHabit} />
   </div>
 );
 
+// Insights Component
 const Insights = ({ entries, chartData }) => (
   <div className="space-y-6">
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
-        <span className="mr-3">{icons.insights}</span>
-        Weekly Insights
-      </h3>
+    <div className="wellness-card">
+      <div className="wellness-section-heading">
+        <span className="wellness-kicker">📈 RETROSPECTIVE ANALYTICS</span>
+        <h2>Your Weekly Academic Health Baseline</h2>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-blue-50 p-6 rounded-lg text-center">
-          <div className="text-3xl mb-2">{icons.mood}</div>
-          <h4 className="font-semibold text-blue-800 mb-1">Average Mood</h4>
-          <p className="text-2xl font-bold text-blue-600">
-            {entries.length > 0
-              ? (entries.reduce((sum, entry) => sum + (moods.find((m) => m.label === entry.mood)?.value || 0), 0) / entries.length).toFixed(1)
-              : '0'}
-            /5
+        <div style={{ background: 'var(--m-yellow)', padding: '18px', borderRadius: '14px', border: '2.5px solid var(--m-ink)', boxShadow: '3px 3px 0px var(--m-ink)', textAlign: 'center' }}>
+          <span style={{ fontSize: '32px' }}>{icons.mood}</span>
+          <h4 style={{ fontSize: '13px', fontWeight: 900, margin: '6px 0 2px' }}>Avg Mood</h4>
+          <p style={{ fontSize: '28px', fontWeight: 950, margin: 0 }}>
+            {entries.length > 0 ? (entries.reduce((sum, e) => sum + (moods.find((m) => m.label === e.mood)?.value || 0), 0) / entries.length).toFixed(1) : '0'} / 5
           </p>
-          <p className="text-sm text-gray-600">This week</p>
         </div>
-        <div className="bg-green-50 p-6 rounded-lg text-center">
-          <div className="text-3xl mb-2">{icons.sleep}</div>
-          <h4 className="font-semibold text-green-800 mb-1">Average Sleep</h4>
-          <p className="text-2xl font-bold text-green-600">
-            {entries.length > 0 ? (entries.reduce((sum, entry) => sum + entry.sleep, 0) / entries.length).toFixed(1) : '0'}h
+        <div style={{ background: 'var(--m-cyan)', padding: '18px', borderRadius: '14px', border: '2.5px solid var(--m-ink)', boxShadow: '3px 3px 0px var(--m-ink)', textAlign: 'center' }}>
+          <span style={{ fontSize: '32px' }}>{icons.sleep}</span>
+          <h4 style={{ fontSize: '13px', fontWeight: 900, margin: '6px 0 2px' }}>Avg Sleep</h4>
+          <p style={{ fontSize: '28px', fontWeight: 950, margin: 0 }}>
+            {entries.length > 0 ? (entries.reduce((sum, e) => sum + e.sleep, 0) / entries.length).toFixed(1) : '0'} hrs
           </p>
-          <p className="text-sm text-gray-600">Per night</p>
         </div>
-        <div className="bg-purple-50 p-6 rounded-lg text-center">
-          <div className="text-3xl mb-2">{icons.study}</div>
-          <h4 className="font-semibold text-purple-800 mb-1">Study Time</h4>
-          <p className="text-2xl font-bold text-purple-600">
-            {entries.length > 0 ? Math.floor(entries.reduce((sum, entry) => sum + entry.studyTime, 0) / entries.length / 60) : '0'}h
+        <div style={{ background: 'var(--m-pink)', color: '#ffffff', padding: '18px', borderRadius: '14px', border: '2.5px solid var(--m-ink)', boxShadow: '3px 3px 0px var(--m-ink)', textAlign: 'center' }}>
+          <span style={{ fontSize: '32px' }}>{icons.study}</span>
+          <h4 style={{ fontSize: '13px', fontWeight: 900, margin: '6px 0 2px' }}>Daily Study</h4>
+          <p style={{ fontSize: '28px', fontWeight: 950, margin: 0 }}>
+            {entries.length > 0 ? Math.floor(entries.reduce((sum, e) => sum + e.studyTime, 0) / entries.length / 60) : '0'}h avg
           </p>
-          <p className="text-sm text-gray-600">Daily average</p>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          <h4 className="text-lg font-semibold text-gray-800 mb-4">Mood & Energy Trends</h4>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis domain={[0, 5]} />
-                <Tooltip />
-                <Line type="monotone" dataKey="mood" stroke="#3b82f6" strokeWidth={2} />
-                <Line type="monotone" dataKey="energy" stroke="#10b981" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        <div>
-          <h4 className="text-lg font-semibold text-gray-800 mb-4">Sleep & Exercise</h4>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="sleep" fill="#8b5cf6" />
-                <Bar dataKey="exercise" fill="#f59e0b" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-        <span className="mr-2">💡</span>
-        Personalized Recommendations
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div className="p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
-            <h4 className="font-semibold text-yellow-800">Sleep Optimization</h4>
-            <p className="text-sm text-gray-700 mt-1">
-              Your average sleep is{' '}
-              {entries.length > 0 ? (entries.reduce((sum, entry) => sum + entry.sleep, 0) / entries.length).toFixed(1) : '0'} hours. Try to maintain
-              7-9 hours for optimal performance.
-            </p>
-          </div>
-          <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-            <h4 className="font-semibold text-blue-800">Study Efficiency</h4>
-            <p className="text-sm text-gray-700 mt-1">Consider using the Pomodoro Technique to maintain focus during study sessions.</p>
-          </div>
-        </div>
-        <div className="space-y-4">
-          <div className="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
-            <h4 className="font-semibold text-green-800">Exercise Boost</h4>
-            <p className="text-sm text-gray-700 mt-1">Regular exercise improves cognitive function. Try a 20-minute walk between study sessions.</p>
-          </div>
-          <div className="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
-            <h4 className="font-semibold text-purple-800">Stress Management</h4>
-            <p className="text-sm text-gray-700 mt-1">High stress levels detected. Try meditation or deep breathing exercises.</p>
-          </div>
-        </div>
-      </div>
+
+      <WeeklyOverviewChart chartData={chartData} />
     </div>
   </div>
 );
@@ -918,30 +1310,26 @@ const MoodHealthTracker = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [formData, setFormData] = useState({
     date: today,
-    mood: moods[2].label,
+    mood: moods[3].label,
     sleep: 7.5,
-    water: 0,
-    exercise: 0,
-    studyTime: 0,
-    meditation: 0,
-    weight: 70,
-    height: 170,
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fats: 0,
-    stressLevel: 3,
-    energy: 3,
+    water: 4,
+    exercise: 25,
+    studyTime: 180,
+    meditation: 10,
+    weight: 68,
+    height: 172,
+    stressLevel: 2,
+    energy: 4,
   });
   const [studyTimer, setStudyTimer] = useState({
     isActive: false,
     timeLeft: 25 * 60,
     sessionType: studySessionTypes[2],
     isBreak: false,
-    completedSessions: 0,
+    completedSessions: 2,
   });
   const [quickActions, setQuickActions] = useState({
-    waterGlasses: 0,
+    waterGlasses: 4,
     moodCheckedToday: false,
     studySessionActive: false,
   });
@@ -957,7 +1345,7 @@ const MoodHealthTracker = () => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
-  // Initial Data Setup
+  // Initial Sample Setup
   useEffect(() => {
     if (entries.length === 0) {
       const sampleEntries = Array.from({ length: 7 }, (_, i) => {
@@ -967,11 +1355,11 @@ const MoodHealthTracker = () => {
           date: date.toISOString().split('T')[0],
           mood: moods[Math.floor(Math.random() * moods.length)].label,
           sleep: 6 + Math.random() * 3,
-          water: Math.floor(Math.random() * 10) + 5,
-          exercise: Math.floor(Math.random() * 60) + 15,
+          water: Math.floor(Math.random() * 8) + 4,
+          exercise: Math.floor(Math.random() * 45) + 15,
           studyTime: Math.floor(Math.random() * 180) + 120,
-          stressLevel: Math.floor(Math.random() * 5) + 1,
-          energy: Math.floor(Math.random() * 5) + 1,
+          stressLevel: Math.floor(Math.random() * 4) + 1,
+          energy: Math.floor(Math.random() * 4) + 2,
         };
       });
       setEntries(sampleEntries);
@@ -982,22 +1370,22 @@ const MoodHealthTracker = () => {
           id: index,
           ...template,
           progress: Math.random() * template.target,
-          streak: Math.floor(Math.random() * 10),
-          isCompleted: Math.random() > 0.5,
+          streak: Math.floor(Math.random() * 10) + 1,
+          isCompleted: Math.random() > 0.4,
         }))
       );
     }
     if (habits.length === 0) {
       setHabits([
-        { id: 1, name: 'Morning meditation', completed: false, streak: 5 },
-        { id: 2, name: 'Drink water before meals', completed: true, streak: 12 },
-        { id: 3, name: 'Evening review', completed: false, streak: 3 },
-        { id: 4, name: 'Exercise', completed: true, streak: 8 },
+        { id: 1, name: 'Morning hydration & vitamins', completed: true, streak: 6 },
+        { id: 2, name: '90-min Deep Study Block', completed: true, streak: 4 },
+        { id: 3, name: 'Post-study desk stretch & 20-20-20 eye rest', completed: false, streak: 3 },
+        { id: 4, name: 'Evening sleep wind-down (no screens 30m)', completed: false, streak: 8 },
       ]);
     }
   }, [entries.length, goals.length, habits.length]);
 
-  // Study Timer Logic
+  // Pomodoro Study Timer Logic
   useEffect(() => {
     let interval = null;
     if (studyTimer.isActive && studyTimer.timeLeft > 0) {
@@ -1016,13 +1404,13 @@ const MoodHealthTracker = () => {
         completedSessions: prev.isBreak ? prev.completedSessions + 1 : prev.completedSessions,
       }));
       if (studyTimer.isBreak) {
-        addToast(`Completed ${studyTimer.sessionType.type} session!`, 'success');
+        addToast(`🎉 Conquered ${studyTimer.sessionType.type} session! Take a break.`, 'success');
       }
     }
     return () => clearInterval(interval);
-  }, [studyTimer.isActive, studyTimer.timeLeft, studyTimer.isBreak, studyTimer.sessionType, today]);
+  }, [studyTimer.isActive, studyTimer.timeLeft, studyTimer.isBreak, studyTimer.sessionType]);
 
-  // Handlers
+  // Habit toggler
   const toggleHabit = (habitId) => {
     setHabits((prev) =>
       prev.map((habit) =>
@@ -1036,9 +1424,10 @@ const MoodHealthTracker = () => {
       )
     );
     const habit = habits.find((h) => h.id === habitId);
-    addToast(`${habit?.name} marked as ${!habit?.completed ? 'completed' : 'incomplete'}!`, 'success');
+    addToast(`${habit?.name} ${!habit?.completed ? 'completed! ⭐' : 'unmarked'}`, 'success');
   };
 
+  // Water increment
   const addWaterGlass = () => {
     setQuickActions((prev) => ({
       ...prev,
@@ -1048,9 +1437,10 @@ const MoodHealthTracker = () => {
       ...prev,
       water: prev.water + 1,
     }));
-    addToast('Added a glass of water!', 'info');
+    addToast('Hydration +1 logged! 💧 Stay sharp!', 'info');
   };
 
+  // Timer Handlers
   const startStudyTimer = (sessionType) => {
     setStudyTimer({
       isActive: true,
@@ -1059,10 +1449,6 @@ const MoodHealthTracker = () => {
       isBreak: false,
       completedSessions: studyTimer.completedSessions,
     });
-    setQuickActions((prev) => ({
-      ...prev,
-      studySessionActive: true,
-    }));
   };
 
   const toggleTimer = () => {
@@ -1075,15 +1461,11 @@ const MoodHealthTracker = () => {
   const resetTimer = () => {
     setStudyTimer({
       isActive: false,
-      timeLeft: 25 * 60,
-      sessionType: studySessionTypes[2],
+      timeLeft: studyTimer.sessionType.duration * 60,
+      sessionType: studyTimer.sessionType,
       isBreak: false,
-      completedSessions: 0,
+      completedSessions: studyTimer.completedSessions,
     });
-    setQuickActions((prev) => ({
-      ...prev,
-      studySessionActive: false,
-    }));
   };
 
   const handleFormChange = (field, value) => {
@@ -1104,10 +1486,6 @@ const MoodHealthTracker = () => {
       meditation: Number(formData.meditation),
       weight: Number(formData.weight),
       height: Number(formData.height),
-      calories: Number(formData.calories),
-      protein: Number(formData.protein),
-      carbs: Number(formData.carbs),
-      fats: Number(formData.fats),
       stressLevel: Number(formData.stressLevel),
       energy: Number(formData.energy),
     };
@@ -1115,19 +1493,19 @@ const MoodHealthTracker = () => {
       const updated = [...entries];
       updated[existingIndex] = newEntry;
       setEntries(updated);
-      addToast('Updated today\'s entry!', 'success');
+      addToast("Today's check-in updated! ⚡", 'success');
     } else {
       setEntries([...entries, newEntry]);
-      addToast('Saved today\'s entry!', 'success');
+      addToast("Today's wellness log saved! 🚀", 'success');
     }
   };
 
-  // Chart Data Preparation
+  // Chart preparation
   const chartData = entries
     .slice(0, 7)
     .map((entry) => ({
       date: new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short' }),
-      mood: moods.find((m) => m.label === entry.mood)?.value || 0,
+      mood: moods.find((m) => m.label === entry.mood)?.value || 3,
       sleep: entry.sleep,
       water: entry.water,
       exercise: entry.exercise,
@@ -1140,27 +1518,106 @@ const MoodHealthTracker = () => {
   const currentBMI = calculateBMI(formData.weight, formData.height);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <Header />
+    <div className="wellness-page">
+      {/* Background Floating Orbs */}
+      <div className="wellness-orb wellness-orb-1" aria-hidden="true" />
+      <div className="wellness-orb wellness-orb-2" aria-hidden="true" />
+      <div className="wellness-orb wellness-orb-3" aria-hidden="true" />
+
+      {/* Floating Retro Stickers */}
+      <div className="wellness-sticker wellness-sticker-tl" aria-hidden="true">
+        <span>⚡</span> 100% FOCUS FLOW
+      </div>
+      <div className="wellness-sticker wellness-sticker-tr" aria-hidden="true">
+        <span>🧠</span> ZERO BURNOUT ZONE
+      </div>
+      <div className="wellness-sticker wellness-sticker-br" aria-hidden="true">
+        <span>💧</span> HYDRATE OR DIEDRATE
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Maximalist Header */}
+        <header className="wellness-page-heading">
+          <div>
+            <span className="wellness-kicker">
+              <span>✦</span> STUDENT WELLNESS & FOCUS LAB
+            </span>
+            <h1>
+              Nourish Your Brain.<br />
+              <span>Crush Your Goals.</span>
+            </h1>
+            <p>
+              Burnout prevention, generative Lo-Fi soundscapes, and science-backed focus rhythms engineered for high-performing students.
+            </p>
+          </div>
+          <div className="wellness-heading-art" aria-hidden="true">
+            <span>☀</span>
+            <i>✦</i>
+            <b>⚡</b>
+          </div>
+        </header>
+
+        {/* Maximalist Navigation */}
         <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+
+        {/* Tab Views */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
-            <QuickStats formData={formData} quickActions={quickActions} studyTimer={studyTimer} goals={goals} />
-            <StudyTimerWidget studyTimer={studyTimer} toggleTimer={toggleTimer} resetTimer={resetTimer} startStudyTimer={startStudyTimer} />
-            <QuickActions addWaterGlass={addWaterGlass} setActiveTab={setActiveTab} quickActions={quickActions} />
+            <StudyTimerWidget
+              studyTimer={studyTimer}
+              toggleTimer={toggleTimer}
+              resetTimer={resetTimer}
+              startStudyTimer={startStudyTimer}
+            />
+            <QuickStats
+              formData={formData}
+              quickActions={quickActions}
+              studyTimer={studyTimer}
+              goals={goals}
+            />
+            <QuickActions
+              addWaterGlass={addWaterGlass}
+              setActiveTab={setActiveTab}
+              quickActions={quickActions}
+            />
             <HabitsTracker habits={habits} toggleHabit={toggleHabit} />
             <WeeklyOverviewChart chartData={chartData} />
           </div>
         )}
+
+        {activeTab === 'focus' && (
+          <FocusMode
+            studyTimer={studyTimer}
+            toggleTimer={toggleTimer}
+            resetTimer={resetTimer}
+            startStudyTimer={startStudyTimer}
+            formData={formData}
+          />
+        )}
+
+        {activeTab === 'destress' && (
+          <DestressAndSoundLab formData={formData} addToast={addToast} />
+        )}
+
         {activeTab === 'tracker' && (
-          <DailyTracker formData={formData} handleFormChange={handleFormChange} saveEntry={saveEntry} currentBMI={currentBMI} today={today} />
+          <DailyTracker
+            formData={formData}
+            handleFormChange={handleFormChange}
+            saveEntry={saveEntry}
+            currentBMI={currentBMI}
+            today={today}
+          />
         )}
-        {activeTab === 'study' && (
-          <StudyTools studyTimer={studyTimer} toggleTimer={toggleTimer} resetTimer={resetTimer} startStudyTimer={startStudyTimer} formData={formData} />
+
+        {activeTab === 'goals' && (
+          <GoalsAndHabits goals={goals} habits={habits} toggleHabit={toggleHabit} />
         )}
-        {activeTab === 'goals' && <GoalsAndHabits goals={goals} habits={habits} toggleHabit={toggleHabit} />}
-        {activeTab === 'insights' && <Insights entries={entries} chartData={chartData} />}
+
+        {activeTab === 'insights' && (
+          <Insights entries={entries} chartData={chartData} />
+        )}
+
+        {/* Toast notifications */}
         <ToastContainer toasts={toasts} removeToast={removeToast} />
       </div>
     </div>
