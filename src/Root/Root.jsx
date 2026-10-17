@@ -23,7 +23,7 @@ const Root = () => {
   return (
     <><SessionNavigation /><StudyReminders /><QuizReminders />{pathname === "/admin" || pathname.startsWith("/admin/") ? <Outlet /> : <NotificationProvider user={user} role={role} refreshRole={refreshRole}>
       {isWorkspace ? <Outlet /> :
-      <div className="sh-app-shell">
+      <div className={`sh-app-shell${isLandingPage ? " sh-landing-shell" : ""}`}>
         {isLandingPage ? <Outlet /> : (
           <>
             <Navbar />
