@@ -1,0 +1,5 @@
+.study-countdown { display: block; margin-top: 6px; color: light-dark(#4d6339,#c5dfae); font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.5; }
+.study-countdown.is-running { color: light-dark(#126b67,#9be1d5); }.study-countdown.is-overdue { color: light-dark(#c13c28,#ffa48e); }.study-countdown.is-complete { color: light-dark(#387649,#9ad9b4); }
+.study-time-note { color: var(--site-muted,#637084); font-size: 11px; line-height: 1.7; }
+.schedule-calendar-event .study-countdown { font-size: 9px; margin-top: 3px; white-space: normal; }
+.schedule-modal-actions { flex-wrap: wrap; }

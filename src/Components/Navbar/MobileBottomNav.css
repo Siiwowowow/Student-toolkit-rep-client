@@ -1,0 +1,165 @@
+.sh-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .sh-app-shell {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .sh-bottom-nav {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    padding: 7px 10px calc(7px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--site-border);
+    background: var(--site-surface);
+    color: var(--site-muted);
+    box-shadow: 0 -4px 20px #0000000d;
+    font-family: "DM Sans", Arial, sans-serif;
+  }
+
+  .sh-bottom-link {
+    display: flex;
+    min-height: 56px;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 2px;
+    border-radius: 10px;
+    color: inherit;
+    text-decoration: none;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: normal;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .sh-bottom-link:hover {
+    color: var(--site-text);
+    background: light-dark(#eee5d5, #30394a);
+  }
+
+  .sh-bottom-link.sh-bottom-active {
+    background: #e7fa37;
+    color: #10110e;
+  }
+
+  .sh-bottom-link:focus-visible {
+    outline: 3px solid #3478f6;
+    outline-offset: -3px;
+  }
+
+  .sh-mobile-nav > .sh-mobile-route {
+    display: none;
+  }
+}
+
+.sh-account-guest,
+.sh-account-routes,
+.sh-account-start {
+  display: none;
+}
+
+.sh-account-menu > .sh-account-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 8px;
+  margin-top: 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.sh-account-menu > .sh-account-profile:hover,
+.sh-account-menu > .sh-account-profile.sh-account-current {
+  background: light-dark(#eee5d5, #30394a);
+}
+
+@media (max-width: 767px) {
+  .sh-header .sh-menu-button,
+  .sh-header .sh-mobile-nav,
+  .sh-header .sh-mobile-nav:not([hidden]),
+  .sh-header .sh-login {
+    display: none;
+  }
+
+  .sh-account-guest {
+    display: block;
+  }
+
+  .sh-account-button {
+    color: #10110e;
+    border-color: var(--site-border);
+  }
+
+  .sh-account-menu {
+    width: min(260px, calc(100vw - 32px));
+    max-height: calc(100dvh - 160px - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    color: var(--site-text);
+    background: var(--site-surface);
+    border-color: var(--site-border);
+    box-shadow: 0 12px 32px #0003;
+  }
+
+  .sh-account-routes {
+    display: grid;
+    padding-block: 6px;
+    border-bottom: 1px solid var(--site-border);
+  }
+
+  .sh-account-menu :is(.sh-account-routes a, .sh-account-start, .sh-account-login) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .sh-account-routes a {
+    justify-content: space-between;
+  }
+
+  .sh-account-menu .sh-account-start {
+    justify-content: space-between;
+    margin-block: 6px;
+    background: #e7fa37;
+    color: #10110e;
+  }
+
+  .sh-account-routes .sh-account-current,
+  .sh-account-routes a:hover,
+  .sh-account-login:hover {
+    background: light-dark(#eee5d5, #30394a);
+  }
+
+  .sh-account-menu > button {
+    min-height: 44px;
+  }
+}
+
+.sh-account-menu > .sh-account-admin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 8px;
+  margin-block: 5px;
+  border-radius: 6px;
+  color: var(--site-text);
+  background: light-dark(#e8edf8, #30394a);
+  font-size: 12px;
+  font-weight: 700;
+}

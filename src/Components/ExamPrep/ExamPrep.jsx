@@ -1,19 +1,16 @@
+import useCurriculum from "../Student/useCurriculum";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { API_BASE } from "../../api";
 
-const subjects = [
-  "English Vocabulary",
-  "SAT Vocabulary",
-  "GRE Vocabulary",
-  "Business English",
-  "Academic Vocabulary"
-];
+import { API_BASE, apiClient as axios } from "../../api";
+
+
 
 const difficultyLevels = ["Beginner", "Intermediate", "Advanced"];
 const questionTypes = ["Multiple Choice", "True/False", "Short Answer"];
 
 const ExamPrep = () => {
+  const curriculum = useCurriculum();
+  const subjects = curriculum.subjects.map((item) => item.name);
   const [subject, setSubject] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [type, setType] = useState("");
@@ -81,6 +78,7 @@ const ExamPrep = () => {
     
     try {
       const response = await axios.post(`${API_BASE}/generate-questions`, {
+        subject,
         topic: `${subject} - ${difficulty} level`
       });
       
@@ -141,6 +139,7 @@ const ExamPrep = () => {
       
       // Call the backend API
       const response = await axios.post(`${API_BASE}/generate-questions`, {
+        subject,
         topic: topic
       });
       

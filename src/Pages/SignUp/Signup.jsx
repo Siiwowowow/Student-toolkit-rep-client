@@ -1,9 +1,10 @@
-import React, { useContext, useState } from "react";
+import AcademicProfileFields from "../../Components/Student/AcademicProfileFields";
+import React, { useContext, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { AuthContext } from "../../Context/AuthContext";
 import axios from "axios";
-import toast, { Toaster } from "react-hot-toast";
-import { useLocation, useNavigate, Link } from "react-router";
+import toast from "react-hot-toast";
+import { useNavigate, Link } from "react-router";
 import {
   AiOutlineEye,
   AiOutlineEyeInvisible,
@@ -14,11 +15,12 @@ import {
   AiOutlineCheckCircle,
 } from "react-icons/ai";
 import SocialLogin from "../SocialLogin/SocialLogin";
-import { API_BASE } from "../../api";
-import "../AuthMaximalism.css";
+import AuthLayout from "../AuthLayout";
+import { ArrowRight } from "lucide-react";
 
 const Signup = () => {
-  const { createUser, uploadProfile } = useContext(AuthContext);
+  const { user, createUser, uploadProfile, saveStudentProfile } = useContext(AuthContext);
+  const createdAccount = useRef(null);
   const {
     register,
     handleSubmit,
@@ -34,9 +36,7 @@ const Signup = () => {
   const [uploading, setUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const location = useLocation();
   const navigate = useNavigate();
-  const from = location.state?.from?.pathname || "/";
 
   // Image upload to imgbb
   const handleImageUpload = async (e) => {
@@ -84,7 +84,11 @@ const Signup = () => {
 
     try {
       // 1. Create Firebase user
-      const result = await createUser(data.email, data.password);
+      const retryAccount = createdAccount.current;
+      const result = retryAccount?.uid === user?.uid && retryAccount?.email?.toLowerCase() === data.email.trim().toLowerCase()
+        ? { user: retryAccount }
+        : await createUser(data.email, data.password);
+      createdAccount.current = result.user;
 
       // 2. Update Firebase profile
       await uploadProfile({
@@ -98,12 +102,15 @@ const Signup = () => {
         email: data.email,
         photoURL: profile,
         firebaseUID: result.user.uid,
+        academicProfile: { college: data.college, phone: data.phone, section: data.section, sessionYear: data.sessionYear, ndcRoll: data.ndcRoll, academicYear: data.academicYear, group: data.group },
       };
 
-      const response = await axios.post(`${API_BASE}/users`, userToSave);
-      if (response.data.success) {
+      await result.user.getIdToken(true);
+      const saved = await saveStudentProfile(result.user, userToSave);
+      if (saved.profileComplete) {
+        createdAccount.current = null;
         toast.success("Account created successfully! Welcome! 🎉");
-        navigate(from, { replace: true });
+        navigate(saved.role === "admin" ? "/admin" : "/student-dashboard", { replace: true });
         reset();
         setProfile(null);
       } else {
@@ -121,259 +128,26 @@ const Signup = () => {
     }
   };
 
-  return (
-    <div className="auth-maximalist-wrap">
-      {/* Background Floating Ambient Orbs */}
-      <div className="auth-bg-orb auth-bg-orb-1" aria-hidden="true" />
-      <div className="auth-bg-orb auth-bg-orb-2" aria-hidden="true" />
-      <div className="auth-bg-orb auth-bg-orb-3" aria-hidden="true" />
-
-      {/* Floating Retro Starbursts */}
-      <span className="auth-starburst auth-starburst-1" aria-hidden="true">✦</span>
-      <span className="auth-starburst auth-starburst-2" aria-hidden="true">✸</span>
-
-      {/* Maximalist Decorative Stickers (Visible on Desktop) */}
-      <div className="auth-sticker auth-sticker-tl" aria-hidden="true">
-        <span>🚀</span> JOIN 10,000+ STUDENTS
+  return <AuthLayout mode="signup" title="Make it your own." description="Create your account. Build a study space that works for you.">
+    <form onSubmit={handleSubmit(onSubmit)} className="auth-form" noValidate>
+      <div className="auth-section-heading"><span>01</span> A little about you</div>
+      <div className="auth-input-group"><label className="auth-label"><span>Profile photo</span>{profile && <span className="auth-upload-ready"><AiOutlineCheckCircle />Ready</span>}</label><div className="auth-avatar-box"><div className="auth-avatar-preview">{profile ? <img src={profile} alt="Your profile preview" /> : <AiOutlineUser size={23} />}{uploading && <span className="auth-avatar-overlay"><span className="loading loading-spinner loading-xs" /></span>}</div><div><label className="auth-avatar-upload-btn"><AiOutlineCloudUpload size={16} />{profile ? "Change photo" : "Upload a photo"}<input type="file" aria-label="Upload profile photo" disabled={uploading || isSubmitting} onChange={handleImageUpload} accept="image/jpeg,image/png,image/gif" /></label><p>JPG, PNG or GIF. Up to 5 MB.</p></div></div></div>
+      <div className="auth-form-grid">
+        <div className="auth-input-group"><label htmlFor="signup-name" className="auth-label">Full name</label><div className="auth-input-wrapper"><AiOutlineUser className="auth-input-icon" /><input id="signup-name" type="text" autoComplete="name" {...register("name", { required: "Name is required", minLength: { value: 2, message: "Enter at least 2 characters" }, maxLength: { value: 100, message: "Use up to 100 characters" } })} aria-invalid={!!errors.name} className="auth-input" placeholder="Alex Morgan" /></div>{errors.name && <span className="auth-error-text" role="alert">{errors.name.message}</span>}</div>
+        <div className="auth-input-group"><label htmlFor="signup-email" className="auth-label">Email address</label><div className="auth-input-wrapper"><AiOutlineMail className="auth-input-icon" /><input id="signup-email" type="email" autoComplete="email" {...register("email", { required: "Email is required", pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Enter a valid email address" } })} aria-invalid={!!errors.email} className="auth-input" placeholder="alex@university.edu" /></div>{errors.email && <span className="auth-error-text" role="alert">{errors.email.message}</span>}</div>
       </div>
-      <div className="auth-sticker auth-sticker-tr" aria-hidden="true">
-        <span>⭐</span> 100% FREE FOREVER
+      <AcademicProfileFields register={register} errors={errors} step="02" />
+      <div className="auth-section-heading"><span>03</span> Keep your account secure</div>
+      <div className="auth-form-grid">
+        <div className="auth-input-group"><label htmlFor="signup-password" className="auth-label">Password</label><div className="auth-input-wrapper"><AiOutlineLock className="auth-input-icon" /><input id="signup-password" type={showPassword ? "text" : "password"} autoComplete="new-password" {...register("password", { required: "Password is required", minLength: { value: 6, message: "Use at least 6 characters" }, pattern: { value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/, message: "Include uppercase, lowercase and a number" } })} aria-invalid={!!errors.password} className="auth-input auth-password-input" placeholder="At least 6 characters" /><button type="button" onClick={() => setShowPassword(!showPassword)} className="auth-eye-btn" aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <AiOutlineEyeInvisible size={18} /> : <AiOutlineEye size={18} />}</button></div>{errors.password && <span className="auth-error-text" role="alert">{errors.password.message}</span>}</div>
+        <div className="auth-input-group"><label htmlFor="signup-confirm-password" className="auth-label">Confirm password</label><div className="auth-input-wrapper"><AiOutlineLock className="auth-input-icon" /><input id="signup-confirm-password" type={showConfirm ? "text" : "password"} autoComplete="new-password" {...register("confirmPassword", { required: "Confirm your password", validate: (value) => value === password || "Passwords do not match" })} aria-invalid={!!errors.confirmPassword} className="auth-input auth-password-input" placeholder="Re-enter your password" /><button type="button" onClick={() => setShowConfirm(!showConfirm)} className="auth-eye-btn" aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}>{showConfirm ? <AiOutlineEyeInvisible size={18} /> : <AiOutlineEye size={18} />}</button></div>{errors.confirmPassword && <span className="auth-error-text" role="alert">{errors.confirmPassword.message}</span>}</div>
       </div>
-      <div className="auth-sticker auth-sticker-bl" aria-hidden="true">
-        <span>✦</span> SMARTER HABITS
-      </div>
-      <div className="auth-sticker auth-sticker-br" aria-hidden="true">
-        <span>🎯</span> GRADE A+ GUARANTEED
-      </div>
-
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: "#11141e",
-            color: "#fff",
-            border: "2px solid #f8fb38",
-            fontWeight: "700",
-          },
-        }}
-      />
-
-      {/* Central Maximalist Card */}
-      <div className="auth-maximalist-card">
-        <div className="auth-card-header">
-          <div className="auth-badge-pill">
-            <span>✦</span> NEW MEMBER ACCESS
-          </div>
-          <h1 className="auth-card-title">
-            Create <span>Account</span>
-          </h1>
-          <p className="auth-card-subtitle">
-            Supercharge your studies with smart tools & planners
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
-          {/* Profile Picture Upload Box */}
-          <div className="auth-input-group">
-            <label className="auth-label">
-              <span>Profile Avatar</span>
-              {profile && (
-                <span style={{ color: "var(--m-cyan)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                  <AiOutlineCheckCircle /> Ready
-                </span>
-              )}
-            </label>
-            <div className="auth-avatar-box">
-              <div className="auth-avatar-preview">
-                {profile ? (
-                  <img src={profile} alt="Avatar Preview" />
-                ) : (
-                  <AiOutlineCloudUpload style={{ fontSize: "24px", color: "var(--m-ink)" }} />
-                )}
-                {uploading && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: "rgba(0,0,0,0.5)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <span className="loading loading-spinner loading-xs text-white" />
-                  </div>
-                )}
-              </div>
-              <div style={{ flex: 1 }}>
-                <label className="auth-avatar-upload-btn">
-                  {profile ? "Change Avatar 📸" : "Upload Picture ✦"}
-                  <input
-                    type="file"
-                    onChange={handleImageUpload}
-                    style={{ display: "none" }}
-                    accept="image/*"
-                  />
-                </label>
-                <p style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", fontWeight: "600" }}>
-                  JPEG, PNG or GIF (Max 5MB)
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Full Name */}
-          <div className="auth-input-group">
-            <label className="auth-label">Full Name</label>
-            <div className="auth-input-wrapper">
-              <AiOutlineUser className="auth-input-icon" />
-              <input
-                type="text"
-                {...register("name", {
-                  required: "Name is required",
-                  minLength: {
-                    value: 2,
-                    message: "Name should be at least 2 characters",
-                  },
-                })}
-                className={`auth-input ${errors.name ? "has-error" : ""}`}
-                placeholder="Alex Morgan"
-              />
-            </div>
-            {errors.name && (
-              <span className="auth-error-text">⚠ {errors.name.message}</span>
-            )}
-          </div>
-
-          {/* Email */}
-          <div className="auth-input-group">
-            <label className="auth-label">Email Address</label>
-            <div className="auth-input-wrapper">
-              <AiOutlineMail className="auth-input-icon" />
-              <input
-                type="email"
-                {...register("email", {
-                  required: "Email is required",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Please enter a valid email address",
-                  },
-                })}
-                className={`auth-input ${errors.email ? "has-error" : ""}`}
-                placeholder="alex@university.edu"
-              />
-            </div>
-            {errors.email && (
-              <span className="auth-error-text">⚠ {errors.email.message}</span>
-            )}
-          </div>
-
-          {/* Password */}
-          <div className="auth-input-group">
-            <label className="auth-label">Password</label>
-            <div className="auth-input-wrapper">
-              <AiOutlineLock className="auth-input-icon" />
-              <input
-                type={showPassword ? "text" : "password"}
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: {
-                    value: 6,
-                    message: "Password must be at least 6 characters",
-                  },
-                  pattern: {
-                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/,
-                    message:
-                      "Must contain at least 1 uppercase, 1 lowercase & 1 digit",
-                  },
-                })}
-                className={`auth-input ${errors.password ? "has-error" : ""}`}
-                placeholder="At least 6 characters"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="auth-eye-btn"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <AiOutlineEyeInvisible size={20} />
-                ) : (
-                  <AiOutlineEye size={20} />
-                )}
-              </button>
-            </div>
-            {errors.password && (
-              <span className="auth-error-text">⚠ {errors.password.message}</span>
-            )}
-          </div>
-
-          {/* Confirm Password */}
-          <div className="auth-input-group">
-            <label className="auth-label">Confirm Password</label>
-            <div className="auth-input-wrapper">
-              <AiOutlineLock className="auth-input-icon" />
-              <input
-                type={showConfirm ? "text" : "password"}
-                {...register("confirmPassword", {
-                  required: "Please confirm your password",
-                  validate: (value) =>
-                    value === password || "Passwords do not match",
-                })}
-                className={`auth-input ${errors.confirmPassword ? "has-error" : ""}`}
-                placeholder="Re-enter your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirm(!showConfirm)}
-                className="auth-eye-btn"
-                aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
-              >
-                {showConfirm ? (
-                  <AiOutlineEyeInvisible size={20} />
-                ) : (
-                  <AiOutlineEye size={20} />
-                )}
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <span className="auth-error-text">
-                ⚠ {errors.confirmPassword.message}
-              </span>
-            )}
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="auth-submit-btn"
-            disabled={uploading || isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <span className="loading loading-spinner loading-sm" />
-                Creating Account...
-              </>
-            ) : (
-              <>Create My Account ➔</>
-            )}
-          </button>
-        </form>
-
-        {/* Social Login */}
-        <div style={{ marginTop: "16px" }}>
-          <SocialLogin />
-        </div>
-
-        {/* Switch Link */}
-        <p className="auth-switch-text">
-          Already have an account?
-          <Link to="/login">Sign In here ✦</Link>
-        </p>
-      </div>
-    </div>
-  );
+      <p className="auth-password-hint">Use 6 or more characters with an uppercase letter, a lowercase letter and a number.</p>
+      <button type="submit" className="auth-submit-btn" disabled={uploading || isSubmitting}>{isSubmitting ? <><span className="loading loading-spinner loading-xs" />Creating account...</> : <>Create my account<ArrowRight size={17} /></>}</button>
+    </form>
+    <SocialLogin />
+    <p className="auth-switch-text">Already have an account? <Link to="/logIn">Sign in</Link></p>
+  </AuthLayout>;
 };
 
 export default Signup;

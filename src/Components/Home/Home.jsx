@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 import {
   ArrowLeft,
@@ -9,11 +9,8 @@ import {
   Check,
   Coins,
   FileText,
-  HeartPulse,
   Plus,
-  Search,
   Smile,
-  X,
 } from "lucide-react";
 import { AuthContext } from "../../Context/AuthContext";
 import Hero1 from "../../Pages/HeroSection/Hero1/Hero1";
@@ -34,17 +31,6 @@ const tools = [
     detail:
       "Add your classes, search subjects, and filter your weekly timetable by day.",
     image: 0,
-  },
-  {
-    title: "Budget Tracker",
-    short: "Budget",
-    path: "/budget",
-    icon: Coins,
-    color: "yellow",
-    description: "Track your income, expenses, and savings.",
-    detail:
-      "Manage transactions, check your balance, and understand spending with monthly trends.",
-    image: 1,
   },
   {
     title: "Study Planner",
@@ -69,17 +55,6 @@ const tools = [
     image: 3,
   },
   {
-    title: "Wellness Hub",
-    short: "Wellness",
-    path: "/remainder",
-    icon: HeartPulse,
-    color: "pink",
-    description: "Track your mood, habits, and a healthier you.",
-    detail:
-      "Check in with your mood, track water and habits, and take a focused study break.",
-    image: 4,
-  },
-  {
     title: "AI Assistant",
     short: "AI Assistant",
     path: "/ai-planner",
@@ -89,6 +64,17 @@ const tools = [
     detail:
       "Ask questions, explore explanations, and find a starting point for your next study session.",
     image: 5,
+  },
+  {
+    title: "Budget Tracker",
+    short: "Budget",
+    path: "/budget",
+    icon: Coins,
+    color: "yellow",
+    description: "Track your income, expenses, and savings.",
+    detail:
+      "Manage transactions, check your balance, and understand spending with monthly trends.",
+    image: 1,
   },
 ];
 const routines = [
@@ -112,11 +98,11 @@ const routines = [
   },
   {
     label: "SOMEWHERE IN BETWEEN",
-    title: "Make room for you.",
-    text: "Drink some water, check in with yourself, and remember that a break counts, too.",
-    icon: HeartPulse,
-    path: "/remainder",
-    action: "Take a breather",
+    title: "Keep spending in check.",
+    text: "Review your expenses and set aside a little for your next goal.",
+    icon: Coins,
+    path: "/budget",
+    action: "Review your budget",
     color: "green",
   },
 ];
@@ -127,7 +113,7 @@ const faqs = [
   ],
   [
     "Do I need to create an account?",
-    "Sign in with email or Google for Class Schedule, Budget Tracker, and Study Planner. Exam Preparation, Wellness Hub, and the AI Assistant can be opened without an account.",
+    "Sign in with email or Google for Class Schedule, Budget Tracker, and Study Planner. Exam Preparation and the AI Assistant can be opened without an account.",
   ],
   [
     "Can I use it on mobile?",
@@ -135,7 +121,7 @@ const faqs = [
   ],
   [
     "Is my data safe?",
-    "Sign-in uses Firebase authentication. Schedules, budgets, and study tasks use the connected backend; wellness check-ins currently reset when you reload the page.",
+    "Sign-in uses Firebase authentication. Schedules, budgets, and study tasks use the connected backend.",
   ],
   [
     "Can I suggest new features?",
@@ -159,7 +145,7 @@ const testimonials = [
   },
   {
     quote:
-      "The wellness tracker helps me stay focused and healthy. Highly recommended!",
+      "The study planner helps me stay focused and organized. Highly recommended!",
     name: "Nusrat Jahan",
     role: "High School Student",
     avatar: 2,
@@ -295,7 +281,7 @@ function DashboardPreview() {
         <span className="sh-phone-start">Start</span>
         <div className="sh-phone-bottom">
           <BookOpen size={16} />
-          <HeartPulse size={16} />
+          <CalendarDays size={16} />
           <Bot size={16} />
         </div>
         <small>ONE THING AT A TIME.</small>
@@ -306,33 +292,16 @@ function DashboardPreview() {
 
 export default function Home() {
   const { user } = useContext(AuthContext);
-  const [query, setQuery] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
   const [featureStart, setFeatureStart] = useState(0);
   const [testimonialStart, setTestimonialStart] = useState(0);
-  const searchRef = useRef(null);
   const location = useLocation();
   const startPath = user ? "/study-planner" : "/signUp";
   const orderedTools = tools.map(
     (_, index) => tools[(index + featureStart) % tools.length],
   );
-  const filteredTools = orderedTools.filter((tool) =>
-    `${tool.title} ${tool.detail}`
-      .toLowerCase()
-      .includes(query.toLowerCase().trim()),
-  );
   const orderedTestimonials = testimonials.map(
     (_, index) => testimonials[(index + testimonialStart) % testimonials.length],
   );
-  const focusSearch = () => {
-    setShowSearch(true);
-    document.getElementById("explore-tools")?.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "auto"
-        : "smooth",
-    });
-    requestAnimationFrame(() => searchRef.current?.focus({ preventScroll: true }));
-  };
   useEffect(() => {
     const targetId = location.hash.slice(1);
     if (!["overview", "explore-tools"].includes(targetId)) return;
@@ -342,7 +311,7 @@ export default function Home() {
   }, [location.hash]);
 
   return (
-    <LandingCanvas header={<Navbar onSearch={focusSearch} />}>
+    <LandingCanvas header={<Navbar />}>
       <a className="sh-skip" href="#main-content">
         Skip to content
       </a>
@@ -387,36 +356,8 @@ export default function Home() {
                 </button>
               </div>
             </div>
-            {showSearch && (
-              <div className="sh-feature-search">
-                <Search size={17} aria-hidden="true" />
-                <input
-                  ref={searchRef}
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      setQuery("");
-                      setShowSearch(false);
-                    }
-                  }}
-                  placeholder="Find a tool…"
-                  aria-label="Find a tool"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setQuery("");
-                    setShowSearch(false);
-                  }}
-                  aria-label="Close search"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
-            <div className={`sh-six-tools${query ? " sh-filtered-tools" : ""}`} aria-live="polite">
-              {filteredTools.map((tool) => {
+            <div className="sh-six-tools">
+              {orderedTools.map((tool, index) => {
                 const Icon = tool.icon;
                 return (
                   <Link
@@ -425,7 +366,7 @@ export default function Home() {
                     key={tool.path}
                   >
                     <div className="sh-tool-top">
-                      <span>0{tool.image + 1}</span>
+                      <span>0{index + 1}</span>
                       <Icon size={48} strokeWidth={2.6} />
                     </div>
                     <h3>{tool.title}</h3>
@@ -437,13 +378,7 @@ export default function Home() {
                 );
               })}
             </div>
-            {query && (
-              <p className="sh-feature-search-status" role="status">
-                {filteredTools.length === 0
-                  ? "No tools found. Try study, budget, or wellness."
-                  : `${filteredTools.length} ${filteredTools.length === 1 ? "tool" : "tools"} found.`}
-              </p>
-            )}
+
           </div>
         </section>
         <StatsBand />

@@ -1,5 +1,4 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import toast from "react-hot-toast";
 import {
   Bar,
@@ -40,7 +39,7 @@ import {
   X,
 } from "lucide-react";
 import { AuthContext } from "../../Context/AuthContext";
-import { API_BASE } from "../../api";
+import { API_BASE, apiClient as axios } from "../../api";
 import "./BudgetDashboard.css";
 
 const chartColors = ["#3478f6", "#08b889", "#ffbb33", "#ff6384", "#8759ed", "#39b9d3", "#ff8a4c", "#969eab"];

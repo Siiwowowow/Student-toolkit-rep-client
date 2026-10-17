@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import toast from 'react-hot-toast';
 import useAuth from '../../Context/useAuth';
-import axios from 'axios';
-import { API_BASE } from '../../api';
 
 const SocialLogin = () => {
   const { signInWithGoogle } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
-  const from = location.state?.from?.pathname || '/';
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,26 +14,12 @@ const SocialLogin = () => {
     try {
       // 1. Sign in with Google
       const result = await signInWithGoogle();
-      const { user } = result;
-
-      // 2. Prepare user data for backend
-      const userInfo = {
-        email: user.email,
-        name: user.displayName || user.email.split('@')[0],
-        role: 'user',
-        photoURL: user.photoURL || null,
-        created_at: new Date().toISOString(),
-        last_log_in: new Date().toISOString(),
-      };
-
-      // The backend creates missing users and returns existing users on repeat login.
-      await axios.post(`${API_BASE}/users`, userInfo);
 
       // 4. Show success toast
       toast.success('Login successful!', { duration: 1000, position: 'top-center' });
 
       // 5. Navigate after toast
-      navigate(from, { replace: true });
+      navigate(result.role === 'admin' ? '/admin' : '/student-dashboard', { replace: true });
 
     } catch (error) {
       console.error('Google login error:', error);
@@ -52,21 +34,21 @@ const SocialLogin = () => {
   };
 
   return (
-    <div className='text-center'>
-      <div className="divider font-bold">Or</div>
+    <div className="auth-social">
+      <div className="auth-social-divider">or continue with</div>
 
       <button
         onClick={handleWithGoogle}
         disabled={isLoading}
-        className={`btn w-full bg-white text-black border-[#e5e5e5] hover:bg-gray-50 transition-colors ${
-          isLoading ? 'opacity-70 cursor-not-allowed' : ''
-        }`}
+        type="button"
+        className="auth-google-button"
       >
         {isLoading ? (
           <span className="loading loading-spinner loading-sm"></span>
         ) : (
           <svg
-            aria-label="Google logo"
+            aria-hidden="true"
+            focusable="false"
             width="16"
             height="16"
             xmlns="http://www.w3.org/2000/svg"
@@ -82,7 +64,7 @@ const SocialLogin = () => {
             </g>
           </svg>
         )}
-        {isLoading ? 'Logging in...' : 'Login with Google'}
+        {isLoading ? 'Logging in...' : 'Continue with Google'}
       </button>
     </div>
   );

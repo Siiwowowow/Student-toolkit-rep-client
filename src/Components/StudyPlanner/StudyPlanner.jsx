@@ -1,13 +1,19 @@
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import { dhakaWallDate, formatTime, taskWindow, taskTimeRange, taskMinutesText } from "../Student/study-time.mjs";
+import StudyCountdown from "../Student/StudyCountdown";
+import useStudyClock from "../Student/useStudyClock";
+import { notifyStudyChanged } from "../Student/study-events";
+import useCurriculum from "../Student/useCurriculum";
+import SubjectTopicFields from "../Student/SubjectTopicFields";
+import notify from "react-hot-toast";
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from "../../Context/AuthContext";
-import { API_BASE } from "../../api";
+import { API_BASE, apiClient as axios } from "../../api";
 import { 
   FaPlus, FaCheck, FaExclamationTriangle, FaCalendarAlt, FaClock, FaBook, 
   FaTrash, FaTasks, FaTimes, FaFilter, FaListUl, FaRunning, FaCheckCircle, 
   FaSync, FaChartBar, FaTrophy, FaFire, FaHome, FaEdit, FaBell,
   FaGraduationCap, FaUserGraduate, FaRegSmileBeam, FaRegCalendarCheck,
-  FaHourglassHalf, FaRegClock, FaSortAmountDownAlt, FaSearch
+  FaHourglassHalf, FaSortAmountDownAlt, FaSearch
 } from 'react-icons/fa';
 import { MdSubject, MdNotes, MdAccessTime } from 'react-icons/md';
 import { IoIosAddCircleOutline } from 'react-icons/io';
@@ -31,7 +37,7 @@ const Toast = ({ message, type, onClose }) => {
     }, 3000);
     
     return () => clearTimeout(timer);
-  }, [onClose]);
+  }, [onClose, message]);
   
   const bgColor = type === 'success' ? 'bg-green-500' : 
                   type === 'error' ? 'bg-red-500' : 
@@ -49,59 +55,9 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-// Countdown Timer Component
-const CountdownTimer = ({ deadline, timeSlot }) => {
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
-  
-  function calculateTimeLeft() {
-    const now = new Date();
-    const taskDateTime = new Date(deadline);
-    const [hours, minutes] = timeSlot.split(':');
-    taskDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-    
-    const difference = taskDateTime - now;
-    
-    if (difference <= 0) {
-      return { overdue: true };
-    }
-    
-    return {
-      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-      minutes: Math.floor((difference / 1000 / 60) % 60),
-      overdue: false
-    };
-  }
-  
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 60000); // Update every minute
-    
-    return () => clearInterval(timer);
-  }, [deadline, timeSlot]);
-  
-  if (timeLeft.overdue) {
-    return (
-      <div className="flex items-center text-red-500 text-xs">
-        <FaExclamationTriangle className="mr-1" /> Overdue
-      </div>
-    );
-  }
-  
-  return (
-    <div className="flex items-center text-xs text-gray-600">
-      <FaRegClock className="mr-1" />
-      {timeLeft.days > 0 && `${timeLeft.days}d `}
-      {timeLeft.hours > 0 && `${timeLeft.hours}h `}
-      {timeLeft.minutes > 0 ? `${timeLeft.minutes}m` : 'Less than 1m'}
-    </div>
-  );
-};
-
 // Task Card Component
 const TaskCard = ({ task, toggleCompletion, deleteTask, editTask, getPriorityBadge, isOverdue }) => (
-  <div className={`planner-list-task-card border-l-4 rounded-lg p-4 mb-3 shadow-sm transition-all duration-200 hover:shadow-md ${task.completed ? 'bg-green-50 border-green-500' : 'bg-white border-indigo-500'} ${isOverdue(task.deadline, task.timeSlot) && !task.completed ? 'border-red-500 bg-red-50' : ''}`}>
+  <div className={`planner-list-task-card border-l-4 rounded-lg p-4 mb-3 shadow-sm transition-all duration-200 hover:shadow-md ${task.completed ? 'bg-green-50 border-green-500' : 'bg-white border-indigo-500'} ${isOverdue(task) && !task.completed ? 'border-red-500 bg-red-50' : ''}`}>
     <div className="flex justify-between items-start">
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
@@ -112,7 +68,7 @@ const TaskCard = ({ task, toggleCompletion, deleteTask, editTask, getPriorityBad
             {task.subject}: {task.topic}
           </h3>
           {getPriorityBadge(task.priority)}
-          {isOverdue(task.deadline, task.timeSlot) && !task.completed && (
+          {isOverdue(task) && !task.completed && (
             <span className="flex items-center gap-1 text-red-600 text-xs bg-red-100 px-2 py-1 rounded-full">
               <FaExclamationTriangle /> Overdue
             </span>
@@ -121,13 +77,13 @@ const TaskCard = ({ task, toggleCompletion, deleteTask, editTask, getPriorityBad
         <div className="text-sm text-gray-600 mb-2 ml-1">
           <p className="flex items-center gap-1 mb-1">
             <FaCalendarAlt className="text-indigo-500" /> 
-            Due: {new Date(task.deadline).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {task.timeSlot}
+            Study date: {new Date(`${getTaskDateKey(task)}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {taskTimeRange(task)}
           </p>
           <p className="flex items-center gap-1 mb-1">
             <FaClock className="text-indigo-500" /> 
-            Duration: {task.duration} minutes
+            Duration: {taskMinutesText(task)}
           </p>
-          <CountdownTimer deadline={task.deadline} timeSlot={task.timeSlot} />
+          <StudyCountdown task={task} />
           {task.notes && (
             <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
               <MdNotes className="inline mr-1 text-indigo-500" />
@@ -201,7 +157,7 @@ const BillboardCard = ({ title, count, icon, color, tasks, toggleCompletion, del
         <div>
           <div className="space-y-3 max-h-80 overflow-y-auto">
             {tasks.slice(0, expanded ? tasks.length : 3).map(task => (
-              <div key={task._id} className={`border-l-4 rounded-lg p-3 ${task.completed ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-indigo-500'} ${isOverdue(task.deadline, task.timeSlot) && !task.completed ? 'border-red-500 bg-red-50' : ''}`}>
+              <div key={task._id} className={`border-l-4 rounded-lg p-3 ${task.completed ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-indigo-500'} ${isOverdue(task) && !task.completed ? 'border-red-500 bg-red-50' : ''}`}>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -214,9 +170,9 @@ const BillboardCard = ({ title, count, icon, color, tasks, toggleCompletion, del
                     <div className="text-xs text-gray-500">
                       <p className="flex items-center gap-1 mb-1">
                         <FaCalendarAlt className="text-indigo-400" /> 
-                        {new Date(task.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {task.timeSlot}
+                        {new Date(`${getTaskDateKey(task)}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {taskTimeRange(task)}
                       </p>
-                      <CountdownTimer deadline={task.deadline} timeSlot={task.timeSlot} />
+                      <StudyCountdown task={task} />
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -317,20 +273,20 @@ const StudentActivityChart = ({ tasks }) => {
 
     // Weekly activity data (last 7 days)
     const last7Days = [...Array(7)].map((_, i) => {
-      const date = new Date();
+      const date = dhakaWallDate();
       date.setDate(date.getDate() - i);
       return date.toLocaleDateString('en-US', { weekday: 'short' });
     }).reverse();
 
     const weeklyData = last7Days.map(day => {
-      const date = new Date();
+      const date = dhakaWallDate();
       date.setDate(date.getDate() - (6 - last7Days.indexOf(day)));
       const dateString = date.toISOString().split('T')[0];
       
       return {
         day,
         tasks: tasks.filter(t => {
-          const taskDate = new Date(t.deadline).toISOString().split('T')[0];
+          const taskDate = getTaskDateKey(t);
           return taskDate === dateString;
         }).length
       };
@@ -529,15 +485,17 @@ const DashboardSection = ({
   tasks, loading, filter, setFilter, showModal, setShowModal, 
   toggleCompletion, deleteTask, editTask, isOverdue, 
   fetchTasks, completedTasksCount, totalTasksCount, progressPercentage,
-  formData, setFormData, handleInputChange, addTask, searchTerm, setSearchTerm
+  formData, setFormData, handleInputChange, addTask, searchTerm, setSearchTerm, curriculum
 }) => {
-  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [selectedDate, setSelectedDate] = useState(() => dhakaWallDate());
   const openTaskForm = (date = selectedDate) => {
     setFormData({
       subject: '',
       topic: '',
       priority: 'medium',
       deadline: toDateKey(date),
+      startTime: '',
+      endTime: '',
       timeSlot: '',
       duration: '',
       notes: ''
@@ -547,14 +505,14 @@ const DashboardSection = ({
 
   // Get tasks due this week (next 7 days)
   const getThisWeekTasks = () => {
-    const today = new Date();
+    const today = dhakaWallDate();
     today.setHours(0, 0, 0, 0);
-    const nextWeek = new Date();
+    const nextWeek = dhakaWallDate();
     nextWeek.setDate(today.getDate() + 7);
     nextWeek.setHours(23, 59, 59, 999);
     
     return tasks.filter(task => {
-      const taskDate = new Date(task.deadline);
+      const taskDate = new Date(`${getTaskDateKey(task)}T12:00:00`);
       taskDate.setHours(0, 0, 0, 0);
       return taskDate >= today && taskDate <= nextWeek && !task.completed;
     }).sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
@@ -574,18 +532,12 @@ const DashboardSection = ({
     return tasks.filter(task => {
       if (task.completed) return false;
       
-      const taskDateTime = new Date(task.deadline);
-      const [hours, minutes] = task.timeSlot.split(':');
-      taskDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      const taskDateTime = taskWindow(task)?.end;
       
       return taskDateTime <= in48Hours && taskDateTime >= now;
     }).sort((a, b) => {
-      const aDate = new Date(a.deadline);
-      const bDate = new Date(b.deadline);
-      const [aHours, aMinutes] = a.timeSlot.split(':');
-      const [bHours, bMinutes] = b.timeSlot.split(':');
-      aDate.setHours(parseInt(aHours), parseInt(aMinutes), 0, 0);
-      bDate.setHours(parseInt(bHours), parseInt(bMinutes), 0, 0);
+      const aDate = taskWindow(a)?.start ?? Infinity;
+      const bDate = taskWindow(b)?.start ?? Infinity;
       
       return aDate - bDate;
     });
@@ -638,6 +590,7 @@ const DashboardSection = ({
             <span className="planner-eyebrow"><FaGraduationCap /> YOUR STUDY PLANNER</span>
             <h1>Plan today.<br /><span>Achieve tomorrow.</span></h1>
             <p>Break your big goals into small steps and stay consistent.</p>
+            <p className="study-time-note">Bangladesh time (UTC+6) · 12-hour AM/PM · Start and end reminders 10 minutes and 1 minute before.</p>
             <div className="planner-hero-actions">
               <button className="planner-primary-button" onClick={() => openTaskForm()}><FaPlus /> Add a study task</button>
               <button className="planner-quiet-button" onClick={fetchTasks}><FaSync className={loading ? 'planner-spin' : ''} /> Refresh plan</button>
@@ -707,7 +660,7 @@ const DashboardSection = ({
                     <option value="urgent">Urgent</option>
                   </select>
                 </label>
-                <button className="planner-icon-button" onClick={() => setSelectedDate(new Date())} title="Go to today">Today</button>
+                <button className="planner-icon-button" onClick={() => setSelectedDate(dhakaWallDate())} title="Go to today">Today</button>
                 <button className="planner-icon-button planner-week-nav" onClick={() => setSelectedDate((date) => new Date(date.getFullYear(), date.getMonth(), date.getDate() - 7))} aria-label="Previous week"><FaSortAmountDownAlt /></button>
                 <button className="planner-icon-button planner-week-nav" onClick={() => setSelectedDate((date) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + 7))} aria-label="Next week"><FaSortAmountDownAlt className="planner-next-arrow" /></button>
               </div>
@@ -724,7 +677,7 @@ const DashboardSection = ({
                 {weekDays.map((day) => {
                   const dateKey = toDateKey(day);
                   const dayTasks = visibleWeekTasks(day);
-                  const isToday = dateKey === toDateKey(new Date());
+                  const isToday = dateKey === toDateKey(dhakaWallDate());
                   const isSelected = dateKey === selectedDateKey;
                   return (
                     <article className={`planner-day-column${isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}`} key={dateKey}>
@@ -734,14 +687,14 @@ const DashboardSection = ({
                       </button>
                       <div className="planner-day-task-list">
                         {dayTasks.length ? dayTasks.map((task, index) => (
-                          <article className={`planner-task-card planner-task-color-${index % 5}${task.completed ? ' is-completed' : ''}${isOverdue(task.deadline, task.timeSlot) && !task.completed ? ' is-overdue' : ''}`} key={task._id}>
+                          <article className={`planner-task-card planner-task-color-${index % 5}${task.completed ? ' is-completed' : ''}${isOverdue(task) && !task.completed ? ' is-overdue' : ''}`} key={task._id}>
                             <div className="planner-task-card-top">
-                              <span className="planner-task-time">{task.timeSlot}</span>
+                              <span className="planner-task-time"><span>Start {formatTime(taskWindow(task)?.startTime)}</span><span>End {formatTime(taskWindow(task)?.endTime)}</span></span>
                               <span className={`planner-priority priority-${task.priority}`}>{task.priority}</span>
                             </div>
                             <strong title={task.subject}>{task.subject}</strong>
                             <span className="planner-task-topic" title={task.topic}>{task.topic}</span>
-                            <small><FaClock /> {task.duration} min</small>
+                            <small><FaClock /> {taskMinutesText(task)}</small><StudyCountdown task={task} />
                             <div className="planner-task-actions">
                               <button onClick={() => toggleCompletion(task._id)} title={task.completed ? 'Mark pending' : 'Mark complete'} aria-label={task.completed ? 'Mark pending' : 'Mark complete'}><FaCheck /></button>
                               <button onClick={() => editTask(task)} title="Edit task" aria-label="Edit task"><FaEdit /></button>
@@ -787,7 +740,7 @@ const DashboardSection = ({
                   const hasTask = tasks.some((task) => getTaskDateKey(task) === dateKey);
                   return (
                     <button
-                      className={`${isCurrentMonth ? '' : 'is-outside'}${dateKey === selectedDateKey ? ' is-active' : ''}${dateKey === toDateKey(new Date()) ? ' is-today' : ''}${hasTask ? ' has-task' : ''}`}
+                      className={`${isCurrentMonth ? '' : 'is-outside'}${dateKey === selectedDateKey ? ' is-active' : ''}${dateKey === toDateKey(dhakaWallDate()) ? ' is-today' : ''}${hasTask ? ' has-task' : ''}`}
                       key={dateKey}
                       onClick={() => setSelectedDate(day)}
                       aria-label={day.toLocaleDateString('en-US', { dateStyle: 'full' })}
@@ -819,7 +772,8 @@ const DashboardSection = ({
                       <button className="planner-complete-toggle" onClick={() => toggleCompletion(task._id)} aria-label={task.completed ? 'Mark pending' : 'Mark complete'}><FaCheck /></button>
                       <span className="planner-selected-task-icon"><FaBook /></span>
                       <button className="planner-selected-task-copy" onClick={() => editTask(task)}>
-                        <strong>{task.subject}</strong><span>{task.topic}</span><small>{task.timeSlot} · {task.duration} min</small>
+                        <strong>{task.subject}</strong><span>{task.topic}</span><small>{taskTimeRange(task)} · {taskMinutesText(task)}</small>
+                        <StudyCountdown task={task} />
                       </button>
                       <button className="planner-more-button" onClick={() => editTask(task)} aria-label="Edit task"><FaEdit /></button>
                     </div>
@@ -850,36 +804,7 @@ const DashboardSection = ({
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={formData._id ? "Edit Study Task" : "Add New Study Task"} isEditing={!!formData._id}>
         <form onSubmit={addTask} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                <MdSubject className="text-indigo-600" /> Subject *
-              </label>
-              <input
-                type="text"
-                name="subject"
-                value={formData.subject}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., Mathematics"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Topic *
-              </label>
-              <input
-                type="text"
-                name="topic"
-                value={formData.topic}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., Calculus"
-                required
-              />
-            </div>
-            
+            <SubjectTopicFields {...curriculum} subject={formData.subject} topic={formData.topic} fieldClass="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" onSubject={(subject) => setFormData((current) => ({ ...current, subject, topic: '' }))} onTopic={(topic) => setFormData((current) => ({ ...current, topic }))} />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Priority Level
@@ -912,32 +837,34 @@ const DashboardSection = ({
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Time Slot *
+                Start time *
               </label>
               <input
                 type="time"
-                name="timeSlot"
-                value={formData.timeSlot}
+                aria-label="Start time"
+                name="startTime"
+                value={formData.startTime}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               />
+              <p className="study-time-note">Bangladesh time (UTC+6){formData.startTime ? ` · ${formatTime(formData.startTime)}` : ""}</p>
             </div>
             
             <div>
               <label className=" text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                <FaClock className="text-indigo-600" /> Duration (minutes) *
+                <FaClock className="text-indigo-600" /> End time *
               </label>
               <input
-                type="number"
-                name="duration"
-                value={formData.duration}
+                type="time"
+                aria-label="End time"
+                name="endTime"
+                value={formData.endTime}
                 onChange={handleInputChange}
-                min="1"
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., 60"
                 required
               />
+              <p className="study-time-note">{formData.endTime ? formatTime(formData.endTime) : "Bangladesh time (UTC+6)"}{formData.duration ? ` · ${formData.duration} minutes total` : ""}{formData.endTime && formData.startTime && formData.endTime < formData.startTime ? " · Ends next day" : ""}</p>
             </div>
           </div>
           
@@ -997,9 +924,7 @@ const TasksSection = ({
       statusMatch = !task.completed;
       const now = new Date();
       const in48Hours = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-      const taskDateTime = new Date(task.deadline);
-      const [hours, minutes] = task.timeSlot.split(':');
-      taskDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      const taskDateTime = taskWindow(task)?.end;
       
       statusMatch = statusMatch && taskDateTime <= in48Hours && taskDateTime >= now;
     }
@@ -1014,12 +939,8 @@ const TasksSection = ({
 
   // Sort all tasks by deadline
   const sortedTasks = [...filteredTasks].sort((a, b) => {
-    const aDate = new Date(a.deadline);
-    const bDate = new Date(b.deadline);
-    const [aHours, aMinutes] = a.timeSlot.split(':');
-    const [bHours, bMinutes] = b.timeSlot.split(':');
-    aDate.setHours(parseInt(aHours), parseInt(aMinutes), 0, 0);
-    bDate.setHours(parseInt(bHours), parseInt(bMinutes), 0, 0);
+    const aDate = taskWindow(a)?.start ?? Infinity;
+    const bDate = taskWindow(b)?.start ?? Infinity;
     
     return aDate - bDate;
   });
@@ -1052,10 +973,7 @@ const TasksSection = ({
             { id: 'completed', label: 'Completed', count: tasks.filter((task) => task.completed).length },
             { id: 'urgent', label: 'Urgent', count: tasks.filter((task) => {
               if (task.completed) return false;
-              const date = new Date(task.deadline);
-              const [hours, minutes] = task.timeSlot.split(':');
-              date.setHours(Number(hours), Number(minutes), 0, 0);
-              const remaining = date.getTime() - Date.now();
+              const remaining = (taskWindow(task)?.end ?? Infinity) - Date.now();
               return remaining >= 0 && remaining <= 48 * 60 * 60 * 1000;
             }).length }
           ].map((item) => (
@@ -1117,12 +1035,15 @@ const TasksSection = ({
 };
 
 const StudyPlanner = () => {
+  const now = useStudyClock();
+  const curriculum = useCurriculum();
   const { user } = useContext(AuthContext);
   const userEmail = user?.email; 
 
   const [tasks, setTasks] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  const closeToast = useCallback(() => setToast(current => ({ ...current, show: false })), []);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
@@ -1133,6 +1054,8 @@ const StudyPlanner = () => {
     topic: '',
     priority: 'medium',
     deadline: '',
+    startTime: '',
+    endTime: '',
     timeSlot: '',
     duration: '',
     notes: ''
@@ -1153,7 +1076,7 @@ const StudyPlanner = () => {
     if (response.data.success) setTasks(response.data.data);
   } catch (err) {
     console.error(err);
-    toast.error("Failed to load tasks. Please try again.");
+    notify.error("Failed to load tasks. Please try again.");
   } finally {
     setLoading(false);
   }
@@ -1167,44 +1090,48 @@ const StudyPlanner = () => {
     if(!userEmail) return showToast('User not logged in', 'error');
 
     // validation
-    if(!formData.subject || !formData.topic || !formData.deadline || !formData.timeSlot || !formData.duration) 
+    if(formData.startTime && formData.startTime === formData.endTime) return showToast('Start and end times must be different', 'error');
+    if(!formData.subject || !formData.topic || !formData.deadline || !formData.startTime || !formData.endTime || !formData.duration) 
       return showToast('Fill required fields', 'error');
-    if(parseInt(formData.duration)<=0) return showToast('Duration must be positive', 'error');
+    if(parseInt(formData.duration)<=0 || formData.startTime === formData.endTime) return showToast('Start and end times must be different', 'error');
 
     try {
       setLoading(true);
+      const { _id, ...taskData } = formData;
       
-      if (formData._id) {
+      if (_id) {
         // Update existing task
         const response = await axios.put(`${API_BASE}/study-tasks/${formData._id}`, { 
-          ...formData, 
+          ...taskData, 
           email: userEmail 
         });
         
         if(response.data.success){
+        notifyStudyChanged();
           setTasks(tasks.map(t => t._id === formData._id ? { ...t, ...formData } : t));
-          setFormData({ subject:'', topic:'', priority:'medium', deadline:'', timeSlot:'', duration:'', notes:'' });
+          setFormData({ subject:'', topic:'', priority:'medium', deadline:'', startTime:'', endTime:'', timeSlot:'', duration:'', notes:'' });
           setShowModal(false);
-          toast.success("Task updated successfully! ✅");
+          notify.success("Task updated successfully! ✅");
         } else {
           showToast('Failed to update task', 'error');
         }
       } else {
         // Create new task
-        const response = await axios.post(`${API_BASE}/study-tasks`, { ...formData, email: userEmail });
+        const response = await axios.post(`${API_BASE}/study-tasks`, { ...taskData, email: userEmail });
         
         if(response.data.success){
+        notifyStudyChanged();
           setTasks([...tasks, response.data.data]);
-          setFormData({ subject:'', topic:'', priority:'medium', deadline:'', timeSlot:'', duration:'', notes:'' });
+          setFormData({ subject:'', topic:'', priority:'medium', deadline:'', startTime:'', endTime:'', timeSlot:'', duration:'', notes:'' });
           setShowModal(false);
-          toast.success("Task added successfully! ✅");
+          notify.success("Task added successfully! ✅");
         } else {
           showToast('Failed to add task', 'error');
         }
       }
     } catch(err){ 
       console.error(err); 
-      toast.error("Error saving task. Please try again."); 
+      notify.error("Error saving task. Please try again."); 
     } finally { 
       setLoading(false); 
     }
@@ -1222,30 +1149,34 @@ const StudyPlanner = () => {
       });
       
       if(response.data.success){
+        notifyStudyChanged();
         setTasks(tasks.map(t=>t._id===id ? updatedTask : t));
         if(!taskToUpdate.completed){ 
           setShowConfetti(true); 
           setTimeout(()=>setShowConfetti(false),5000);
         }
-        toast.success("Task status updated! ✅");
+        notify.success("Task status updated! ✅");
       } else {
-        toast.error("Failed to update task. Please try again.");
+        notify.error("Failed to update task. Please try again.");
       }
     } catch(err){ 
       console.error(err); 
-      toast.error("Error updating task. Please try again."); 
+      notify.error("Error updating task. Please try again."); 
     }
   };
 
   const editTask = (task) => {
+    setActiveSection('dashboard');
     setFormData({
       _id: task._id,
       subject: task.subject,
       topic: task.topic,
       priority: task.priority,
       deadline: task.deadline.split('T')[0], // Format date for input
-      timeSlot: task.timeSlot,
-      duration: task.duration,
+      startTime: taskWindow(task)?.startTime || task.timeSlot || "",
+      endTime: taskWindow(task)?.endTime || "",
+      timeSlot: taskWindow(task)?.startTime || task.timeSlot || "",
+      duration: String(taskWindow(task)?.duration || ""),
       notes: task.notes || ''
     });
     setShowModal(true);
@@ -1261,14 +1192,15 @@ const StudyPlanner = () => {
       });
       
       if(response.data.success){
+        notifyStudyChanged();
         setTasks(tasks.filter(t=>t._id!==id));
-        toast.success("Task deleted! ✅");
+        notify.success("Task deleted! ✅");
       } else {
-        toast.error("Failed to delete task. Please try again.");
+        notify.error("Failed to delete task. Please try again.");
       }
     } catch(err){ 
       console.error(err); 
-      toast.error("Error deleting task. Please try again."); 
+      notify.error("Error deleting task. Please try again."); 
     }
   };
 
@@ -1290,17 +1222,19 @@ const StudyPlanner = () => {
     );
   };
   
-  const isOverdue = (deadline, timeSlot) => { 
-    const now = new Date();
-    const taskDateTime = new Date(deadline);
-    const [hours, minutes] = timeSlot.split(':');
-    taskDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-    return taskDateTime < now;
-  };
-  
+  const isOverdue = task => (taskWindow(task)?.end ?? Infinity) <= now;
+
   const handleInputChange = e => { 
     const { name, value } = e.target; 
-    setFormData({...formData, [name]: value}); 
+    setFormData(current => {
+      const next = { ...current, [name]: value, ...(name === "subject" ? { topic: "" } : {}) };
+      if (["startTime", "endTime"].includes(name)) {
+        next.timeSlot = next.startTime;
+        const timing = taskWindow({ ...next, deadline: next.deadline || "2000-01-01" });
+        next.duration = timing ? String(timing.duration) : "";
+      }
+      return next;
+    }); 
   };
 
   // render active section
@@ -1315,7 +1249,7 @@ const StudyPlanner = () => {
             isOverdue={isOverdue} fetchTasks={fetchTasks}
             completedTasksCount={completedTasksCount} totalTasksCount={totalTasksCount} 
             progressPercentage={progressPercentage}
-            formData={formData} setFormData={setFormData} handleInputChange={handleInputChange} addTask={addTask}
+            curriculum={curriculum} formData={formData} setFormData={setFormData} handleInputChange={handleInputChange} addTask={addTask}
             searchTerm={searchTerm} setSearchTerm={setSearchTerm}
           />
         );
@@ -1327,7 +1261,13 @@ const StudyPlanner = () => {
             tasks={tasks} loading={loading} filter={filter} setFilter={setFilter}
             toggleCompletion={toggleCompletion} deleteTask={deleteTask} editTask={editTask}
             getPriorityBadge={getPriorityBadge} isOverdue={isOverdue} 
-            searchTerm={searchTerm} setSearchTerm={setSearchTerm} setShowModal={setShowModal}
+            searchTerm={searchTerm} setSearchTerm={setSearchTerm} setShowModal={(visible) => {
+              if (visible) {
+                setFormData({ subject: '', topic: '', priority: 'medium', deadline: toDateKey(dhakaWallDate(now)), startTime: '', endTime: '', timeSlot: '', duration: '', notes: '' });
+                setActiveSection('dashboard');
+              }
+              setShowModal(visible);
+            }}
           />
         );
       default: 
@@ -1342,7 +1282,7 @@ const StudyPlanner = () => {
         <Toast 
           message={toast.message} 
           type={toast.type} 
-          onClose={() => setToast({...toast, show: false})} 
+          onClose={closeToast}
         />
       )}
       <div className="max-w-7xl mx-auto">

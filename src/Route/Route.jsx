@@ -1,3 +1,5 @@
+import CompleteProfile from "../Pages/SignUp/CompleteProfile";
+import StudentProfile from "../Components/Student/StudentProfile";
 import { createBrowserRouter } from "react-router";
 import Root from "../Root/Root";
 import Home from "../Components/Home/Home";
@@ -8,20 +10,39 @@ import StudyPlanner from "../Components/StudyPlanner/StudyPlanner";
 import SignUp from "../Pages/SignUp/Signup";
 import Login from "../Pages/Login/Login";
 import AiAssistent from "../Components/AiAssistent/AiAssistent";
+import AdminRoute from "../Context/AdminRoute";
+import AdminDashboard from "../Components/Admin/AdminDashboard";
+import AdminOverview from "../Components/Admin/AdminOverview";
+import StudentManagement from "../Components/Admin/StudentManagement";
+import AdminContentManager from "../Components/Admin/AdminContentManager";
 import PrivateRoute from "../Context/PrivateRoute";
 import Error from "../Components/Errorpage/Error";
-import Remainder from "../Components/Reminder/Remainder";
+import StudentDashboard from "../Components/Student/StudentDashboard";
+import QuizUpdatesManager from "../Components/Admin/QuizUpdatesManager";
+import StudentQuizUpdates from "../Components/Student/StudentQuizUpdates";
 export const router = createBrowserRouter([
   {
     path: "/",
     errorElement:<Error></Error>,
     element: <Root></Root>,
     children:[
+        { path: "/complete-profile", element: <PrivateRoute><CompleteProfile /></PrivateRoute> },
+        { path: "/profile", element: <PrivateRoute><StudentProfile /></PrivateRoute> },
         {
 
             index:true,
             path:'/',
             element:<Home></Home>
+        },
+        {
+          path: '/admin',
+          element: <AdminRoute><AdminDashboard /></AdminRoute>,
+          children: [
+            { index: true, element: <AdminOverview /> },
+            { path: "students", element: <StudentManagement /> },
+            { path: "quizzes", element: <QuizUpdatesManager /> },
+            { path: "announcements", element: <AdminContentManager key="announcements" kind="announcements" /> },
+          ],
         },
         {
           path:'/schedule',
@@ -40,14 +61,21 @@ export const router = createBrowserRouter([
           element:<PrivateRoute><StudyPlanner></StudyPlanner></PrivateRoute>
         },
         {
+          path: '/quiz-tracker',
+          element: <PrivateRoute><StudentQuizUpdates tracker /></PrivateRoute>
+        },
+        {
+          path: '/student-dashboard/quiz-updates',
+          element: <PrivateRoute><StudentDashboard quizUpdates /></PrivateRoute>
+        },
+        {
+          path:'/student-dashboard',
+          element:<PrivateRoute><StudentDashboard /></PrivateRoute>
+        },
+        {
           path:'/ai-planner',
           element:<AiAssistent></AiAssistent>
         },
-        {
-          path:'/remainder',
-          element:<Remainder></Remainder>
-        },
-
         {
           path:'/signUp',
           element:<SignUp></SignUp>

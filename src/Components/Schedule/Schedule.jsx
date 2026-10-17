@@ -1,5 +1,11 @@
+import useCurriculum from "../Student/useCurriculum";
+import SubjectTopicFields from "../Student/SubjectTopicFields";
+import { dhakaWallDate, dhakaDateKey, formatTime } from "../Student/study-time.mjs";
+import useStudyClock from "../Student/useStudyClock";
+import StudyCountdown from "../Student/StudyCountdown";
+import { notifyStudyChanged } from "../Student/study-events";
+import { isCancel } from "axios";
 import { useContext, useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import toast from "react-hot-toast";
 import {
   Atom,
@@ -7,6 +13,8 @@ import {
   Brain,
   CalendarDays,
   ChartNoAxesColumnIncreasing,
+  ChevronLeft,
+  ChevronRight,
   Check,
   Clock3,
   Code2,
@@ -15,7 +23,6 @@ import {
   GraduationCap,
   Languages,
   Landmark,
-  MapPin,
   Pencil,
   Plus,
   Search,
@@ -24,23 +31,15 @@ import {
   X,
 } from "lucide-react";
 import { AuthContext } from "../../Context/AuthContext";
-import { API_BASE } from "../../api";
+import { API_BASE, apiClient as axios } from "../../api";
 import "./Schedule.css";
 
 const classesUrl = `${API_BASE}/classes`;
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const subjects = [
-  "Mathematics",
-  "Physics",
-  "Chemistry",
-  "Biology",
-  "Computer Science",
-  "English",
-  "History",
-  "Economics",
-  "Psychology",
-  "Philosophy",
-];
+const calendarHourHeight = 78;
+const calendarMinuteHeight = calendarHourHeight / 60;
+const calendarDateKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
 const subjectIcons = {
   Mathematics: ChartNoAxesColumnIncreasing,
   Physics: Atom,
@@ -67,14 +66,12 @@ const subjectAccents = {
 };
 const initialForm = {
   subject: "",
+  topic: "",
   instructor: "",
   day: "Monday",
   startTime: "",
   endTime: "",
-  location: "",
 };
-const calendarStartHour = 7;
-const calendarHours = Array.from({ length: 15 }, (_, index) => index + calendarStartHour);
 const minutesOfDay = (time) => {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
@@ -89,6 +86,8 @@ const getWeekStart = (date) => {
 };
 
 export default function Schedule() {
+  const now = useStudyClock();
+  const curriculum = useCurriculum();
   const { user } = useContext(AuthContext);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,6 +100,11 @@ export default function Schedule() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [formData, setFormData] = useState(initialForm);
+  const [selectedDate, setSelectedDate] = useState(() => dhakaWallDate());
+  const [calendarMonth, setCalendarMonth] = useState(() => dhakaWallDate());
+  const calendarStartHour = Math.min(7, ...classes.map(item => Math.floor(minutesOfDay(item.startTime) / 60)).filter(Number.isFinite));
+  const calendarEndHour = Math.max(22, ...classes.map(item => Math.ceil(minutesOfDay(item.endTime) / 60)).filter(Number.isFinite));
+  const calendarHours = Array.from({ length: calendarEndHour - calendarStartHour }, (_, index) => index + calendarStartHour);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -123,7 +127,7 @@ export default function Schedule() {
         }
         if (isActive) setClasses(response.data.data);
       } catch (error) {
-        if (!isActive || axios.isCancel(error)) return;
+        if (!isActive || isCancel(error)) return;
         console.error("Unable to load schedule:", error);
         toast.error(error.response?.data?.error || "Could not load your classes. Please try again.");
       } finally {
@@ -144,7 +148,7 @@ export default function Schedule() {
       const matchesDay = activeDay === "All" || classItem.day === activeDay;
       const matchesSearch =
         !query ||
-        [classItem.subject, classItem.instructor, classItem.location]
+        [classItem.subject, classItem.instructor, classItem.topic]
           .some((value) => value?.toLowerCase().includes(query));
       return matchesDay && matchesSearch;
     });
@@ -162,12 +166,13 @@ export default function Schedule() {
     (total, classItem) => total + (minutesOfDay(classItem.endTime) - minutesOfDay(classItem.startTime)) / 60,
     0,
   );
-  const today = new Date();
+  const today = dhakaWallDate(now);
   const todayName = days[(today.getDay() + 6) % 7];
   const todayClasses = classes
     .filter((classItem) => classItem.day === todayName)
     .sort((first, second) => minutesOfDay(first.startTime) - minutesOfDay(second.startTime));
-  const nowMinutes = today.getHours() * 60 + today.getMinutes();
+  const dhakaClock = new Date(now + 6 * 60 * 60 * 1000);
+  const nowMinutes = dhakaClock.getUTCHours() * 60 + dhakaClock.getUTCMinutes();
   const nextClass = todayClasses.find((classItem) => minutesOfDay(classItem.endTime) > nowMinutes);
   const subjectCounts = Object.entries(
     classes.reduce((counts, classItem) => {
@@ -175,7 +180,19 @@ export default function Schedule() {
       return counts;
     }, {}),
   ).sort((first, second) => second[1] - first[1]);
-  const weekStart = getWeekStart(today);
+  const weekStart = getWeekStart(selectedDate);
+  const monthStart = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+  const monthGridStart = getWeekStart(monthStart);
+  const monthDays = Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(monthGridStart);
+    date.setDate(monthGridStart.getDate() + index);
+    return date;
+  });
+  const isCurrentWeek = calendarDateKey(weekStart) === calendarDateKey(getWeekStart(today));
+  const goToToday = () => {
+    const date = dhakaWallDate(now);
+    setSelectedDate(date); setCalendarMonth(date); setActiveDay(todayName);
+  };
   const weekDates = days.map((_, index) => {
     const date = new Date(weekStart);
     date.setDate(weekStart.getDate() + index);
@@ -197,11 +214,11 @@ export default function Schedule() {
     setEditingClass(classItem);
     setFormData({
       subject: classItem.subject || "",
+      topic: classItem.topic || "",
       instructor: classItem.instructor || "",
       day: classItem.day || "Monday",
       startTime: classItem.startTime || "",
       endTime: classItem.endTime || "",
-      location: classItem.location || "",
     });
     setShowModal(true);
   };
@@ -220,7 +237,7 @@ export default function Schedule() {
       return;
     }
     if (
-      !formData.subject ||
+      !formData.subject || !formData.topic ||
       !formData.instructor.trim() ||
       !formData.startTime ||
       !formData.endTime ||
@@ -236,11 +253,11 @@ export default function Schedule() {
 
     const classData = {
       subject: formData.subject,
+      topic: formData.topic,
       instructor: formData.instructor.trim(),
       day: formData.day,
       startTime: formData.startTime,
       endTime: formData.endTime,
-      location: formData.location.trim(),
       email: user.email,
     };
 
@@ -264,6 +281,7 @@ export default function Schedule() {
         toast.success("Class added to your week.");
       }
       setShowModal(false);
+      notifyStudyChanged();
       setEditingClass(null);
       setFormData(initialForm);
     } catch (error) {
@@ -285,6 +303,7 @@ export default function Schedule() {
       setClasses((current) => current.filter((classItem) => classItem._id !== confirmDelete._id));
       toast.success("Class removed from your week.");
       setConfirmDelete(null);
+      notifyStudyChanged();
     } catch (error) {
       console.error("Unable to delete class:", error);
       toast.error(error.response?.data?.error || error.message || "Could not delete this class. Please try again.");
@@ -304,14 +323,14 @@ export default function Schedule() {
         <div className="schedule-class-icon"><SubjectIcon size={20} /></div>
         <div className="schedule-class-main">
           <div className="schedule-class-title-row">
-            <h3>{classItem.subject}</h3>
+            <h3>{classItem.subject}</h3>{classItem.topic && <p className="schedule-class-topic" title={classItem.topic}>{classItem.topic}</p>}
             <span className="schedule-class-day">{classItem.day}</span>
           </div>
           <div className="schedule-class-details">
-            <span><Clock3 size={14} /> {classItem.startTime} – {classItem.endTime}</span>
+            <span><Clock3 size={14} /> {formatTime(classItem.startTime)} – {formatTime(classItem.endTime)}</span>
             <span><UsersRound size={14} /> {classItem.instructor}</span>
-            {classItem.location && <span><MapPin size={14} /> {classItem.location}</span>}
           </div>
+          <StudyCountdown classItem={classItem} dateKey={weekDates[days.indexOf(classItem.day)] ? calendarDateKey(weekDates[days.indexOf(classItem.day)]) : undefined} />
         </div>
         <div className="schedule-card-actions">
           <button
@@ -343,6 +362,7 @@ export default function Schedule() {
             <span className="schedule-kicker"><CalendarDays size={15} /> YOUR PERSONAL CLASS PLANNER</span>
             <h1>Your Study <span>Schedule</span></h1>
             <p>Stay organized, manage your classes, and make every hour count.</p>
+            <p className="study-time-note">Bangladesh time (UTC+6) · 12-hour AM/PM · Reminders 10 minutes and 1 minute before.</p>
           </div>
           <button className="schedule-add-button" onClick={openAddModal}>
             <Plus size={18} /> Add class
@@ -381,11 +401,11 @@ export default function Schedule() {
             <div className="schedule-calendar-toolbar">
               <div>
                 <span className="schedule-eyebrow">YOUR TIMETABLE</span>
-                <h2>This week</h2>
+                <h2>{isCurrentWeek ? "This week" : "Selected week"}</h2>
               </div>
               <div className="schedule-calendar-tools">
                 <span className="schedule-date-range">{dateRange}</span>
-                <button className="schedule-today-button" onClick={() => setActiveDay(todayName)}>Today</button>
+                <button className="schedule-today-button" onClick={goToToday}>Today</button>
                 <div className="schedule-view-switch" aria-label="Calendar view">
                   <button className={view === "week" ? "is-active" : ""} onClick={() => setView("week")}>Week</button>
                   <button className={view === "list" ? "is-active" : ""} onClick={() => setView("list")}>List</button>
@@ -425,7 +445,7 @@ export default function Schedule() {
               <div className="schedule-state" role="status"><span className="schedule-spinner" /> Loading your classes…</div>
             ) : view === "week" ? (
               <div className="schedule-calendar-scroll">
-                <div className="schedule-week-calendar">
+                <div className="schedule-week-calendar" style={{ "--calendar-hour-height": `${calendarHourHeight}px`, "--calendar-lane-height": `${calendarHours.length * calendarHourHeight}px` }}>
                   <div className="schedule-time-rail">
                     <div className="schedule-calendar-day-heading schedule-time-heading">TIME</div>
                     {calendarHours.map((hour) => <div className="schedule-time-label" key={hour}>{formatHour(hour)}</div>)}
@@ -436,7 +456,7 @@ export default function Schedule() {
                     const dayClasses = filteredClasses
                       .filter((classItem) => classItem.day === day)
                       .sort((first, second) => minutesOfDay(first.startTime) - minutesOfDay(second.startTime));
-                    const isToday = day === todayName;
+                    const isToday = calendarDateKey(date) === dhakaDateKey(now);
                     return (
                       <div className={`schedule-calendar-day ${isToday ? "is-today" : ""}`} key={day}>
                         <button
@@ -463,14 +483,14 @@ export default function Schedule() {
                                 onClick={() => openEditModal(classItem)}
                                 style={{
                                   "--event-accent": subjectAccents[classItem.subject] || "#e7fa37",
-                                  top: `${visibleStart - calendarStartHour * 60}px`,
-                                  height: `${Math.max(visibleEnd - visibleStart, 36)}px`,
+                                  top: `${(visibleStart - calendarStartHour * 60) * calendarMinuteHeight}px`,
+                                  height: `${Math.max((visibleEnd - visibleStart) * calendarMinuteHeight, 64)}px`,
                                 }}
-                                title={`${classItem.subject}: ${classItem.startTime}–${classItem.endTime}. Click to edit.`}
+                                title={`${classItem.subject}: ${formatTime(classItem.startTime)}–${formatTime(classItem.endTime)} Bangladesh time. Click to edit or remove.`}
                               >
                                 <span className="schedule-event-subject"><SubjectIcon size={13} />{classItem.subject}</span>
-                                <span className="schedule-event-time">{classItem.startTime} – {classItem.endTime}</span>
-                                {classItem.location && <span className="schedule-event-location">{classItem.location}</span>}
+                                <span className="schedule-event-time">{formatTime(classItem.startTime)} – {formatTime(classItem.endTime)}</span>
+                                <StudyCountdown classItem={classItem} dateKey={calendarDateKey(date)} />
                               </button>
                             );
                           })}
@@ -512,6 +532,29 @@ export default function Schedule() {
           </section>
 
           <aside className="schedule-sidebar">
+            <section className="schedule-side-panel schedule-mini-calendar" aria-label="Monthly calendar">
+              <div className="schedule-side-heading">
+                <div><span className="schedule-eyebrow">PICK A DATE</span><h2>{calendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</h2></div>
+                <div className="schedule-month-controls">
+                  <button type="button" aria-label="Previous calendar month" onClick={() => setCalendarMonth(date => new Date(date.getFullYear(), date.getMonth() - 1, 1))}><ChevronLeft size={16} /></button>
+                  <button type="button" aria-label="Next calendar month" onClick={() => setCalendarMonth(date => new Date(date.getFullYear(), date.getMonth() + 1, 1))}><ChevronRight size={16} /></button>
+                </div>
+              </div>
+              <div className="schedule-month-weekdays" aria-hidden="true">{days.map(day => <span key={day}>{day.slice(0, 2)}</span>)}</div>
+              <div className="schedule-month-days">
+                {monthDays.map(date => {
+                  const key = calendarDateKey(date);
+                  const selected = key === calendarDateKey(selectedDate);
+                  const current = key === dhakaDateKey(now);
+                  const classDay = days[(date.getDay() + 6) % 7];
+                  const hasClasses = classes.some(item => item.day === classDay);
+                  return <button type="button" key={key} className={`${date.getMonth() !== calendarMonth.getMonth() ? "is-outside " : ""}${selected ? "is-selected " : ""}${current ? "is-today" : ""}`} aria-label={`Select ${date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`} aria-pressed={selected} aria-current={current ? "date" : undefined} onClick={() => { setSelectedDate(date); setCalendarMonth(date); setActiveDay("All"); }}>
+                    {date.getDate()}{hasClasses && <i aria-hidden="true" />}
+                  </button>;
+                })}
+              </div>
+              <p className="schedule-month-caption">Dots mark your class days. Select a date to view its week.</p>
+            </section>
             <section className="schedule-side-panel schedule-focus-panel">
               <div className="schedule-side-heading">
                 <div><span className="schedule-eyebrow">YOUR NEXT UP</span><h2>Today’s focus</h2></div>
@@ -524,13 +567,13 @@ export default function Schedule() {
                 <div className="schedule-focus-facts">
                   <p><i className="focus-blue" /> {todayClasses.length} on today’s schedule</p>
                   <p><i className="focus-violet" /> {todayClasses.filter((classItem) => minutesOfDay(classItem.endTime) <= nowMinutes).length} completed</p>
-                  <p><i className="focus-yellow" /> {nextClass ? `Next at ${nextClass.startTime}` : "No more classes today"}</p>
+                  <p><i className="focus-yellow" /> {nextClass ? `Next at ${formatTime(nextClass.startTime)}` : "No more classes today"}</p>
                 </div>
               </div>
               {nextClass ? (
                 <button className="schedule-next-class" onClick={() => openEditModal(nextClass)}>
                   <span className="schedule-next-icon"><CalendarDays size={18} /></span>
-                  <span><strong>{nextClass.subject}</strong><small>{nextClass.startTime} · {nextClass.instructor}</small></span>
+                  <span><strong>{nextClass.subject}</strong><small>{formatTime(nextClass.startTime)} · {nextClass.instructor}</small><StudyCountdown classItem={nextClass} /></span>
                   <Pencil size={15} />
                 </button>
               ) : (
@@ -583,15 +626,10 @@ export default function Schedule() {
               </div>
               <button type="button" className="schedule-modal-close" onClick={closeModal} aria-label="Close dialog"><X size={20} /></button>
             </div>
-            <p className="schedule-modal-intro">Every great week starts with one good plan.</p>
+            <p className="schedule-modal-intro">All times are Bangladesh time (UTC+6). {formData.startTime && `${formatTime(formData.startTime)}${formData.endTime ? ` – ${formatTime(formData.endTime)}` : ""}`}</p>
+            {editingClass && <StudyCountdown classItem={editingClass} />}
             <div className="schedule-form-grid">
-              <label className="schedule-form-field schedule-form-wide">
-                <span>Subject <b>*</b></span>
-                <select required value={formData.subject} onChange={(event) => setFormData({ ...formData, subject: event.target.value })}>
-                  <option value="">Choose a subject</option>
-                  {subjects.map((subject) => <option key={subject} value={subject}>{subject}</option>)}
-                </select>
-              </label>
+              <SubjectTopicFields {...curriculum} subject={formData.subject} topic={formData.topic} onSubject={(subject) => setFormData((current) => ({ ...current, subject, topic: "" }))} onTopic={(topic) => setFormData((current) => ({ ...current, topic }))} />
               <label className="schedule-form-field schedule-form-wide">
                 <span>Instructor <b>*</b></span>
                 <input required value={formData.instructor} onChange={(event) => setFormData({ ...formData, instructor: event.target.value })} placeholder="Who’s teaching?" />
@@ -610,12 +648,9 @@ export default function Schedule() {
                 <span>Ends <b>*</b></span>
                 <input required type="time" value={formData.endTime} onChange={(event) => setFormData({ ...formData, endTime: event.target.value })} />
               </label>
-              <label className="schedule-form-field schedule-form-wide">
-                <span>Location <small>OPTIONAL</small></span>
-                <input value={formData.location} onChange={(event) => setFormData({ ...formData, location: event.target.value })} placeholder="Building, room, or online" />
-              </label>
             </div>
             <div className="schedule-modal-actions">
+              {editingClass && <button type="button" className="schedule-confirm-delete" disabled={saving} onClick={() => { setConfirmDelete(editingClass); setShowModal(false); }}><Trash2 size={16} />Remove class</button>}
               <button type="button" className="schedule-cancel-button" onClick={closeModal} disabled={saving}>Cancel</button>
               <button type="submit" className="schedule-submit-button" disabled={saving}>
                 {saving ? "Saving…" : <><Check size={17} /> {editingClass ? "Save changes" : "Add to my week"}</>}
