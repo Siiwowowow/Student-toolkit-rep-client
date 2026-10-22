@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router";
+import { useBlocker, useLocation } from "react-router";
 import { AuthContext } from "../../Context/AuthContext";
 import { isActive, restoreSession, returnToFocus, transition } from "./focus-session.mjs";
 import { flushFocusHistory, queueFocusHistory } from "./focus-history-store";
+import FocusExitDialog from "./FocusExitDialog";
 
 // The controller lives above the routes so watching a class keeps the same session.
 // eslint-disable-next-line react-refresh/only-export-components
@@ -20,6 +21,11 @@ function SessionController({ user, children }) {
   const [now, setNow] = useState(Date.now);
   const [storageError, setStorageError] = useState(false);
   const [historyError, setHistoryError] = useState("");
+  const [externalExit, setExternalExit] = useState(null);
+  const [exitError, setExitError] = useState("");
+  const blocker = useBlocker(({ currentLocation, nextLocation }) =>
+    isActive(sessionRef.current) && currentLocation.pathname !== nextLocation.pathname &&
+    !["/focus-mode", "/focus-study-mood"].includes(nextLocation.pathname));
   const lastHistory = useRef(null);
   const persistHistory = useCallback((next, force = false) => {
     if (!next) return true;
@@ -104,12 +110,51 @@ function SessionController({ user, children }) {
   const active = isActive(session);
   useEffect(() => {
     if (!active) return;
-    const warn = event => { event.preventDefault(); event.returnValue = ""; };
+    // Browsers reserve tab-close/reload confirmation for their own native dialog.
+    const warn = event => {
+      if (!isActive(sessionRef.current)) return;
+      event.preventDefault(); event.returnValue = "";
+    };
+    const onLinkClick = event => {
+      if (!isActive(sessionRef.current) || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const link = event.target.closest?.("a[href]");
+      if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
+      const url = new URL(link.href, window.location.href);
+      if (!["http:", "https:"].includes(url.protocol) || url.origin === window.location.origin) return;
+      event.preventDefault();
+      setExitError("");
+      setExternalExit(url.href);
+    };
     window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
+    document.addEventListener("click", onLinkClick, true);
+    return () => {
+      window.removeEventListener("beforeunload", warn);
+      document.removeEventListener("click", onLinkClick, true);
+    };
   }, [active]);
 
-  return <FocusSessionContext.Provider value={{ session, sessionRef, now, storageError, historyError, lastHistory, persistHistory, update }}>{children}</FocusSessionContext.Provider>;
+  const stay = () => {
+    if (blocker.state === "blocked") blocker.reset();
+    setExternalExit(null);
+    setExitError("");
+  };
+  const leave = () => {
+    const ended = transition(sessionRef.current, "finish", Date.now());
+    if (!persistHistory(ended, true)) {
+      setExitError("Your session could not be saved. Please free some browser storage and try again.");
+      return;
+    }
+    update(null);
+    if (blocker.state === "blocked") blocker.proceed();
+    else if (externalExit) window.location.assign(externalExit);
+    setExternalExit(null);
+    setExitError("");
+  };
+
+  return <FocusSessionContext.Provider value={{ session, sessionRef, now, storageError, historyError, lastHistory, persistHistory, update }}>
+    {children}
+    {(blocker.state === "blocked" || externalExit) && <FocusExitDialog onStay={stay} onLeave={leave} error={exitError} />}
+  </FocusSessionContext.Provider>;
 }
 
 export default function FocusSessionProvider({ children }) {
