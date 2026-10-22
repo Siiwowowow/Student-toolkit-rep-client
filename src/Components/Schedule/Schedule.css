@@ -1476,42 +1476,41 @@
 }
 
 .schedule-calendar-day {
+  --schedule-day-start: light-dark(#e5f7ef, #203b34);
+  --schedule-day-end: light-dark(#f1f9f5, #1b2d29);
   border-color: light-dark(#dce5f1, #364152);
-  background:
-    radial-gradient(ellipse at 50% 0, light-dark(#e8f0ff, #2a2b2e) 0, transparent 67%),
-    light-dark(#f4f7fd, #222324);
+  background: linear-gradient(180deg, var(--schedule-day-start), var(--schedule-day-end));
 }
 
 .schedule-calendar-day:nth-child(3n + 1) {
-  background:
-    radial-gradient(ellipse at 70% 2%, light-dark(#e7f8ef, #212422) 0, transparent 65%),
-    light-dark(#f2f8f5, #232423);
+  --schedule-day-start: light-dark(#f6ebfa, #392e45);
+  --schedule-day-end: light-dark(#faf3f8, #2c2535);
 }
 
 .schedule-calendar-day:nth-child(3n + 2) {
-  background:
-    radial-gradient(ellipse at 70% 2%, light-dark(#f1eaff, #2b2a2e) 0, transparent 65%),
-    light-dark(#f6f3fc, #232224);
+  --schedule-day-start: light-dark(#e8f1ff, #243651);
+  --schedule-day-end: light-dark(#f2f7fd, #1b283b);
 }
 
 .schedule-calendar-day.is-today {
-  background:
-    radial-gradient(ellipse at 50% 0, light-dark(#d9e8ff, #272a2e) 0, transparent 62%),
-    light-dark(#edf4ff, #212224);
+  --schedule-day-start: light-dark(#dceaff, #29456c);
+  --schedule-day-end: light-dark(#eaf2ff, #20334f);
 }
+
+.schedule-time-rail { background: light-dark(#eaf1fc, #202d40); }
 
 .schedule-time-heading,
 .schedule-calendar-day-heading {
   height: 54px;
   border-color: light-dark(#dce5f2, #364152);
-  background: linear-gradient(135deg, light-dark(#e7effc, #2a2c2e), light-dark(#edf2fb, #222224));
+  background: linear-gradient(135deg, var(--schedule-day-start, light-dark(#e7effc, #26374f)), var(--schedule-day-end, light-dark(#edf2fb, #202d40)));
   color: light-dark(#46546b, #e7eaf0);
   font-size: 11px;
   font-weight: 900;
 }
 
 .schedule-calendar-day.is-today .schedule-calendar-day-heading {
-  background: linear-gradient(135deg, light-dark(#dbe8ff, #272a2e), light-dark(#e9efff, #2a2b2e));
+  background: linear-gradient(135deg, var(--schedule-day-start), var(--schedule-day-end));
 }
 
 .schedule-calendar-day-heading strong {
@@ -1533,9 +1532,7 @@
 }
 
 .schedule-calendar-lane {
-  background-image:
-    repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--calendar-hour-height, 78px) - 1px), #dce5f1 calc(var(--calendar-hour-height, 78px) - 1px), #dce5f1 var(--calendar-hour-height, 78px)),
-    linear-gradient(180deg, #f7f9fe, #f1f5fc);
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--calendar-hour-height, 78px) - 1px), light-dark(#dce5f1, #3a4b62) calc(var(--calendar-hour-height, 78px) - 1px), light-dark(#dce5f1, #3a4b62) var(--calendar-hour-height, 78px));
 }
 
 .schedule-calendar-event {
@@ -1609,9 +1606,6 @@
     background: light-dark(#edf3fc, #222224);
   }
 
-  .schedule-calendar-day:nth-child(3n + 1) { background: light-dark(#f0f7f3, #232423); }
-  .schedule-calendar-day:nth-child(3n + 2) { background: light-dark(#f5f1fc, #232224); }
-  .schedule-calendar-day.is-today { background: light-dark(#e8f0ff, #2a2b2e); }
 }
 .schedule-form-grid > .subject-topic-field { grid-column: 1 / -1; color: light-dark(#667085,#b4bdca); font-size: 11px; }
 .schedule-form-grid > .subject-topic-field select { min-height: 41px; padding: 9px 10px; border: 1px solid light-dark(#dfe3ea,#364152); border-radius: 6px; background: light-dark(#fff,#242424); color: light-dark(#272d39,#e7eaf0); font: 600 12px 'DM Sans',Arial,sans-serif; }

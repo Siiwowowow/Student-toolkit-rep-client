@@ -1,0 +1,15 @@
+.calendar-quiz-links { display: grid; gap: 3px; padding: 4px 5px; max-height: 49px; overflow-y: auto; scrollbar-width: thin; }
+.calendar-quiz-links > a { display: flex; align-items: center; gap: 4px; min-width: 0; padding: 3px 5px; border: 1px solid light-dark(#c9dbfa, #405b82); border-radius: 5px; background: light-dark(#e7fa37, #d7e936); color: #10110e; text-decoration: none; font: 400 10px/1.4 'DM Sans', Arial, sans-serif; }
+.calendar-quiz-links > a > span { flex-shrink: 0; font-size: 9px; }
+.calendar-quiz-links > a > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.calendar-quiz-links > a.is-completed { background: light-dark(#e9f1ff, #293d5a); color: light-dark(#34547d, #bed4f6); }
+.calendar-quiz-links > a:focus-visible { outline: 2px solid #3478f6; outline-offset: 1px; }
+.calendar-quiz-date-badge { display: block; max-width: 100%; padding: 1px 3px; border-radius: 3px; background: #e7fa37; color: #10110e; font: 500 7px/1.25 'DM Sans', Arial, sans-serif; text-align: center; white-space: normal; }
+.calendar-quiz-date-badge.is-completed { background: light-dark(#e4edff, #304464); color: light-dark(#34547d, #d0dff5); }
+.schedule-month-days button.calendar-has-quiz, .planner-month-grid button.calendar-has-quiz { display: flex; flex-direction: column; justify-content: center; gap: 2px; height: auto; min-height: 46px; aspect-ratio: auto; border-radius: 7px; }
+.calendar-date-header { min-width: 0; }
+.schedule-week-calendar.has-quizzes .calendar-date-header, .schedule-week-calendar.has-quizzes .schedule-time-heading { height: 110px; }
+.schedule-week-calendar .calendar-date-header > .schedule-calendar-day-heading { width: 100%; }
+.planner-day-column .calendar-quiz-links { margin-bottom: 5px; }
+.calendar-quiz-notice { margin: 8px 0 12px; color: light-dark(#697589, #b1bac9); font: 400 11px/1.7 'DM Sans', Arial, sans-serif; }
+.calendar-quiz-notice button { border: 0; background: transparent; color: #3478f6; cursor: pointer; text-decoration: underline; }

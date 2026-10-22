@@ -1,0 +1,146 @@
+/* Shared visual language for the four student tools. Keep status errors distinct. */
+.study-tool-page {
+  --tool-blue: #3478f6;
+  --tool-lime: #e7fa37;
+  --tool-ink: light-dark(#171a24, #e7eaf0);
+  --tool-muted: light-dark(#697589, #b1bac9);
+  --tool-line: light-dark(#e2e8f1, #364152);
+  --tool-surface: light-dark(#fff, #242b36);
+  --tool-soft: light-dark(#edf4ff, #253750);
+  --site-text: var(--tool-ink);
+  --site-muted: var(--tool-muted);
+  --site-border: var(--tool-line);
+  --site-surface: var(--tool-surface);
+  --fsm-accent: var(--tool-blue);
+  --fsm-ink: var(--tool-ink);
+  --fsm-muted: var(--tool-muted);
+  --fsm-border: var(--tool-line);
+  --fsm-surface: var(--tool-surface);
+  --fsm-bg: light-dark(#f6f8fc, #202631);
+  --fsm-soft: var(--tool-soft);
+  --budget-blue: var(--tool-blue);
+  --budget-green: var(--tool-blue);
+  --budget-pink: var(--tool-ink);
+  --budget-yellow: var(--tool-lime);
+  --budget-ink: var(--tool-ink);
+  --budget-muted: var(--tool-muted);
+  --budget-line: var(--tool-line);
+  color: var(--tool-ink);
+  background: radial-gradient(ellipse at 3% 8%, light-dark(#dceaff70, #26334a70), transparent 28rem), var(--site-paper, #f5f0e5);
+  font-family: 'DM Sans', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.65;
+}
+.study-tool-page :is(p, label, li, small, input, select, textarea, td, summary) { font-weight: 400; }
+.study-tool-page :is(button, a, th) { font-weight: 500; }
+.study-tool-page :is(strong, b) { font-weight: 600; }
+.study-tool-page :is(h1, h2, h3, h4) { font-weight: 600; letter-spacing: -.025em; color: var(--tool-ink); }
+.study-tool-page :is(h1) { font-size: clamp(30px, 4vw, 46px); line-height: 1.12; font-weight: 650; }
+.study-tool-page :is(h2) { line-height: 1.4; }
+.study-tool-page :is(button, a, input, select, textarea, summary):focus-visible { outline: 3px solid var(--tool-blue); outline-offset: 3px; }
+.study-tool-page :is(.focus-shell, .fsm-shell, .budget-shell) { max-width: 1440px; }
+.study-tool-page:is(.focus-page, .budget-page) { padding: 28px 24px 48px; }
+.study-tool-page:is(.student-quiz-updates) { max-width: none; padding: 28px max(24px, calc((100% - 1440px) / 2)) 48px; min-height: calc(100vh - 72px); }
+
+.study-tool-page :is(.focus-heading, .fsm-heading, .quiz-page-heading, .budget-heading) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 26px 30px;
+  margin-bottom: 22px;
+  border: 1px solid var(--tool-line);
+  border-radius: 16px;
+  background: radial-gradient(circle at 100% 100%, light-dark(#e7fa3740, #e7fa3714) 0 135px, transparent 136px), linear-gradient(110deg, var(--tool-surface), var(--tool-soft));
+  box-shadow: 0 6px 22px #1b294006;
+}
+.study-tool-page :is(.focus-heading h1 span, .fsm-title h1 span, .budget-heading h1 span, .quiz-card-heading, .quiz-eyebrow, .quiz-progress-heading > strong) { color: var(--tool-blue); }
+.study-tool-page :is(.focus-heading p, .fsm-hero-copy > p, .budget-heading p, .quiz-page-heading p) { font-size: 14px; color: var(--tool-muted); line-height: 1.75; }
+.study-tool-page :is(.focus-eyebrow, .fsm-eyebrow, .budget-eyebrow, .budget-kicker, .budget-metric-label, .quiz-eyebrow, .fsm-now span, .fsm-stat > div > span) { font-weight: 500; letter-spacing: .035em; }
+.study-tool-page :is(.focus-eyebrow, .budget-kicker, .quiz-eyebrow) { color: var(--tool-blue); }
+.study-tool-page :is(.focus-card, .focus-timer-card, .fsm-card, .budget-panel, .budget-metric, .quiz-update-card, .quiz-state) { border: 1px solid var(--tool-line); border-radius: 13px; background: var(--tool-surface); color: var(--tool-ink); box-shadow: 0 5px 18px #1b294006; }
+
+/* Blue actions and lime selections stay consistent across all four pages. */
+.study-tool-page :is(.focus-primary, .fsm-primary, .budget-add-button, .budget-save-button, .budget-bottom-banner button, .quiz-track-link) { background: var(--tool-blue); color: #fff; border: 1px solid var(--tool-blue); border-radius: 8px; box-shadow: 0 3px 8px #3478f61c; font-size: 13px; font-weight: 500 !important; }
+.study-tool-page :is(.focus-primary, .fsm-primary, .budget-add-button, .budget-save-button, .quiz-track-link):hover { background: #2065dc; border-color: #2065dc; color: #fff; }
+.study-tool-page :is(.focus-secondary, .quiz-action, .quiz-tabs button) { background: var(--tool-surface); color: var(--tool-ink); border-color: var(--tool-line); border-radius: 8px; font-weight: 500; }
+.study-tool-page :is(.fsm-tabs button.is-active, .quiz-tabs button[aria-pressed="true"], .focus-presets button[aria-pressed="true"], .fsm-timer-presets button.is-active, .budget-filter-tabs button.is-active, .budget-add-button.budget-add-income) { color: #10110e; background: var(--tool-lime); border-color: #d7e72c; box-shadow: none; }
+.study-tool-page :is(.focus-card input:not([type="checkbox"]), .focus-card select, .fsm-add input, .fsm-add textarea) { background: light-dark(#f7f9fc, #202631); border-color: var(--tool-line); color: var(--tool-ink); font-size: 13px; }
+
+/* Strict focus keeps its timer and session behaviour. */
+.study-tool-page .focus-dial { background: conic-gradient(var(--tool-blue) var(--focus-progress), light-dark(#e5ebf5, #364152) 0); }
+.study-tool-page :is(.focus-progress span, .budget-progress-track span) { background: var(--tool-blue); }
+.study-tool-page :is(.focus-chapter-toolbar button, .focus-result) { color: var(--tool-blue); }
+.study-tool-page :is(.focus-chapter-option input, .quiz-topic-check input, .quiz-chapter-check input) { accent-color: var(--tool-blue); }
+.study-tool-page :is(.focus-chapter-option.is-selected, .focus-status-running, .focus-status-completed) { background: var(--tool-soft); color: var(--tool-blue); }
+.study-tool-page .focus-strict { background: var(--tool-lime); color: #10110e; border-color: #d7e72c; font-weight: 500; }
+.study-tool-page :is(.focus-card h2, .focus-section-heading h2, .focus-timer-card h2) { font-weight: 600; }
+.study-tool-page :is(.focus-stats article > span, .focus-card label, .focus-chapter-field legend) { font-weight: 400; }
+.study-tool-page .focus-stats article > strong { font-weight: 600; }
+.study-tool-page .focus-stats .focus-waste { background: var(--tool-soft); color: var(--tool-ink); border-color: var(--tool-line); }
+.study-tool-page .focus-reset { border-color: var(--tool-line); }
+.study-tool-page :is(.focus-reset p, .focus-reset-message) { color: var(--tool-muted); }
+
+/* The video room shares the same restrained typography and palette. */
+.study-tool-page .fsm-title h1 { font-weight: 650; letter-spacing: -.035em; }
+.study-tool-page .fsm-heading { min-height: 205px; }
+.study-tool-page .fsm-art-play { background: var(--tool-lime); color: #10110e; }
+.study-tool-page .fsm-art-orbit::after { background: var(--tool-blue); }
+.study-tool-page .fsm-art-caption { color: #415775; font-weight: 400; }
+.study-tool-page :is(.fsm-stat-icon, .fsm-stat:nth-child(2) .fsm-stat-icon, .fsm-stat:nth-child(3) .fsm-stat-icon) { color: var(--tool-blue); background: var(--tool-soft); }
+.study-tool-page .fsm-stat:nth-child(2) .fsm-stat-icon { background: var(--tool-lime); color: #10110e; }
+.study-tool-page :is(.fsm-stat strong, .fsm-timer-main > strong) { font-weight: 600; }
+.study-tool-page :is(.fsm-stat small, .fsm-heading-status > span, .fsm-autoplay > span, .fsm-timer-presets button, .fsm-tabs button, .fsm-add label) { font-weight: 400; }
+.study-tool-page :is(.fsm-section-title h2, .fsm-class-details h2, .fsm-queue-empty h3, .fsm-note h3, .fsm-class-button strong, .fsm-playlist-classes strong) { font-weight: 500; }
+.study-tool-page .fsm-empty-player h2 { color: #f4f7ff; font-weight: 500; letter-spacing: -.025em; }
+.study-tool-page .fsm-queue-item.is-selected { border-color: #aac7f7; background: var(--tool-soft); }
+.study-tool-page .fsm-note { background: var(--tool-soft); border-color: var(--tool-line); }
+.study-tool-page .fsm-footer > span { font-weight: 500; }
+
+/* Budget charts and categories retain their labels and distinguishable series. */
+.study-tool-page :is(.budget-metric-balance, .budget-metric-expense) { background: var(--tool-soft); }
+.study-tool-page :is(.budget-metric-income, .budget-metric-savings) { background: light-dark(#f5f9d9, #2d3324); }
+.study-tool-page :is(.budget-metric-icon, .budget-metric-income .budget-metric-icon, .budget-metric-expense .budget-metric-icon, .budget-metric-savings .budget-metric-icon, .budget-insight-icon, .budget-insight-icon.is-pink, .budget-insight-icon.is-green) { background: var(--tool-surface); color: var(--tool-blue); }
+.study-tool-page :is(.budget-category-pill.income, .budget-type-switch button.is-income) { background: var(--tool-soft); color: var(--tool-blue); }
+.study-tool-page :is(.budget-category-pill.expense, .budget-type-switch button.is-expense) { background: var(--tool-lime); color: #10110e; }
+.study-tool-page .budget-amount-cell.income { color: var(--tool-blue); }
+.study-tool-page .budget-amount-cell.expense { color: var(--tool-ink); }
+.study-tool-page :is(.budget-metric-label, .budget-metric > small, .budget-table th, .budget-table td, .budget-category-info strong, .budget-category-info small, .budget-category-percent, .budget-period-label, .budget-transaction-count, .budget-showing-note, .budget-legend-row, .budget-insight p) { color: var(--tool-muted); font-weight: 400; }
+.study-tool-page :is(.budget-metric > strong, .budget-panel-heading h2, .budget-insight strong, .budget-donut-label strong, .budget-table .budget-description-cell, .budget-bottom-banner h2, .budget-modal h2) { color: var(--tool-ink); font-weight: 600; letter-spacing: -.025em; }
+.study-tool-page :is(.budget-bottom-banner, .budget-modal) { background: linear-gradient(120deg, var(--tool-surface), var(--tool-soft)); border-color: var(--tool-line); }
+.study-tool-page :is(.budget-bottom-banner h2 span, .budget-banner-icon) { color: var(--tool-blue); }
+.study-tool-page .budget-banner-icon { background: var(--tool-lime); color: #10110e; }
+.study-tool-page .budget-panel-heading > svg { color: var(--tool-blue); }
+.study-tool-page .budget-insight { background: var(--tool-soft); border-color: var(--tool-line); }
+.study-tool-page .recharts-default-legend .recharts-legend-item-text { color: var(--tool-ink) !important; font-weight: 400; }
+
+/* Quiz styling is scoped to the standalone tracker, leaving admin editing alone. */
+.study-tool-page .quiz-page-heading h1 { margin: 10px 0; color: var(--tool-blue); }
+.study-tool-page .quiz-page-heading p { margin: 7px 0 0; max-width: 720px; }
+.study-tool-page .quiz-page-actions { flex-shrink: 0; }
+.study-tool-page :is(.quiz-college, .quiz-reminder-note, .quiz-tracker-help, .quiz-subject-progress p, .quiz-chapter-topic-count, .quiz-syllabus summary span) { color: var(--tool-muted); }
+.study-tool-page :is(.quiz-student-notice, .quiz-countdown-panel, .quiz-subject-progress, .quiz-syllabus summary, .quiz-syllabus-chapter.is-complete) { background: var(--tool-soft); color: var(--tool-ink); border-color: var(--tool-line); }
+.study-tool-page .quiz-student-notice > svg { color: var(--tool-blue); }
+.study-tool-page .quiz-student-notice a { color: var(--tool-blue); }
+.study-tool-page :is(.quiz-syllabus details, .quiz-syllabus-chapter) { border-color: var(--tool-line); }
+.study-tool-page .quiz-preparation-tracker progress { background: var(--tool-line); accent-color: var(--tool-blue); }
+.study-tool-page .quiz-preparation-tracker progress::-webkit-progress-bar { background: var(--tool-line); }
+.study-tool-page .quiz-preparation-tracker progress::-webkit-progress-value { background: var(--tool-blue); }
+.study-tool-page .quiz-preparation-tracker progress::-moz-progress-bar { background: var(--tool-blue); }
+.study-tool-page :is(.quiz-completed-text, .quiz-syllabus-chapter.is-complete .quiz-chapter-check strong) { color: var(--tool-blue); }
+.study-tool-page .quiz-syllabus-chapter.is-complete .quiz-chapter-check strong { background: var(--tool-lime); color: #10110e; border-color: #d7e72c; }
+.study-tool-page :is(.quiz-update-card h2, .quiz-update-card h3, .quiz-chapter-check span, .quiz-countdown-panel span) { font-weight: 500; }
+
+@media (max-width: 800px) {
+  .study-tool-page :is(.focus-heading, .quiz-page-heading, .budget-heading) { align-items: flex-start; flex-wrap: wrap; }
+  .study-tool-page .quiz-page-actions { flex-shrink: 1; }
+}
+@media (max-width: 640px) {
+  .study-tool-page:is(.focus-page, .budget-page, .student-quiz-updates) { padding: 20px 14px 36px; }
+  .study-tool-page :is(.focus-heading, .fsm-heading, .quiz-page-heading, .budget-heading) { padding: 22px 18px; gap: 16px; border-radius: 13px; }
+  .study-tool-page :is(.focus-heading h1, .budget-heading h1, .quiz-page-heading h1) { font-size: 32px; }
+  .study-tool-page .fsm-title h1 { font-size: clamp(25px, 6.6vw, 38px); }
+  .study-tool-page .fsm-heading { min-height: 0; }
+  .study-tool-page .budget-heading-actions { flex-wrap: wrap; }
+}

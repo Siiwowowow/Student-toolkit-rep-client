@@ -1,9 +1,14 @@
+import useCenteredCalendar from '../Student/useCenteredCalendar';
+import useQuizUpdates from '../Student/useQuizUpdates';
+import { quizCalendarDays } from '../Student/calendar-dates.mjs';
+import { CalendarQuizzes, QuizDateBadge, CalendarQuizNotice } from '../Student/CalendarQuizzes';
 import { dhakaWallDate, formatTime, taskWindow, taskTimeRange, taskMinutesText } from "../Student/study-time.mjs";
 import StudyCountdown from "../Student/StudyCountdown";
 import useStudyClock from "../Student/useStudyClock";
 import { notifyStudyChanged } from "../Student/study-events";
 import useCurriculum from "../Student/useCurriculum";
 import SubjectTopicFields from "../Student/SubjectTopicFields";
+import { recordTopics, topicSummary, validTopicSelection } from "../Student/topic-selection.mjs";
 import notify from "react-hot-toast";
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from "../../Context/AuthContext";
@@ -485,13 +490,17 @@ const DashboardSection = ({
   tasks, loading, filter, setFilter, showModal, setShowModal, 
   toggleCompletion, deleteTask, editTask, isOverdue, 
   fetchTasks, completedTasksCount, totalTasksCount, progressPercentage,
-  formData, setFormData, handleInputChange, addTask, searchTerm, setSearchTerm, curriculum
+  formData, setFormData, handleInputChange, addTask, searchTerm, setSearchTerm, curriculum, navigation
 }) => {
-  const [selectedDate, setSelectedDate] = useState(() => dhakaWallDate());
+  const now = useStudyClock();
+  const { selectedDate, setSelectedDate, dates: weekDays } = useCenteredCalendar(now);
+  const quizState = useQuizUpdates();
+  const quizzesByDay = quizCalendarDays(quizState.items);
   const openTaskForm = (date = selectedDate) => {
     setFormData({
       subject: '',
       topic: '',
+      topics: [],
       priority: 'medium',
       deadline: toDateKey(date),
       startTime: '',
@@ -547,14 +556,6 @@ const DashboardSection = ({
   const upcomingTasks = getThisWeekTasks();
   const pendingTasks = getPendingTasks();
   const urgentTasks = getUrgentTasks();
-  const weekStart = new Date(selectedDate);
-  weekStart.setDate(selectedDate.getDate() - ((selectedDate.getDay() + 6) % 7));
-  weekStart.setHours(0, 0, 0, 0);
-  const weekDays = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(weekStart);
-    date.setDate(weekStart.getDate() + index);
-    return date;
-  });
   const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
   const calendarStart = new Date(monthStart);
   calendarStart.setDate(1 - ((monthStart.getDay() + 6) % 7));
@@ -585,6 +586,7 @@ const DashboardSection = ({
   return (
     <>
       <div className="study-planner-dashboard">
+
         <header className="planner-hero">
           <div className="planner-hero-copy">
             <span className="planner-eyebrow"><FaGraduationCap /> YOUR STUDY PLANNER</span>
@@ -633,6 +635,10 @@ const DashboardSection = ({
           </article>
         </section>
 
+        {navigation}
+
+
+
         <div className="planner-workspace">
           <section className="planner-calendar-panel">
             <div className="planner-panel-heading planner-calendar-heading">
@@ -670,6 +676,7 @@ const DashboardSection = ({
               {weekDays[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – {weekDays[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </div>
 
+            <CalendarQuizNotice state={quizState} />
             {loading && tasks.length === 0 ? (
               <div className="planner-empty-state"><FaSync className="planner-spin" /> Loading your study plan…</div>
             ) : (
@@ -685,6 +692,7 @@ const DashboardSection = ({
                         <span>{day.toLocaleDateString('en-US', { weekday: 'short' })}</span>
                         <strong>{day.getDate()}</strong>
                       </button>
+                      <CalendarQuizzes quizzes={quizzesByDay[dateKey]} now={now} />
                       <div className="planner-day-task-list">
                         {dayTasks.length ? dayTasks.map((task, index) => (
                           <article className={`planner-task-card planner-task-color-${index % 5}${task.completed ? ' is-completed' : ''}${isOverdue(task) && !task.completed ? ' is-overdue' : ''}`} key={task._id}>
@@ -740,13 +748,13 @@ const DashboardSection = ({
                   const hasTask = tasks.some((task) => getTaskDateKey(task) === dateKey);
                   return (
                     <button
-                      className={`${isCurrentMonth ? '' : 'is-outside'}${dateKey === selectedDateKey ? ' is-active' : ''}${dateKey === toDateKey(dhakaWallDate()) ? ' is-today' : ''}${hasTask ? ' has-task' : ''}`}
+                      className={`${isCurrentMonth ? '' : 'is-outside'}${dateKey === selectedDateKey ? ' is-active' : ''}${dateKey === toDateKey(dhakaWallDate()) ? ' is-today' : ''}${hasTask ? ' has-task' : ''}${quizzesByDay[dateKey]?.length ? ' calendar-has-quiz' : ''}`}
                       key={dateKey}
                       onClick={() => setSelectedDate(day)}
                       aria-label={day.toLocaleDateString('en-US', { dateStyle: 'full' })}
                       aria-pressed={dateKey === selectedDateKey}
                     >
-                      {day.getDate()}
+                      {day.getDate()}<QuizDateBadge quizzes={quizzesByDay[dateKey]} now={now} />
                     </button>
                   );
                 })}
@@ -804,7 +812,7 @@ const DashboardSection = ({
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={formData._id ? "Edit Study Task" : "Add New Study Task"} isEditing={!!formData._id}>
         <form onSubmit={addTask} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SubjectTopicFields {...curriculum} subject={formData.subject} topic={formData.topic} fieldClass="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" onSubject={(subject) => setFormData((current) => ({ ...current, subject, topic: '' }))} onTopic={(topic) => setFormData((current) => ({ ...current, topic }))} />
+            <SubjectTopicFields {...curriculum} subject={formData.subject} topics={formData.topics} fieldClass="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" onSubject={(subject) => setFormData((current) => ({ ...current, subject, topic: '', topics: [] }))} onTopics={(topics) => setFormData((current) => ({ ...current, topics, topic: topicSummary(topics) }))} />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Priority Level
@@ -1052,6 +1060,7 @@ const StudyPlanner = () => {
   const [formData, setFormData] = useState({
     subject: '',
     topic: '',
+    topics: [],
     priority: 'medium',
     deadline: '',
     startTime: '',
@@ -1091,7 +1100,7 @@ const StudyPlanner = () => {
 
     // validation
     if(formData.startTime && formData.startTime === formData.endTime) return showToast('Start and end times must be different', 'error');
-    if(!formData.subject || !formData.topic || !formData.deadline || !formData.startTime || !formData.endTime || !formData.duration) 
+    if(curriculum.loading || curriculum.error || !validTopicSelection(curriculum.subjects, formData.subject, formData.topics) || !formData.deadline || !formData.startTime || !formData.endTime || !formData.duration)
       return showToast('Fill required fields', 'error');
     if(parseInt(formData.duration)<=0 || formData.startTime === formData.endTime) return showToast('Start and end times must be different', 'error');
 
@@ -1109,7 +1118,7 @@ const StudyPlanner = () => {
         if(response.data.success){
         notifyStudyChanged();
           setTasks(tasks.map(t => t._id === formData._id ? { ...t, ...formData } : t));
-          setFormData({ subject:'', topic:'', priority:'medium', deadline:'', startTime:'', endTime:'', timeSlot:'', duration:'', notes:'' });
+          setFormData({ subject:'', topic:'', topics:[], priority:'medium', deadline:'', startTime:'', endTime:'', timeSlot:'', duration:'', notes:'' });
           setShowModal(false);
           notify.success("Task updated successfully! ✅");
         } else {
@@ -1122,7 +1131,7 @@ const StudyPlanner = () => {
         if(response.data.success){
         notifyStudyChanged();
           setTasks([...tasks, response.data.data]);
-          setFormData({ subject:'', topic:'', priority:'medium', deadline:'', startTime:'', endTime:'', timeSlot:'', duration:'', notes:'' });
+          setFormData({ subject:'', topic:'', topics:[], priority:'medium', deadline:'', startTime:'', endTime:'', timeSlot:'', duration:'', notes:'' });
           setShowModal(false);
           notify.success("Task added successfully! ✅");
         } else {
@@ -1171,6 +1180,7 @@ const StudyPlanner = () => {
       _id: task._id,
       subject: task.subject,
       topic: task.topic,
+      topics: recordTopics(task),
       priority: task.priority,
       deadline: task.deadline.split('T')[0], // Format date for input
       startTime: taskWindow(task)?.startTime || task.timeSlot || "",
@@ -1227,7 +1237,7 @@ const StudyPlanner = () => {
   const handleInputChange = e => { 
     const { name, value } = e.target; 
     setFormData(current => {
-      const next = { ...current, [name]: value, ...(name === "subject" ? { topic: "" } : {}) };
+      const next = { ...current, [name]: value, ...(name === "subject" ? { topic: "", topics: [] } : {}) };
       if (["startTime", "endTime"].includes(name)) {
         next.timeSlot = next.startTime;
         const timing = taskWindow({ ...next, deadline: next.deadline || "2000-01-01" });
@@ -1242,7 +1252,8 @@ const StudyPlanner = () => {
     switch(activeSection){
       case 'dashboard':
         return (
-          <DashboardSection 
+          <DashboardSection
+            navigation={<Navigation activeSection={activeSection} setActiveSection={setActiveSection} />}
             tasks={tasks} loading={loading} filter={filter} setFilter={setFilter}
             showModal={showModal} setShowModal={setShowModal} 
             toggleCompletion={toggleCompletion} deleteTask={deleteTask} editTask={editTask}
@@ -1263,7 +1274,7 @@ const StudyPlanner = () => {
             getPriorityBadge={getPriorityBadge} isOverdue={isOverdue} 
             searchTerm={searchTerm} setSearchTerm={setSearchTerm} setShowModal={(visible) => {
               if (visible) {
-                setFormData({ subject: '', topic: '', priority: 'medium', deadline: toDateKey(dhakaWallDate(now)), startTime: '', endTime: '', timeSlot: '', duration: '', notes: '' });
+                setFormData({ subject: '', topic: '', topics: [], priority: 'medium', deadline: toDateKey(dhakaWallDate(now)), startTime: '', endTime: '', timeSlot: '', duration: '', notes: '' });
                 setActiveSection('dashboard');
               }
               setShowModal(visible);
@@ -1286,7 +1297,7 @@ const StudyPlanner = () => {
         />
       )}
       <div className="max-w-7xl mx-auto">
-        <Navigation activeSection={activeSection} setActiveSection={setActiveSection} />
+        {activeSection !== "dashboard" && <Navigation activeSection={activeSection} setActiveSection={setActiveSection} />}
         {renderActiveSection()}
       </div>
     </div>

@@ -1,0 +1,369 @@
+/* Keep the original artwork and section order, with a fluid, readable canvas. */
+.sh-landing-canvas {
+  width: 100%;
+}
+
+/* Scale the complete desktop hero composition on mobile and tablet. */
+.sh-hero-viewport {
+  width: 100%;
+  overflow: clip;
+}
+
+.sh-hero-canvas {
+  container: studyhub / inline-size;
+  width: 1366px;
+}
+
+.sh-composition-viewport {
+  width: 100%;
+  overflow: clip;
+}
+
+.sh-composition-canvas {
+  container: studyhub / inline-size;
+  width: 1366px;
+}
+
+
+.studyhub-landing {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.studyhub-landing :is(h1, h2, h3),
+.studyhub-landing .sh-testimonials-heading h2 em {
+  font-family: "DM Sans", sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.studyhub-landing .sh-banner h1 {
+  font-family: "DM Sans", Arial, sans-serif;
+  font-size: clamp(80px, 6.7cqw, 98px);
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: 0;
+  line-height: 1.02;
+  transform: none;
+}
+
+.studyhub-landing .sh-banner-copy {
+  width: 48%;
+  max-width: 650px;
+  padding-block: 24px;
+}
+
+.studyhub-landing .sh-banner,
+.studyhub-landing .sh-banner-inner {
+  min-height: max(500px, 56.28cqw);
+}
+
+/* Show the complete artwork at its original aspect ratio. */
+.studyhub-landing .sh-banner-bg {
+  inset: 0;
+  height: 100%;
+}
+
+.studyhub-landing .sh-banner-bg img {
+  object-fit: contain;
+  object-position: center top;
+}
+
+.studyhub-landing .sh-banner-copy > p {
+  max-width: 540px;
+}
+
+.studyhub-landing .sh-final-content {
+  color: #fff;
+  text-shadow: 0 1px 3px #000;
+}
+
+.studyhub-landing .sh-final-content > p {
+  color: #f4f4f5;
+}
+
+.studyhub-landing .sh-final-content .sh-button {
+  text-shadow: none;
+}
+
+.studyhub-landing .sh-stats-item strong {
+  font-family: "DM Sans", sans-serif;
+  font-weight: 600;
+}
+
+@container studyhub (min-width: 621px) and (max-width: 1100px) {
+  .studyhub-landing .sh-banner-bg::after {
+    background: linear-gradient(
+      90deg,
+      light-dark(#f5f0e5, #242321) 0% 46%,
+      light-dark(#f5f0e5f5, #242321f5) 51%,
+      light-dark(#f5f0e500, #24232100) 67%
+    );
+  }
+}
+
+.studyhub-landing :is(.sh-feature-head h2, .sh-overview h2, .sh-routines h2, .sh-planner-feature h2, .sh-testimonials-heading h2, .sh-faq h2, .sh-final-cta h2) {
+  font-size: clamp(32px, 3.4cqw, 48px);
+  letter-spacing: -0.035em;
+  line-height: 1.18;
+  font-weight: 600;
+}
+
+.studyhub-landing :is(.sh-banner-copy > p, .sh-feature-head > p, .sh-overview-copy > p, .sh-section-heading p, .sh-routine p, .sh-planner-feature-copy > p, .sh-testimonials-top > p, .sh-faq-list details p, .sh-final-content > p) {
+  font-size: 16px;
+  line-height: 1.65;
+  font-weight: 400;
+}
+
+.studyhub-landing .sh-feature-strip .sh-tool {
+  min-height: 280px;
+  padding: 22px 18px 54px;
+}
+
+.studyhub-landing .sh-feature-strip .sh-tool h3 {
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.studyhub-landing .sh-feature-strip .sh-tool p,
+.studyhub-landing .sh-planner-feature li,
+.studyhub-landing .sh-testimonial-card > p,
+.studyhub-landing .sh-faq-list summary {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.studyhub-landing :is(.sh-button, .sh-planner-cta, .sh-routine a) {
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.studyhub-landing .sh-stats-item > span,
+.studyhub-landing .sh-testimonial-author small {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@container studyhub (max-width: 1000px) {
+  .studyhub-landing .sh-feature-strip .sh-six-tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+}
+
+@container studyhub (max-width: 700px) {
+
+  .studyhub-landing :is(.sh-feature-head h2, .sh-overview h2, .sh-routines h2, .sh-planner-feature h2, .sh-testimonials-heading h2, .sh-faq h2, .sh-final-cta h2) {
+    font-size: clamp(28px, 7.5cqw, 38px);
+    line-height: 1.22;
+  }
+
+  .studyhub-landing .sh-feature-strip .sh-six-tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .studyhub-landing .sh-feature-strip .sh-tool {
+    min-height: 270px;
+    padding: 20px 18px 54px;
+  }
+
+  .studyhub-landing .sh-feature-strip .sh-tool h3 {
+    font-size: 21px;
+  }
+
+  .studyhub-landing .sh-planner-feature h2 span {
+    white-space: normal;
+  }
+
+  .studyhub-landing .sh-planner-feature ul {
+    gap: 12px;
+    margin-block: 20px 24px;
+  }
+
+  .studyhub-landing .sh-routine {
+    padding: 24px;
+  }
+
+  .studyhub-landing .sh-testimonial-author strong {
+    font-size: 14px;
+  }
+
+  .studyhub-landing .sh-faq-list summary {
+    padding-block: 18px;
+    gap: 16px;
+  }
+
+  .studyhub-landing .sh-faq-list summary svg {
+    flex-shrink: 0;
+  }
+}
+
+@container studyhub (max-width: 620px) {
+
+  .studyhub-landing .sh-feature-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .studyhub-landing .sh-feature-head > p {
+    max-width: none;
+    grid-column: 1 / -1;
+  }
+
+  .studyhub-landing .sh-feature-controls {
+    grid-row: 1;
+  }
+
+  .studyhub-landing .sh-feature-controls button {
+    width: 40px;
+    height: 40px;
+  }
+
+}
+
+@container studyhub (max-width: 480px) {
+  .studyhub-landing .sh-feature-strip .sh-six-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .studyhub-landing .sh-feature-strip .sh-tool {
+    min-height: 230px;
+    padding: 24px 24px 56px;
+  }
+
+  .studyhub-landing .sh-feature-strip .sh-tool h3 {
+    font-size: 24px;
+  }
+
+  .studyhub-landing .sh-feature-head {
+    grid-template-columns: 1fr;
+  }
+
+  .studyhub-landing .sh-feature-controls {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: start;
+  }
+}
+
+/* Reflow text within the same side-by-side composition; never shrink the page. */
+@container studyhub (max-width: 1100px) {
+  .studyhub-landing .sh-banner h1 { font-size: clamp(48px, 8cqw, 88px); }
+}
+
+@container studyhub (max-width: 760px) {
+  .studyhub-landing .sh-banner,
+  .studyhub-landing .sh-banner-inner { min-height: 520px; }
+  .studyhub-landing .sh-banner-inner { width: calc(100% - 32px); align-items: center; padding-block: 20px; }
+  .studyhub-landing .sh-banner-copy { width: 57%; max-width: none; padding: 0; }
+  .studyhub-landing .sh-banner h1 { font-size: clamp(40px, 8cqw, 60px); margin-block: 14px; line-height: 1.08; }
+  .studyhub-landing .sh-banner-copy > p { font-size: 15px; line-height: 1.6; max-width: none; }
+  .studyhub-landing .sh-banner .sh-pill { font-size: 10px; }
+  .studyhub-landing .sh-banner-bg { inset: 0; height: 100%; }
+  .studyhub-landing .sh-banner-bg img { object-position: center; }
+  .studyhub-landing .sh-banner-bg::after { background: linear-gradient(90deg, light-dark(#f5f0e5, #242321) 0% 50%, light-dark(#f5f0e5f5, #242321f5) 58%, light-dark(#f5f0e500, #24232100) 76%); }
+  .studyhub-landing .sh-banner-note-top { top: 24px; bottom: auto; right: 0; font-size: 15px; }
+  .studyhub-landing .sh-banner-actions { gap: 12px; margin-top: 20px; }
+  .studyhub-landing .sh-banner-actions .sh-button { min-height: 44px; font-size: 14px; padding: 10px 12px; gap: 8px; }
+  .studyhub-landing .sh-banner-actions .sh-button-outline { background: light-dark(#f5f0e5, #242321); }
+  .studyhub-landing .sh-banner-brand-stamp { right: 4px; bottom: 16px; font-size: 24px; }
+
+  .studyhub-landing .sh-faq { display: grid; width: 100%; grid-template-columns: 90px minmax(0, 1fr) minmax(60px, .55fr); padding: 0 12px; gap: 8px; align-items: stretch; }
+  .studyhub-landing .sh-faq-heading { grid-column: 1; grid-row: 1; padding: 24px 0; min-width: 0; }
+  .studyhub-landing .sh-faq h2 { font-size: clamp(17px, 3.4cqw, 25px); line-height: 1.3; letter-spacing: -.035em; }
+  .studyhub-landing .sh-faq-list { grid-column: 2; grid-row: 1; padding: 20px 0; margin: 0; min-width: 0; }
+  .studyhub-landing .sh-faq-list summary { font-size: 14px; line-height: 1.5; padding: 12px 8px; gap: 6px; min-height: 44px; }
+  .studyhub-landing .sh-faq-list summary svg { width: 14px; height: 14px; }
+  .studyhub-landing .sh-faq-list details p { font-size: 14px; line-height: 1.6; padding: 0 8px 14px; overflow-wrap: anywhere; }
+  .studyhub-landing .sh-faq-photo { grid-column: 3; grid-row: 1; height: auto; min-height: 100%; margin: 0 -12px 0 0; }
+  .studyhub-landing .sh-faq-photo img { object-position: 42% center; }
+  .studyhub-landing .sh-faq-photo .sh-faq-paper-note { top: 25%; right: 4px; font-size: 16px; padding: 8px 5px; }
+  .studyhub-landing .sh-faq-smile { width: 24px; height: 24px; }
+
+}
+/* Keep all three artwork zones visible instead of cropping the entire banner. */
+@container studyhub (max-width: 760px) {
+  .studyhub-landing .sh-final-cta {
+    position: relative;
+    isolation: isolate;
+    background: #0d0d0e;
+    overflow: hidden;
+  }
+  .studyhub-landing .sh-final-cta::before,
+  .studyhub-landing .sh-final-cta::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    pointer-events: none;
+    background-image: url('/images/landing/gritty-campus-final-banner.png');
+    background-repeat: no-repeat;
+    background-size: auto 100%;
+  }
+  .studyhub-landing .sh-final-cta::before {
+    left: 0;
+    width: 29%;
+    background-position: 14% center;
+    mask-image: linear-gradient(90deg, #000 70%, transparent);
+  }
+  .studyhub-landing .sh-final-cta::after {
+    right: 0;
+    width: 17%;
+    background-position: right center;
+    mask-image: linear-gradient(90deg, transparent, #000 24%);
+  }
+  .studyhub-landing .sh-final-inner {
+    z-index: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: calc(100% - 24px);
+    min-height: 400px;
+    padding-block: 90px 32px;
+  }
+  .studyhub-landing .sh-final-inner::before { content: none; }
+  .studyhub-landing .sh-final-content {
+    flex: 0 0 57%;
+    width: 57%;
+    min-width: 0;
+    margin-left: 25%;
+  }
+  .studyhub-landing .sh-final-cta h2 {
+    font-size: clamp(21px, 5.2cqw, 32px);
+    line-height: 1.25;
+  }
+  .studyhub-landing .sh-final-cta .sh-final-content > p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-block: 16px 20px;
+  }
+  .studyhub-landing .sh-final-cta .sh-button-yellow {
+    max-width: 100%;
+    min-height: 44px;
+    padding-inline: 10px;
+    font-size: 13px;
+  }
+  .studyhub-landing .sh-final-mantra {
+    display: block;
+    top: 25px;
+    left: 0;
+    width: 25%;
+    font-size: 16px;
+  }
+  .studyhub-landing .sh-final-note {
+    display: block;
+    top: 20px;
+    right: 0;
+    font-size: 16px;
+    padding: 8px;
+  }
+}
+
+.studyhub-landing .sh-testimonials-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@container studyhub (max-width: 700px) { .studyhub-landing .sh-testimonials-cards { grid-template-columns: 1fr; } }

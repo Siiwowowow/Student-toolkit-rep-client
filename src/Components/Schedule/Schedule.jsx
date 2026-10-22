@@ -1,11 +1,16 @@
+import useCenteredCalendar from '../Student/useCenteredCalendar';
+import useQuizUpdates from '../Student/useQuizUpdates';
+import { quizCalendarDays } from '../Student/calendar-dates.mjs';
+import { CalendarQuizzes, QuizDateBadge, CalendarQuizNotice } from '../Student/CalendarQuizzes';
 import useCurriculum from "../Student/useCurriculum";
 import SubjectTopicFields from "../Student/SubjectTopicFields";
+import { recordTopics, topicSummary, validTopicSelection } from "../Student/topic-selection.mjs";
 import { dhakaWallDate, dhakaDateKey, formatTime } from "../Student/study-time.mjs";
 import useStudyClock from "../Student/useStudyClock";
 import StudyCountdown from "../Student/StudyCountdown";
 import { notifyStudyChanged } from "../Student/study-events";
 import { isCancel } from "axios";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
   Atom,
@@ -67,6 +72,7 @@ const subjectAccents = {
 const initialForm = {
   subject: "",
   topic: "",
+  topics: [],
   instructor: "",
   day: "Monday",
   startTime: "",
@@ -100,7 +106,10 @@ export default function Schedule() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [formData, setFormData] = useState(initialForm);
-  const [selectedDate, setSelectedDate] = useState(() => dhakaWallDate());
+  const { selectedDate, setSelectedDate, dates: weekDates } = useCenteredCalendar(now);
+  const calendarScroll = useRef(null);
+  const quizState = useQuizUpdates();
+  const quizzesByDay = useMemo(() => quizCalendarDays(quizState.items), [quizState.items]);
   const [calendarMonth, setCalendarMonth] = useState(() => dhakaWallDate());
   const calendarStartHour = Math.min(7, ...classes.map(item => Math.floor(minutesOfDay(item.startTime) / 60)).filter(Number.isFinite));
   const calendarEndHour = Math.max(22, ...classes.map(item => Math.ceil(minutesOfDay(item.endTime) / 60)).filter(Number.isFinite));
@@ -180,7 +189,19 @@ export default function Schedule() {
       return counts;
     }, {}),
   ).sort((first, second) => second[1] - first[1]);
-  const weekStart = getWeekStart(selectedDate);
+  const weekStart = weekDates[0];
+  const selectedDateKey = calendarDateKey(selectedDate);
+  useEffect(() => {
+    const center = () => {
+      const scroll = calendarScroll.current;
+      const day = scroll?.querySelector(`[data-calendar-date="${selectedDateKey}"]`);
+      if (!scroll || !day || scroll.scrollWidth <= scroll.clientWidth) return;
+      scroll.scrollLeft += day.getBoundingClientRect().left - scroll.getBoundingClientRect().left - (scroll.clientWidth - day.offsetWidth) / 2;
+    };
+    const frame = window.requestAnimationFrame(center);
+    window.addEventListener('resize', center);
+    return () => { window.cancelAnimationFrame(frame); window.removeEventListener('resize', center); };
+  }, [selectedDateKey, loading, view]);
   const monthStart = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
   const monthGridStart = getWeekStart(monthStart);
   const monthDays = Array.from({ length: 42 }, (_, index) => {
@@ -188,16 +209,11 @@ export default function Schedule() {
     date.setDate(monthGridStart.getDate() + index);
     return date;
   });
-  const isCurrentWeek = calendarDateKey(weekStart) === calendarDateKey(getWeekStart(today));
+  const isCurrentWeek = calendarDateKey(selectedDate) === dhakaDateKey(now);
   const goToToday = () => {
     const date = dhakaWallDate(now);
-    setSelectedDate(date); setCalendarMonth(date); setActiveDay(todayName);
+    setSelectedDate(date); setCalendarMonth(date); setActiveDay("All");
   };
-  const weekDates = days.map((_, index) => {
-    const date = new Date(weekStart);
-    date.setDate(weekStart.getDate() + index);
-    return date;
-  });
   const dateRange = `${weekStart.toLocaleDateString("en", { month: "short", day: "numeric" })} – ${new Date(
     weekStart.getFullYear(),
     weekStart.getMonth(),
@@ -215,6 +231,7 @@ export default function Schedule() {
     setFormData({
       subject: classItem.subject || "",
       topic: classItem.topic || "",
+      topics: recordTopics(classItem),
       instructor: classItem.instructor || "",
       day: classItem.day || "Monday",
       startTime: classItem.startTime || "",
@@ -237,7 +254,7 @@ export default function Schedule() {
       return;
     }
     if (
-      !formData.subject || !formData.topic ||
+      curriculum.loading || curriculum.error || !validTopicSelection(curriculum.subjects, formData.subject, formData.topics) ||
       !formData.instructor.trim() ||
       !formData.startTime ||
       !formData.endTime ||
@@ -254,6 +271,7 @@ export default function Schedule() {
     const classData = {
       subject: formData.subject,
       topic: formData.topic,
+      topics: formData.topics,
       instructor: formData.instructor.trim(),
       day: formData.day,
       startTime: formData.startTime,
@@ -330,7 +348,7 @@ export default function Schedule() {
             <span><Clock3 size={14} /> {formatTime(classItem.startTime)} – {formatTime(classItem.endTime)}</span>
             <span><UsersRound size={14} /> {classItem.instructor}</span>
           </div>
-          <StudyCountdown classItem={classItem} dateKey={weekDates[days.indexOf(classItem.day)] ? calendarDateKey(weekDates[days.indexOf(classItem.day)]) : undefined} />
+          <StudyCountdown classItem={classItem} dateKey={calendarDateKey(weekDates.find(date => days[(date.getDay() + 6) % 7] === classItem.day))} />
         </div>
         <div className="schedule-card-actions">
           <button
@@ -401,7 +419,7 @@ export default function Schedule() {
             <div className="schedule-calendar-toolbar">
               <div>
                 <span className="schedule-eyebrow">YOUR TIMETABLE</span>
-                <h2>{isCurrentWeek ? "This week" : "Selected week"}</h2>
+                <h2>{isCurrentWeek ? "Around today" : "Around selected day"}</h2>
               </div>
               <div className="schedule-calendar-tools">
                 <span className="schedule-date-range">{dateRange}</span>
@@ -441,32 +459,33 @@ export default function Schedule() {
               </div>
             </div>
 
+            <CalendarQuizNotice state={quizState} />
             {loading ? (
               <div className="schedule-state" role="status"><span className="schedule-spinner" /> Loading your classes…</div>
             ) : view === "week" ? (
-              <div className="schedule-calendar-scroll">
-                <div className="schedule-week-calendar" style={{ "--calendar-hour-height": `${calendarHourHeight}px`, "--calendar-lane-height": `${calendarHours.length * calendarHourHeight}px` }}>
+              <div className="schedule-calendar-scroll" ref={calendarScroll}>
+                <div className={`schedule-week-calendar${weekDates.some(date => quizzesByDay[calendarDateKey(date)]?.length) ? " has-quizzes" : ""}`} style={{ "--calendar-hour-height": `${calendarHourHeight}px`, "--calendar-lane-height": `${calendarHours.length * calendarHourHeight}px` }}>
                   <div className="schedule-time-rail">
                     <div className="schedule-calendar-day-heading schedule-time-heading">TIME</div>
                     {calendarHours.map((hour) => <div className="schedule-time-label" key={hour}>{formatHour(hour)}</div>)}
                   </div>
-                  {days.map((day, dayIndex) => {
-                    const date = weekDates[dayIndex];
+                  {weekDates.map(date => {
+                    const day = days[(date.getDay() + 6) % 7];
                     const dateNumber = date.getDate();
                     const dayClasses = filteredClasses
                       .filter((classItem) => classItem.day === day)
                       .sort((first, second) => minutesOfDay(first.startTime) - minutesOfDay(second.startTime));
                     const isToday = calendarDateKey(date) === dhakaDateKey(now);
                     return (
-                      <div className={`schedule-calendar-day ${isToday ? "is-today" : ""}`} key={day}>
-                        <button
+                      <div className={`schedule-calendar-day ${isToday ? "is-today" : ""}`} key={day} data-calendar-date={calendarDateKey(date)}>
+                        <div className="calendar-date-header"><button
                           className="schedule-calendar-day-heading"
                           onClick={() => setActiveDay(day)}
                           aria-label={`Show ${day}, ${date.toLocaleDateString("en", { month: "short", day: "numeric" })}`}
                         >
                           <span>{day.slice(0, 3)}</span>
                           <strong>{dateNumber}</strong>
-                        </button>
+                        </button><CalendarQuizzes quizzes={quizzesByDay[calendarDateKey(date)]} now={now} /></div>
                         <div className="schedule-calendar-lane">
                           {calendarHours.map((hour) => <div className="schedule-calendar-hour" key={hour} />)}
                           {dayClasses.map((classItem) => {
@@ -548,12 +567,12 @@ export default function Schedule() {
                   const current = key === dhakaDateKey(now);
                   const classDay = days[(date.getDay() + 6) % 7];
                   const hasClasses = classes.some(item => item.day === classDay);
-                  return <button type="button" key={key} className={`${date.getMonth() !== calendarMonth.getMonth() ? "is-outside " : ""}${selected ? "is-selected " : ""}${current ? "is-today" : ""}`} aria-label={`Select ${date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`} aria-pressed={selected} aria-current={current ? "date" : undefined} onClick={() => { setSelectedDate(date); setCalendarMonth(date); setActiveDay("All"); }}>
-                    {date.getDate()}{hasClasses && <i aria-hidden="true" />}
+                  return <button type="button" key={key} className={`${date.getMonth() !== calendarMonth.getMonth() ? "is-outside " : ""}${selected ? "is-selected " : ""}${current ? "is-today" : ""}${quizzesByDay[key]?.length ? " calendar-has-quiz" : ""}`} aria-label={`Select ${date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`} aria-pressed={selected} aria-current={current ? "date" : undefined} onClick={() => { setSelectedDate(date); setCalendarMonth(date); setActiveDay("All"); }}>
+                    {date.getDate()}<QuizDateBadge quizzes={quizzesByDay[key]} now={now} />{hasClasses && <i aria-hidden="true" />}
                   </button>;
                 })}
               </div>
-              <p className="schedule-month-caption">Dots mark your class days. Select a date to view its week.</p>
+              <p className="schedule-month-caption">Dots mark classes; quiz labels mark published quizzes. Select a date to center your seven-day view.</p>
             </section>
             <section className="schedule-side-panel schedule-focus-panel">
               <div className="schedule-side-heading">
@@ -629,7 +648,7 @@ export default function Schedule() {
             <p className="schedule-modal-intro">All times are Bangladesh time (UTC+6). {formData.startTime && `${formatTime(formData.startTime)}${formData.endTime ? ` – ${formatTime(formData.endTime)}` : ""}`}</p>
             {editingClass && <StudyCountdown classItem={editingClass} />}
             <div className="schedule-form-grid">
-              <SubjectTopicFields {...curriculum} subject={formData.subject} topic={formData.topic} onSubject={(subject) => setFormData((current) => ({ ...current, subject, topic: "" }))} onTopic={(topic) => setFormData((current) => ({ ...current, topic }))} />
+              <SubjectTopicFields {...curriculum} subject={formData.subject} topics={formData.topics} onSubject={(subject) => setFormData((current) => ({ ...current, subject, topic: "", topics: [] }))} onTopics={(topics) => setFormData((current) => ({ ...current, topics, topic: topicSummary(topics) }))} />
               <label className="schedule-form-field schedule-form-wide">
                 <span>Instructor <b>*</b></span>
                 <input required value={formData.instructor} onChange={(event) => setFormData({ ...formData, instructor: event.target.value })} placeholder="Who’s teaching?" />

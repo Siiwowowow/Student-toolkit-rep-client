@@ -1,15 +1,37 @@
-﻿import { Link } from "react-router";
+import { Link } from "react-router";
 import { ArrowRight, Play } from "lucide-react";
+import { useLayoutEffect, useRef } from "react";
 
 export default function Hero1({ startPath = "/signUp", signedIn = false }) {
+  const viewportRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    const canvas = canvasRef.current;
+    const resize = () => {
+      const availableWidth = viewport.getBoundingClientRect().width;
+      if (!availableWidth) return;
+      const layoutWidth = Math.max(1366, availableWidth);
+      canvas.style.width = `${layoutWidth}px`;
+      canvas.style.zoom = availableWidth / layoutWidth;
+    };
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, []);
+
   return (
+    <div className="sh-hero-viewport" ref={viewportRef}>
+      <div className="sh-hero-canvas" ref={canvasRef}>
     <section className="sh-banner" aria-labelledby="hero-heading">
       <div className="sh-banner-bg" aria-hidden="true">
         <img
-          src="/images/landing/student-banner-toolkit.png"
+          src="/images/landing/notre-dame-hero-banner.png"
           alt=""
-          width="1774"
-          height="887"
+          width="1672"
+          height="941"
           fetchPriority="high"
         />
       </div>
@@ -64,5 +86,7 @@ export default function Hero1({ startPath = "/signUp", signedIn = false }) {
         <span className="sh-banner-brand-stamp" aria-hidden="true">TOOLKIT+</span>
       </div>
     </section>
+      </div>
+    </div>
   );
 }

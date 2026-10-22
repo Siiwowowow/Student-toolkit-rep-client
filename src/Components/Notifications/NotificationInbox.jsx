@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { Bell, X } from "lucide-react";
+import { noticeUrl } from "../Student/notice-routes.mjs";
 
 const compactDate = (value) => {
   if (!value) return null;
@@ -17,6 +18,6 @@ export default function NotificationInbox({ user, feed, onNavigate }) {
   if (!items.length) return <div className="sh-notification-empty" role="status"><Bell size={28} /><strong>No new notifications</strong><p>You have seen all current updates.</p></div>;
   return <div className="sh-notification-list">{items.map((item) => {
     const date = compactDate(item.publishedAt || item.updatedAt);
-    return <article className={`sh-notification-item${item.read ? " is-read" : " is-unread"}`} key={item.id}><div className="sh-notification-row"><Link className="sh-notification-link" to={item.target || `/student-dashboard?announcement=${encodeURIComponent(item.id)}#notice-board`} onClick={() => { feed.markRead(item.id); onNavigate?.(); }}><span className="sh-notification-copy">{item.type === "quiz" && <span>Quiz update · Preparation tracker</span>}{item.priority === "important" && <span>Important</span>}<strong>{item.title}</strong><small>{date ? <time dateTime={item.publishedAt || item.updatedAt}>{date}</time> : "Toolkit update"}</small></span>{!item.read && <i className="sh-notification-unread-dot" aria-label="Unread" />}</Link><button type="button" className="sh-notification-dismiss" aria-label={`Dismiss ${item.title}`} title="Dismiss notification" onClick={() => feed.dismiss(item.id)}><X size={16} /></button></div></article>;
+    return <article className={`sh-notification-item${item.read ? " is-read" : " is-unread"}`} key={item.id}><div className="sh-notification-row"><Link className="sh-notification-link" to={item.type === "quiz" ? item.target || "/student-dashboard/quiz-updates" : noticeUrl(item.id)} onClick={() => { feed.markRead(item.id); onNavigate?.(); }}><span className="sh-notification-copy">{item.type === "quiz" && <span>Quiz update · Preparation tracker</span>}{item.priority === "important" && <span>Important</span>}<strong>{item.title}</strong><small>{date ? <time dateTime={item.publishedAt || item.updatedAt}>{date}</time> : "Toolkit update"}</small></span>{!item.read && <i className="sh-notification-unread-dot" aria-label="Unread" />}</Link><button type="button" className="sh-notification-dismiss" aria-label={`Dismiss ${item.title}`} title="Dismiss notification" onClick={() => feed.dismiss(item.id)}><X size={16} /></button></div></article>;
   })}</div>;
 }

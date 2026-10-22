@@ -42,7 +42,7 @@ import { AuthContext } from "../../Context/AuthContext";
 import { API_BASE, apiClient as axios } from "../../api";
 import "./BudgetDashboard.css";
 
-const chartColors = ["#3478f6", "#08b889", "#ffbb33", "#ff6384", "#8759ed", "#39b9d3", "#ff8a4c", "#969eab"];
+const chartColors = ["#3478f6", "#e7fa37", "#10110e", "#78a6f5", "#b9d2fc", "#b8cb25", "#677186", "#dbe7ff"];
 const categoryIcons = {
   food: Utensils,
   transport: Bus,
@@ -336,14 +336,14 @@ const Budget = () => {
 
   if (loading) {
     return (
-      <main className="budget-page">
+      <main className="budget-page study-tool-page">
         <div className="budget-loading"><span className="budget-spinner" />Loading your money dashboard…</div>
       </main>
     );
   }
 
   return (
-    <main className="budget-page">
+    <main className="budget-page study-tool-page">
       <div className="budget-shell">
         <header className="budget-heading">
           <div>
@@ -412,7 +412,7 @@ const Budget = () => {
                     <Tooltip {...chartTooltip} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: 10, paddingTop: 9 }} />
                     <Bar dataKey="income" name="Income" fill="#3478f6" radius={[4, 4, 0, 0]} maxBarSize={22} />
-                    <Bar dataKey="expenses" name="Expenses" fill="#ec4d91" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                    <Bar dataKey="expenses" name="Expenses" fill="#e7fa37" radius={[4, 4, 0, 0]} maxBarSize={22} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

@@ -9,7 +9,6 @@ import ExamPrep from "../Components/ExamPrep/ExamPrep";
 import StudyPlanner from "../Components/StudyPlanner/StudyPlanner";
 import SignUp from "../Pages/SignUp/Signup";
 import Login from "../Pages/Login/Login";
-import AiAssistent from "../Components/AiAssistent/AiAssistent";
 import AdminRoute from "../Context/AdminRoute";
 import AdminDashboard from "../Components/Admin/AdminDashboard";
 import AdminOverview from "../Components/Admin/AdminOverview";
@@ -20,6 +19,10 @@ import Error from "../Components/Errorpage/Error";
 import StudentDashboard from "../Components/Student/StudentDashboard";
 import QuizUpdatesManager from "../Components/Admin/QuizUpdatesManager";
 import StudentQuizUpdates from "../Components/Student/StudentQuizUpdates";
+import FocusMode from "../Components/FocusMode/FocusMode";
+import FocusStudyMood from "../Components/FocusStudyMood/FocusStudyMood";
+import "../Components/Student/StudyToolsTheme.css";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -61,8 +64,20 @@ export const router = createBrowserRouter([
           element:<PrivateRoute><StudyPlanner></StudyPlanner></PrivateRoute>
         },
         {
+          path: '/focus-mode',
+          element: <PrivateRoute><FocusMode /></PrivateRoute>
+        },
+        {
+          path: '/focus-study-mood',
+          element: <PrivateRoute><FocusStudyMood /></PrivateRoute>
+        },
+        {
           path: '/quiz-tracker',
           element: <PrivateRoute><StudentQuizUpdates tracker /></PrivateRoute>
+        },
+        {
+          path: '/student-dashboard/notice-board',
+          element: <PrivateRoute><StudentDashboard noticeBoard /></PrivateRoute>
         },
         {
           path: '/student-dashboard/quiz-updates',
@@ -71,10 +86,6 @@ export const router = createBrowserRouter([
         {
           path:'/student-dashboard',
           element:<PrivateRoute><StudentDashboard /></PrivateRoute>
-        },
-        {
-          path:'/ai-planner',
-          element:<AiAssistent></AiAssistent>
         },
         {
           path:'/signUp',

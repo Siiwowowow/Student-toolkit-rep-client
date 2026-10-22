@@ -544,7 +544,7 @@
 }
 .sh-feature-strip .sh-six-tools {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 .sh-feature-strip .sh-tool {
@@ -3645,7 +3645,7 @@
 .sh-final-cta {
   min-height: 260px;
   border: 0;
-  background: #0d0d0e url("/images/landing/final-cta-clean.png") center top / 100% auto no-repeat;
+  background: #0d0d0e url("/images/landing/gritty-campus-final-banner.png") center top / 100% auto no-repeat;
   color: #fff;
 }
 .sh-final-inner {

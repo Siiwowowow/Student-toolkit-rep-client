@@ -1,0 +1,41 @@
+.std-focus-week { margin-block: 22px; }
+.std-focus-week > header p { margin-top: 8px; font-size: 12px; line-height: 1.5; color: var(--student-muted); }
+.std-focus-toolbar, .std-focus-toolbar > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.std-focus-toolbar { margin-block: 22px; flex-wrap: wrap; }
+.std-focus-toolbar strong { font-size: 13px; }
+.std-focus-toolbar button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; min-width: 38px; padding: 8px; border: 1px solid var(--student-line); border-radius: 8px; background: var(--student-surface); color: inherit; font-size: 12px; cursor: pointer; }
+.std-focus-toolbar button:disabled { opacity: .5; cursor: default; }
+.std-focus-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.std-focus-metrics > div { padding: 16px; border: 1px solid var(--student-line); border-radius: 12px; background: light-dark(#f7f5fc, #2e293a); }
+.std-focus-metrics span, .std-focus-metrics small { display: block; color: var(--student-muted); font-size: 12px; line-height: 1.6; }
+.std-focus-metrics strong { display: block; margin-top: 8px; font-size: 25px; font-weight: 650; }
+.std-focus-metrics small { font-weight: 400; }
+.std-focus-goal { margin-block: 24px; }
+.std-focus-goal > div:first-child { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px; font-size: 12px; flex-wrap: wrap; }
+.std-focus-goal span { color: var(--student-muted); }
+.std-focus-legend { display: flex; gap: 18px; color: var(--student-muted); font-size: 12px; }
+.std-focus-legend span { display: flex; align-items: center; gap: 6px; }
+.std-focus-legend i { width: 9px; height: 9px; border-radius: 3px; background: #8c6ed5; }
+.std-focus-legend span:last-child i { background: #efb56f; }
+.std-focus-chart { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
+.std-focus-day { min-width: 0; text-align: center; font-size: 12px; }
+.std-focus-day > span { display: block; min-height: 20px; color: var(--student-muted); font-size: 11px; }
+.std-focus-day > div { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 130px; border-bottom: 1px solid var(--student-line); }
+.std-focus-day i { display: block; width: min(70%, 40px); flex-shrink: 0; }
+.std-focus-bar-study { background: #8c6ed5; }
+.std-focus-bar-away { background: #efb56f; }
+.std-focus-day small { display: block; margin-top: 10px; font-size: 12px; }
+.std-focus-caption { margin-top: 18px; color: var(--student-muted); font-size: 12px; line-height: 1.6; }
+.std-focus-warning { margin-block: 12px; color: light-dark(#995c21, #f2c287); font-size: 12px; line-height: 1.6; }
+.std-focus-warning button { text-decoration: underline; cursor: pointer; }
+.std-focus-recent { margin-top: 24px; }
+.std-focus-recent h3 { font-size: 14px; font-weight: 650; }
+.std-focus-recent article { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding-block: 15px; border-bottom: 1px solid var(--student-line); }
+.std-focus-recent article > div { min-width: 0; }
+.std-focus-recent article strong { display: block; font-size: 13px; }
+.std-focus-recent article small { display: block; margin-top: 5px; color: var(--student-muted); font-size: 12px; overflow-wrap: anywhere; }
+.std-focus-recent article > span { flex-shrink: 0; text-align: right; }
+.std-focus-empty { margin-top: 24px; color: var(--student-muted); font-size: 13px; line-height: 1.6; }
+.std-focus-empty a { display: inline-flex; gap: 6px; align-items: center; margin-top: 12px; }
+@media (max-width: 900px) { .std-focus-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+@media (max-width: 480px) { .std-focus-week { padding: 18px; } .std-focus-metrics > div { padding: 12px; } .std-focus-metrics strong { font-size: 22px; } .std-focus-chart { gap: 5px; } .std-focus-day > span { font-size: 10px; } .std-focus-toolbar { gap: 8px; } .std-focus-recent article { align-items: flex-start; } }

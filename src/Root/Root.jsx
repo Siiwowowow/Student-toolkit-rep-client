@@ -1,3 +1,4 @@
+import FocusSessionProvider from "../Components/FocusMode/FocusSessionProvider";
 import { useContext } from "react";
 import { Outlet, useLocation } from "react-router";
 import Navbar from "../Components/Navbar/Navbar";
@@ -10,7 +11,7 @@ import ProfileCompletionModal from "../Components/Student/ProfileCompletionModal
 import StudyReminders from "../Components/Student/StudyReminders";
 import QuizReminders from "../Components/Student/QuizReminders";
 
-const Root = () => {
+const RootContent = () => {
   const pathname = useLocation().pathname;
   const isLandingPage = pathname === "/";
   const isWorkspace = pathname === "/student-dashboard" || pathname.startsWith("/student-dashboard/") || pathname === "/complete-profile" || pathname.startsWith("/admin/");
@@ -23,7 +24,7 @@ const Root = () => {
   return (
     <><SessionNavigation /><StudyReminders /><QuizReminders />{pathname === "/admin" || pathname.startsWith("/admin/") ? <Outlet /> : <NotificationProvider user={user} role={role} refreshRole={refreshRole}>
       {isWorkspace ? <Outlet /> :
-      <div className={`sh-app-shell${isLandingPage ? " sh-landing-shell" : ""}`}>
+      <div className="sh-app-shell">
         {isLandingPage ? <Outlet /> : (
           <>
             <Navbar />
@@ -38,5 +39,7 @@ const Root = () => {
     </NotificationProvider>}</>
   );
 };
+
+const Root = () => <FocusSessionProvider><RootContent /></FocusSessionProvider>;
 
 export default Root;
