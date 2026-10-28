@@ -1,0 +1,11 @@
+version: 1
+id: 0fdfce17-6a50-494f-9606-652ee3257313
+name: Student Toolkit account verification test contract
+slug: student-toolkit-account-verifica
+protocol: http
+port: 4500
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true
+interceptRequests: true

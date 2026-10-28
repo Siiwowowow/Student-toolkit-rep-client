@@ -1,27 +1,29 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Maximize, Minimize, RefreshCw } from 'lucide-react';
 import { loadYouTubeAPI } from './youtube.mjs';
+import { createPlaybackProgress } from './playback-progress.mjs';
 
-function loadSource(player, entry, autoplay, startIndex) {
+function loadSource(player, entry, autoplay, startIndex, startSeconds = 0) {
   if (entry.kind === 'playlist') {
-    const options = { listType: 'playlist', list: entry.sourceId, index: startIndex };
+    const options = { listType: 'playlist', list: entry.sourceId, index: startIndex, startSeconds };
     if (autoplay) player.loadPlaylist(options);
     else player.cuePlaylist(options);
-  } else if (autoplay) player.loadVideoById(entry.sourceId);
-  else player.cueVideoById(entry.sourceId);
+  } else if (autoplay) player.loadVideoById({ videoId: entry.sourceId, startSeconds });
+  else player.cueVideoById({ videoId: entry.sourceId, startSeconds });
 }
 
-export default function StudyPlayer({ entry, playerRef, onPlaylist, onActive, onComplete, onNext, onReadyChange, autoplay, startIndex = 0 }) {
+export default function StudyPlayer({ entry, playerRef, onPlaylist, onActive, onComplete, onNext, onReadyChange, autoplay, startIndex, storageKey, onStorageError }) {
   const source = useRef(entry);
   const playback = useRef({ autoplay, startIndex });
   const loadedSource = useRef(entry.id);
+  const changeSource = useRef(null);
   useEffect(() => {
     source.current = entry;
     playback.current = { autoplay, startIndex };
     const player = playerRef.current;
     if (!player || loadedSource.current === entry.id) return;
     loadedSource.current = entry.id;
-    loadSource(player, entry, autoplay, startIndex);
+    changeSource.current?.(entry, autoplay, startIndex);
     setError('');
     setLoading(false);
     callbacks.current.onReadyChange(true);
@@ -32,8 +34,8 @@ export default function StudyPlayer({ entry, playerRef, onPlaylist, onActive, on
   const stage = useRef(null);
   const expandButton = useRef(null);
   const lastSize = useRef(null);
-  const callbacks = useRef({ onPlaylist, onActive, onComplete, onNext, onReadyChange });
-  useEffect(() => { callbacks.current = { onPlaylist, onActive, onComplete, onNext, onReadyChange }; });
+  const callbacks = useRef({ onPlaylist, onActive, onComplete, onNext, onReadyChange, onStorageError });
+  useEffect(() => { callbacks.current = { onPlaylist, onActive, onComplete, onNext, onReadyChange, onStorageError }; });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [retry, setRetry] = useState(0);
@@ -128,7 +130,27 @@ export default function StudyPlayer({ entry, playerRef, onPlaylist, onActive, on
     let lastVideo;
     let lastIndex = -1;
     let finishedVideo;
-    let initialSeekPending = entry.kind === 'playlist' && startIndex > 0;
+    let activeEntry = source.current;
+    let pendingResume;
+    let lastSavedAt = 0;
+    // Access localStorage lazily, including browsers that block its getter.
+    const progress = createPlaybackProgress({
+      getItem: key => window.localStorage.getItem(key),
+      setItem: (key, value) => window.localStorage.setItem(key, value),
+    }, `${storageKey}:playback-v1`, () => callbacks.current.onStorageError?.());
+    const checkpoint = (force = false) => {
+      if (!player || pendingResume || !lastVideo) return;
+      const state = player.getPlayerState?.();
+      const data = player.getVideoData?.();
+      // Never attribute the outgoing lesson's timestamp to an incoming video.
+      if (data?.video_id !== lastVideo || ![0, 1, 2].includes(state)) return;
+      if (!force && Date.now() - lastSavedAt < 5000) return;
+      progress.save(activeEntry, lastVideo, lastIndex, player.getCurrentTime?.(), state === 0);
+      lastSavedAt = Date.now();
+    };
+    const saveOnHide = () => checkpoint(true);
+    window.addEventListener('pagehide', saveOnHide);
+    document.addEventListener('visibilitychange', saveOnHide);
     callbacks.current.onReadyChange(false);
     const fail = message => { if (!disposed) { callbacks.current.onReadyChange(false); setError(message); setLoading(false); } };
     loadYouTubeAPI().then(YT => {
@@ -152,42 +174,58 @@ export default function StudyPlayer({ entry, playerRef, onPlaylist, onActive, on
         if (disposed || !player?.getVideoData) return;
         const data = player.getVideoData();
         const index = Math.max(0, player.getPlaylistIndex?.() || 0);
+        const ids = player.getPlaylist?.();
+        const resumingSource = Boolean(pendingResume);
+        if (pendingResume) {
+          const targetIndex = ids?.length ? Math.min(pendingResume.index, ids.length - 1) : pendingResume.index;
+          const targetVideo = activeEntry.kind === 'video' ? activeEntry.sourceId : ids?.[targetIndex];
+          if (!targetVideo || data?.video_id !== targetVideo || (activeEntry.kind === 'playlist' && index !== targetIndex)) return;
+          pendingResume = null;
+        }
         if (data?.video_id && (data.video_id !== lastVideo || index !== lastIndex)) {
           lastVideo = data.video_id;
           lastIndex = index;
+          const savedTime = progress.seconds(activeEntry, lastVideo);
+          if (savedTime > 0 && !resumingSource) player.seekTo(savedTime, true);
           callbacks.current.onActive(data.video_id, index, data.title);
         }
-        const ids = player.getPlaylist?.();
         if (source.current.kind === 'playlist' && ids?.length && playlistReported !== source.current.id) {
           playlistReported = source.current.id;
           callbacks.current.onPlaylist(ids);
         }
-        if (initialSeekPending && ids?.length) {
-          initialSeekPending = false;
-          player.playVideoAt(Math.min(startIndex, ids.length - 1));
-        }
+        checkpoint();
       };
       player = new YT.Player(iframe, { events: {
         onReady: () => {
           if (disposed) return;
           playerRef.current = player;
-          if (source.current.id !== entry.id) {
-            initialSeekPending = false;
-            loadSource(player, source.current, playback.current.autoplay, playback.current.startIndex);
-          }
+          player.saveStudyProgress = () => checkpoint(true);
+          changeSource.current = (nextEntry, play, index) => {
+            checkpoint(true);
+            activeEntry = nextEntry;
+            lastVideo = null;
+            lastIndex = -1;
+            finishedVideo = null;
+            playlistReported = false;
+            pendingResume = progress.resume(nextEntry, index);
+            loadSource(player, nextEntry, play, pendingResume.index, pendingResume.seconds);
+          };
+          changeSource.current(source.current, playback.current.autoplay, playback.current.startIndex);
           loadedSource.current = source.current.id;
           resizePlayer();
           window.clearTimeout(readyTimeout);
           setLoading(false);
           callbacks.current.onReadyChange(true);
           inspect();
+          checkpoint(true);
           poll = window.setInterval(inspect, 1000);
         },
         onStateChange: event => {
           if (disposed) return;
           inspect();
+          checkpoint(true);
           if (event.data === 1) finishedVideo = null;
-          if (event.data === 0 && lastVideo && finishedVideo !== lastVideo) {
+          if (event.data === 0 && !pendingResume && lastVideo && finishedVideo !== lastVideo) {
             finishedVideo = lastVideo;
             callbacks.current.onComplete(lastVideo);
             const ids = player.getPlaylist?.() || [];
@@ -198,13 +236,17 @@ export default function StudyPlayer({ entry, playerRef, onPlaylist, onActive, on
       } });
     }).catch(failure => fail(failure.message));
     return () => {
+      checkpoint(true);
       disposed = true;
+      changeSource.current = null;
+      window.removeEventListener('pagehide', saveOnHide);
+      document.removeEventListener('visibilitychange', saveOnHide);
       window.clearInterval(poll);
       window.clearTimeout(readyTimeout);
       if (playerRef.current === player) playerRef.current = null;
       player?.destroy();
     };
-    // A new source remounts this component; metadata updates must not interrupt playback.
+    // Keep the same iframe across source/metadata updates, including fullscreen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [retry]);
 

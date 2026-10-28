@@ -23,9 +23,11 @@ function SessionController({ user, children }) {
   const [historyError, setHistoryError] = useState("");
   const [externalExit, setExternalExit] = useState(null);
   const [exitError, setExitError] = useState("");
+  const studyExitRef = useRef({ active: false, save: null });
+  const [studyExitActive, setStudyExitActive] = useState(false);
   const blocker = useBlocker(({ currentLocation, nextLocation }) =>
-    isActive(sessionRef.current) && currentLocation.pathname !== nextLocation.pathname &&
-    !["/focus-mode", "/focus-study-mood"].includes(nextLocation.pathname));
+    currentLocation.pathname !== nextLocation.pathname &&
+    (studyExitActive || (isActive(sessionRef.current) && !["/focus-mode", "/focus-study-mood"].includes(nextLocation.pathname))));
   const lastHistory = useRef(null);
   const persistHistory = useCallback((next, force = false) => {
     if (!next) return true;
@@ -109,14 +111,14 @@ function SessionController({ user, children }) {
 
   const active = isActive(session);
   useEffect(() => {
-    if (!active) return;
+    if (!active && !studyExitActive) return;
     // Browsers reserve tab-close/reload confirmation for their own native dialog.
     const warn = event => {
-      if (!isActive(sessionRef.current)) return;
+      if (!isActive(sessionRef.current) && !studyExitActive) return;
       event.preventDefault(); event.returnValue = "";
     };
     const onLinkClick = event => {
-      if (!isActive(sessionRef.current) || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      if ((!isActive(sessionRef.current) && !studyExitActive) || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
       const link = event.target.closest?.("a[href]");
       if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
       const url = new URL(link.href, window.location.href);
@@ -131,7 +133,7 @@ function SessionController({ user, children }) {
       window.removeEventListener("beforeunload", warn);
       document.removeEventListener("click", onLinkClick, true);
     };
-  }, [active]);
+  }, [active, studyExitActive]);
 
   const stay = () => {
     if (blocker.state === "blocked") blocker.reset();
@@ -139,21 +141,29 @@ function SessionController({ user, children }) {
     setExitError("");
   };
   const leave = () => {
-    const ended = transition(sessionRef.current, "finish", Date.now());
-    if (!persistHistory(ended, true)) {
-      setExitError("Your session could not be saved. Please free some browser storage and try again.");
-      return;
+    studyExitRef.current.save?.();
+    if (isActive(sessionRef.current)) {
+      const ended = transition(sessionRef.current, "finish", Date.now());
+      if (!persistHistory(ended, true)) {
+        setExitError("Your session could not be saved. Please free some browser storage and try again.");
+        return;
+      }
+      update(null);
     }
-    update(null);
     if (blocker.state === "blocked") blocker.proceed();
     else if (externalExit) window.location.assign(externalExit);
     setExternalExit(null);
     setExitError("");
   };
 
-  return <FocusSessionContext.Provider value={{ session, sessionRef, now, storageError, historyError, lastHistory, persistHistory, update }}>
+  const setStudyExitGuard = useCallback((active, save) => {
+    studyExitRef.current = { active, save };
+    setStudyExitActive(active);
+  }, []);
+
+  return <FocusSessionContext.Provider value={{ session, sessionRef, now, storageError, historyError, lastHistory, persistHistory, update, setStudyExitGuard }}>
     {children}
-    {(blocker.state === "blocked" || externalExit) && <FocusExitDialog onStay={stay} onLeave={leave} error={exitError} />}
+    {(blocker.state === "blocked" || externalExit) && <FocusExitDialog onStay={stay} onLeave={leave} error={exitError} protectPlayback={studyExitActive} />}
   </FocusSessionContext.Provider>;
 }
 

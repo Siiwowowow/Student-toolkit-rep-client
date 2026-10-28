@@ -1,0 +1,7 @@
+simulation: study-playback
+routing: path
+mocks:
+  - name: study-auth
+    routeKey: account
+    path: postman/mocks/study-auth/config.yaml
+

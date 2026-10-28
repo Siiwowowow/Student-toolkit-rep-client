@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ArrowDown, ArrowUp, Check, CirclePlay, Coffee, ExternalLink, Headphones, Link2, ListVideo, Play, Plus, SkipBack, SkipForward, Sparkles, Trash2, Video, X } from 'lucide-react';
 import { AuthContext } from '../../Context/AuthContext';
+import { FocusSessionContext } from '../FocusMode/FocusSessionProvider';
 import StudyPlayer from './StudyPlayer';
 import { studyNavigation, completeStudyVideo } from './study-navigation.mjs';
 import { parseYouTubeLink, restoreLibrary, videoMetadata } from './youtube.mjs';
@@ -12,6 +13,7 @@ function Thumbnail({ videoId }) {
 }
 
 function StudyRoom({ storageKey }) {
+  const { setStudyExitGuard } = useContext(FocusSessionContext);
   const [library, setLibrary] = useState(() => { try { return restoreLibrary(localStorage.getItem(storageKey)); } catch { return restoreLibrary(null); } });
   const { entries, selectedId } = library;
   const [mode, setMode] = useState('video');
@@ -24,7 +26,7 @@ function StudyRoom({ storageKey }) {
   const [autoNext, setAutoNext] = useState(false);
   const [autoplay, setAutoplay] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
-  const [startIndex, setStartIndex] = useState(0);
+  const [startIndex, setStartIndex] = useState(undefined);
   const [playbackMessage, setPlaybackMessage] = useState('');
   const [clearConfirm, setClearConfirm] = useState(false);
   const playerRef = useRef(null);
@@ -35,6 +37,11 @@ function StudyRoom({ storageKey }) {
   const completed = entries.reduce((total, item) => total + (item.kind === 'video' ? Number(item.done) : item.videos.filter(id => item.completed.includes(id)).length), 0);
   const totalClasses = entries.reduce((total, item) => total + (item.kind === 'video' ? 1 : item.videos.length), 0);
   const metadataIds = [...new Set(entries.flatMap(item => item.kind === 'video' ? [item.sourceId] : item.videos))].join(',');
+
+  useEffect(() => {
+    setStudyExitGuard(Boolean(selectedId), () => playerRef.current?.saveStudyProgress?.());
+    return () => setStudyExitGuard(false, null);
+  }, [selectedId, setStudyExitGuard]);
 
   useEffect(() => {
     document.documentElement.classList.add('focus-study-scroll');
@@ -88,14 +95,15 @@ function StudyRoom({ storageKey }) {
     if (next.kind === 'playlist') next.done = next.videos.length > 0 && next.videos.every(videoId => next.completed.includes(videoId));
     return next;
   }) }));
-  const select = (item, play = true, index = 0) => {
+  const select = (item, play = true, index) => {
+    playerRef.current?.saveStudyProgress?.();
     setAutoplay(play);
     setPlaybackMessage('');
     setStartIndex(index);
     if (item.id !== selectedId) { setActiveVideo(null); setPlayerReady(false); }
     setLibrary(current => ({ ...current, selectedId: item.id }));
     if (item.id === selectedId && play) {
-      if (item.kind === 'playlist') playerRef.current?.playVideoAt(index);
+      if (item.kind === 'playlist' && Number.isInteger(index)) playerRef.current?.playVideoAt(index);
       else playerRef.current?.playVideo();
     }
   };
@@ -113,7 +121,7 @@ function StudyRoom({ storageKey }) {
     } catch (error) { setMessage(error.message); }
   };
   const remove = id => {
-    if (id === selectedId) { setStartIndex(0); setActiveVideo(null); setPlayerReady(false); setPlaybackMessage(''); }
+    if (id === selectedId) { playerRef.current?.saveStudyProgress?.(); setStartIndex(undefined); setActiveVideo(null); setPlayerReady(false); setPlaybackMessage(''); }
     setLibrary(current => {
       const index = current.entries.findIndex(item => item.id === id);
       const next = current.entries.filter(item => item.id !== id);
@@ -174,7 +182,7 @@ function StudyRoom({ storageKey }) {
         </aside>
 
           <section className="fsm-card fsm-classroom" ref={classroomRef} tabIndex={-1} aria-label="Your classroom"><div className="fsm-now"><span><i /> {selected ? 'NOW IN YOUR CLASSROOM' : 'YOUR CLASSROOM'}</span><span>YOUTUBE</span></div>
-            {selected ? <StudyPlayer entry={selected} playerRef={playerRef} autoplay={autoplay} startIndex={startIndex} onReadyChange={setPlayerReady} onActive={(videoId, index, videoTitle) => { setActiveVideo({ videoId, index, title: videoTitle }); if (videoTitle) setMetadata(current => ({ ...current, [videoId]: { ...current[videoId], title: videoTitle } })); }} onPlaylist={videos => updateEntry(selected.id, item => ({ ...item, videos }))} onComplete={videoId => updateEntry(selected.id, item => completeStudyVideo(item, videoId))} onNext={() => { if (autoNext && nextEntry) select(nextEntry); }} /> : <div className="fsm-empty-player"><span><CirclePlay size={43} strokeWidth={1.3} /></span><h2>A space for your next big idea.</h2><p>Add a YouTube class or playlist to begin.<br />Your lesson will play right here.</p><span className="fsm-empty-pill"><Headphones size={14} /> Settle in. Let’s learn something.</span></div>}
+            {selected ? <StudyPlayer storageKey={storageKey} onStorageError={() => setStorageError(true)} entry={selected} playerRef={playerRef} autoplay={autoplay} startIndex={startIndex} onReadyChange={setPlayerReady} onActive={(videoId, index, videoTitle) => { setActiveVideo({ videoId, index, title: videoTitle }); if (videoTitle) setMetadata(current => ({ ...current, [videoId]: { ...current[videoId], title: videoTitle } })); }} onPlaylist={videos => updateEntry(selected.id, item => ({ ...item, videos }))} onComplete={videoId => updateEntry(selected.id, item => completeStudyVideo(item, videoId))} onNext={() => { if (autoNext && nextEntry) select(nextEntry); }} /> : <div className="fsm-empty-player"><span><CirclePlay size={43} strokeWidth={1.3} /></span><h2>A space for your next big idea.</h2><p>Add a YouTube class or playlist to begin.<br />Your lesson will play right here.</p><span className="fsm-empty-pill"><Headphones size={14} /> Settle in. Let’s learn something.</span></div>}
             <div className="fsm-class-details"><div><h2>{currentTitle || 'Your focus starts here'}</h2><p>{selected ? activeVideo && metadata[activeVideo.videoId]?.author || 'Use the player settings for available quality, playback speed, and captions.' : 'Free classes, lined up and ready when you are.'}</p></div></div>
             <div className="fsm-lesson-navigation" aria-label="Class navigation">
               <button type="button" disabled={!playerReady || !navigation.previous} onClick={() => goTo(navigation.previous)}><SkipBack size={18} /> Previous</button>
@@ -192,10 +200,10 @@ function StudyRoom({ storageKey }) {
           {!entries.length && <div className="fsm-queue-empty"><ListVideo size={32} strokeWidth={1.3} /><h3>A clear queue. A fresh start.</h3><p>Add your first class using a video or playlist link.</p></div>}
           <ol className="fsm-queue-list">{entries.map((item, index) => <li key={item.id} className={`fsm-queue-item${item.id === selectedId ? ' is-selected' : ''}${item.done ? ' is-done' : ''}${item.kind === 'playlist' ? ' is-playlist' : ''}`}><div className="fsm-queue-item-main"><span className="fsm-order">{String(index + 1).padStart(2, '0')}</span><button type="button" className="fsm-class-button" onClick={() => select(item)} aria-label={`Play ${displayTitle(item)}`} aria-current={item.id === selectedId ? 'true' : undefined}><Thumbnail videoId={item.kind === 'video' ? item.sourceId : item.videos[0]} /><span>{item.kind === 'playlist' && <span className="fsm-playlist-label"><ListVideo size={13} /> Main playlist</span>}<strong>{displayTitle(item)}</strong><small>{item.kind === 'playlist' ? `${item.videos.length || 'Load'} classes · Playlist` : item.done ? 'Completed' : item.id === selectedId ? 'In your classroom' : 'Ready to watch'}</small></span></button></div>
             <div className="fsm-item-actions"><button type="button" disabled={!index} onClick={() => move(item.id, -1)} aria-label={`Move ${displayTitle(item)} up`}><ArrowUp size={13} /></button><button type="button" disabled={index === entries.length - 1} onClick={() => move(item.id, 1)} aria-label={`Move ${displayTitle(item)} down`}><ArrowDown size={13} /></button><span /><button type="button" className={item.done ? 'is-complete' : ''} aria-pressed={item.done} aria-label={`Mark ${displayTitle(item)} ${item.done ? 'incomplete' : 'complete'}`} onClick={() => updateEntry(item.id, current => ({ ...current, done: !current.done, completed: current.done ? [] : current.kind === 'playlist' ? [...current.videos] : current.completed }))}><Check size={14} /></button><button type="button" onClick={() => remove(item.id)} aria-label={`Remove ${displayTitle(item)}`}><X size={14} /></button></div>
-            {item.kind === 'playlist' && item.id === selectedId && <div className="fsm-playlist-classes">{item.videos.length ? item.videos.map((videoId, videoIndex) => <div className={(activeVideo?.index === videoIndex ? 'is-active' : '') + (item.completed.includes(videoId) ? ' is-completed' : '')} key={`${videoId}:${videoIndex}`}><button type="button" disabled={!playerReady} onClick={() => { setPlaybackMessage(''); playerRef.current?.playVideoAt(videoIndex); }}><Thumbnail videoId={videoId} /><span><strong>{metadata[videoId]?.title || `Class ${videoIndex + 1}`}</strong><small>Lesson {videoIndex + 1}{item.completed.includes(videoId) ? ' | Completed' : ''}</small></span></button><button type="button" aria-label={`Toggle completion for lesson ${videoIndex + 1}`} aria-pressed={item.completed.includes(videoId)} onClick={() => updateEntry(item.id, current => ({ ...current, completed: current.completed.includes(videoId) ? current.completed.filter(id => id !== videoId) : [...current.completed, videoId] }))}><Check size={13} /></button></div>) : <p>Press play to load this public playlist’s classes. Private or unavailable playlists cannot be loaded.</p>}</div>}
+            {item.kind === 'playlist' && item.id === selectedId && <div className="fsm-playlist-classes">{item.videos.length ? item.videos.map((videoId, videoIndex) => <div className={(activeVideo?.index === videoIndex ? 'is-active' : '') + (item.completed.includes(videoId) ? ' is-completed' : '')} key={`${videoId}:${videoIndex}`}><button type="button" disabled={!playerReady} onClick={() => { setPlaybackMessage(''); playerRef.current?.saveStudyProgress?.(); playerRef.current?.playVideoAt(videoIndex); }}><Thumbnail videoId={videoId} /><span><strong>{metadata[videoId]?.title || `Class ${videoIndex + 1}`}</strong><small>Lesson {videoIndex + 1}{item.completed.includes(videoId) ? ' | Completed' : ''}</small></span></button><button type="button" aria-label={`Toggle completion for lesson ${videoIndex + 1}`} aria-pressed={item.completed.includes(videoId)} onClick={() => updateEntry(item.id, current => ({ ...current, completed: current.completed.includes(videoId) ? current.completed.filter(id => id !== videoId) : [...current.completed, videoId] }))}><Check size={13} /></button></div>) : <p>Press play to load this public playlist’s classes. Private or unavailable playlists cannot be loaded.</p>}</div>}
           </li>)}</ol>
-          <label className="fsm-autoplay"><span><SkipForward size={16} /> Auto-play next queue item</span><input type="checkbox" checked={autoNext} onChange={event => setAutoNext(event.target.checked)} /></label><p className="fsm-saved">Your queue and completion marks are saved in this browser.</p>
-          {storageError && <p className="fsm-message" role="alert">Browser storage is unavailable. Keep this page open to retain your queue.</p>}
+          <label className="fsm-autoplay"><span><SkipForward size={16} /> Auto-play next queue item</span><input type="checkbox" checked={autoNext} onChange={event => setAutoNext(event.target.checked)} /></label><p className="fsm-saved">Your queue, completed lessons and video progress are saved in this browser. Reopen a class to continue where you left off.</p>
+          {storageError && <p className="fsm-message" role="alert">Browser storage is unavailable. Your queue and video progress may not survive closing this page.</p>}
         </aside>
 
       </div>

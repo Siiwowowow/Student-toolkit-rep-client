@@ -3,6 +3,7 @@ import { createUserWithEmailAndPassword, GoogleAuthProvider, onIdTokenChanged, s
 import { AuthContext } from "./AuthContext";
 import { auth } from "../Firebase/firebase.init";
 import { API_BASE, authenticatedRequest } from "../api";
+import { isTemporaryAccessFailure } from "./access-recovery.mjs";
 
 const googleProvider = new GoogleAuthProvider();
 const storageKey = "toolkit-session";
@@ -58,7 +59,7 @@ export default function AuthProvider({ children }) {
         const message = error.name === "AbortError" ? "Account verification timed out. Retrying automatically." : error.message;
         // Retain the verified profile so a temporary outage cannot erase onboarding input.
         // Protected routes still block on roleError until verification succeeds again.
-        setAccess(previous => previous.uid === account.uid ? { ...previous, loading: false, error: message } : { uid: account.uid, role: null, loading: false, error: message });
+        setAccess(previous => previous.uid === account.uid ? { ...previous, loading: false, error: message, temporaryError: isTemporaryAccessFailure(error) } : { uid: account.uid, role: null, loading: false, error: message });
       } finally {
         clearTimeout(timeout);
         if (validationRequest.current === request) validationRequest.current = null;
@@ -203,5 +204,6 @@ export default function AuthProvider({ children }) {
     profile: access.uid === user?.uid ? access.profile : null,
     roleLoading: !!user && (access.uid !== user.uid || access.loading),
     roleError: access.uid === user?.uid ? access.error : null,
+    roleErrorTemporary: access.uid === user?.uid && access.temporaryError === true,
   }}>{children}</AuthContext.Provider>;
 }
